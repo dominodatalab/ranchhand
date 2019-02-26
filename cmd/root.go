@@ -9,13 +9,17 @@ import (
 
 var (
 	nodeIPs    []string
+	sshUser    string
+	sshPort    uint8
 	sshKeyPath string
 
 	rootCmd = &cobra.Command{
-		Use: "ranchhand",
+		Use:   "ranchhand",
 		Short: "Create a Rancher HA installation",
 		Run: func(cmd *cobra.Command, args []string) {
-			ranchhand.Run(nodeIPs, sshKeyPath)
+			if err := ranchhand.Run(nodeIPs, sshKeyPath); err != nil {
+				log.Fatalln(err)
+			}
 		},
 	}
 )
@@ -27,9 +31,11 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.Flags().StringSliceVarP(&nodeIPs, "node-ips", "n", []string{}, "")
-	rootCmd.MarkFlagRequired("node-ips")
+	rootCmd.Flags().StringSliceVarP(&nodeIPs, "node-ips", "n", []string{}, "List of remote hosts")
+	rootCmd.Flags().StringVarP(&sshUser, "ssh-user", "u", "root", "User used to remote host")
+	rootCmd.Flags().Uint8VarP(&sshPort, "ssh-port", "p", 22, "Port to connect to on the remote host")
+	rootCmd.Flags().StringVarP(&sshKeyPath, "ssh-key-path", "k", "", "Path to private key")
 
-	rootCmd.Flags().StringVarP(&sshKeyPath, "ssh-key-path", "k", "", "derpa derpa dee")
+	rootCmd.MarkFlagRequired("node-ips")
 	rootCmd.MarkFlagRequired("ssh-key-path")
 }
