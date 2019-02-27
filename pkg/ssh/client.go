@@ -49,9 +49,10 @@ func (c *Client) ExecuteCmd(cmd string) (string, error) {
 	defer session.Close()
 
 	buffer, err := session.CombinedOutput(cmd)
+	output := string(buffer)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to run remote command")
+		return "", errors.Wrapf(err, "failed to run remote command: %s", output)
 	}
 
-	return strings.TrimSpace(string(buffer)), nil
+	return strings.TrimSpace(output), nil
 }

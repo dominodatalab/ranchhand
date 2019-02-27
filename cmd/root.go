@@ -17,7 +17,13 @@ var (
 		Use:   "ranchhand",
 		Short: "Create a Rancher HA installation",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := ranchhand.Run(nodeIPs, sshKeyPath); err != nil {
+			cfg := ranchhand.Config{
+				Nodes:      nodeIPs,
+				SSHUser:    sshUser,
+				SSHPort:    sshPort,
+				SSHKeyPath: sshKeyPath,
+			}
+			if err := ranchhand.Run(&cfg); err != nil {
 				log.Fatalln(err)
 			}
 		},

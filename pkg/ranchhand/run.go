@@ -1,17 +1,31 @@
 package ranchhand
 
+type Config struct {
+	SSHUser    string
+	SSHPort    uint8
+	SSHKeyPath string
+	Nodes      []string
+}
+
 // required steps:
-// 	- generate rke configuration
+// 	- install required tools
 // 	- execute rke up
 // 	- ensure the k8s cluster came up and is healthy
 // 	- install tiller
 //  - deploy rancher into k8s via helm
 //  - use rancher api to check server health
-func Run(hosts []string, sshKeyPath string) error {
-	if err := enforceRequirements(hosts, sshKeyPath); err != nil {
+func Run(cfg *Config) error {
+	if err := installRequiredTools(); err != nil {
+		return err
+	}
+
+	if err := processHosts(cfg); err != nil {
+		return err
+	}
+
+	if err := installKubernetes(cfg); err != nil {
 		return err
 	}
 
 	return nil
 }
-
