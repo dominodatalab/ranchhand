@@ -18,6 +18,10 @@
   name = "golang.org/x/crypto"
   revision = "7f87c0fbb88b590338857bcb720678c2583d4dea"
 
+[[constraint]]
+  name = "k8s.io/client-go"
+  version = "10.0.0"
+
 [prune]
   go-tests = true
   unused-packages = true

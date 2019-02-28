@@ -13,33 +13,32 @@ import (
 	"github.com/pkg/errors"
 )
 
-var (
-	ToolsDir         = "tools"
-	PlatformToolURLs = map[string]RequiredToolURLs{
-		"darwin": {
-			Kubectl: "https://storage.googleapis.com/kubernetes-release/release/v1.13.3/bin/darwin/amd64/kubectl",
-			Helm:    "https://storage.googleapis.com/kubernetes-helm/helm-v2.12.3-darwin-amd64.tar.gz",
-			RKE:     "https://github.com/rancher/rke/releases/download/v0.1.16/rke_darwin-amd64",
-		},
-		"linux": {
-			Kubectl: "https://storage.googleapis.com/kubernetes-release/release/v1.13.3/bin/linux/amd64/kubectl",
-			Helm:    "https://storage.googleapis.com/kubernetes-helm/helm-v2.12.3-linux-amd64.tar.gz",
-			RKE:     "https://github.com/rancher/rke/releases/download/v0.1.16/rke_linux-amd64",
-		},
-	}
-)
-
 type RequiredToolURLs struct {
 	Kubectl string
 	Helm    string
 	RKE     string
 }
 
+var PlatformToolURLs = map[string]RequiredToolURLs{
+	"darwin": {
+		Kubectl: "https://storage.googleapis.com/kubernetes-release/release/v1.13.3/bin/darwin/amd64/kubectl",
+		Helm:    "https://storage.googleapis.com/kubernetes-helm/helm-v2.12.3-darwin-amd64.tar.gz",
+		RKE:     "https://github.com/rancher/rke/releases/download/v0.1.16/rke_darwin-amd64",
+	},
+	"linux": {
+		Kubectl: "https://storage.googleapis.com/kubernetes-release/release/v1.13.3/bin/linux/amd64/kubectl",
+		Helm:    "https://storage.googleapis.com/kubernetes-helm/helm-v2.12.3-linux-amd64.tar.gz",
+		RKE:     "https://github.com/rancher/rke/releases/download/v0.1.16/rke_linux-amd64",
+	},
+}
+
 func installRequiredTools() error {
-	if _, serr := os.Stat(ToolsDir); os.IsNotExist(serr) {
-		if err := os.Mkdir(ToolsDir, os.ModePerm); err != nil {
-			return errors.Errorf("cannot create tools dir: %s", ToolsDir)
-		}
+	toolsDir, err := filepath.Abs("tools")
+	if err != nil {
+		return err
+	}
+	if err := ensureDirectory(toolsDir); err != nil {
+		return errors.Errorf("cannot create tools dir: %s", toolsDir)
 	}
 
 	rawBinInstall := func(binPath, url string) error {
@@ -98,7 +97,7 @@ func installRequiredTools() error {
 		},
 	}
 	for _, t := range allTools {
-		binPath := filepath.Join(ToolsDir, t.binary)
+		binPath := filepath.Join(toolsDir, t.binary)
 
 		if _, serr := os.Stat(binPath); os.IsNotExist(serr) {
 			if err := t.installFunc(binPath, t.url); err != nil {
@@ -107,7 +106,7 @@ func installRequiredTools() error {
 		}
 	}
 
-	return nil
+	return os.Setenv("PATH", fmt.Sprintf("%s:%s", toolsDir, os.Getenv("PATH")))
 }
 
 func downloadFile(filepath, url string) error {

@@ -11,5 +11,8 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-# Generated RKE configuration
-rancher-cluster.yml
+# Generated output directory
+rh-output/
+
+# End-to-end vagrant private dirs
+e2e/.vagrant/

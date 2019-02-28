@@ -113,6 +113,7 @@ func processHost(addr, username, keyPath string) error {
 			return errors.New("cannot install docker-ee on rhel, contact admin")
 		}
 
+		cmds = append(cmds, "sudo usermod -aG docker $USER")
 		_, err := client.ExecuteCmd(strings.Join(cmds, " && "))
 		if err != nil {
 			panic(err)
@@ -166,72 +167,3 @@ func parseOSInfo(s string) map[string]string {
 
 	return osInfo
 }
-
-//func enforceRequirements(cfg *Config) error {
-//	eChan := make(chan error)
-//
-//	for _, hostname := range cfg.Nodes {
-//		addr := fmt.Sprintf("%s:%d", hostname, cfg.SSHPort)
-//
-//		go func(addr, user, keyPath string, c chan<- error) {
-//			c <- checkHost(addr, user, keyPath)
-//		}(addr, cfg.SSHUser, cfg.SSHKeyPath, eChan)
-//	}
-//
-//	var errs []error
-//	for i := 0; i < len(cfg.Nodes); i++ {
-//		select {
-//		case err := <-eChan:
-//			if err != nil {
-//				errs = append(errs, err)
-//			}
-//		case <-time.After(HostCheckTimeout):
-//			return errors.New("host check timeout exceeded")
-//		}
-//	}
-//
-//	if len(errs) > 0 {
-//		return unifiedErrorF("one or more nodes failed requirement checks: %s", errs)
-//	}
-//
-//	return nil
-//}
-
-//func checkHost(addr, username, keyPath string) error {
-//	client, err := ssh.Connect(addr, username, keyPath)
-//	if err != nil {
-//		return err
-//	}
-//
-//	out, err := client.ExecuteCmd("cat /etc/os-release")
-//	if err != nil {
-//		return errors.Wrap(err, "os check failed")
-//	}
-//
-//	kvPairs := strings.Split(out, "\n") // NOTE: this should be a util func
-//	osInfo := make(map[string]string)
-//	for _, pair := range kvPairs {
-//		if len(pair) > 0 {
-//			z := strings.Split(pair, "=")
-//			osInfo[z[0]] = z[1]
-//		}
-//	}
-//	id := strings.Trim(osInfo["ID"], "\"")
-//	version := strings.Trim(osInfo["VERSION_ID"], "\"")
-//
-//	switch id {
-//	case "ubuntu":
-//		return runVersionComparison("~16.04", version)
-//	case "rhel", "centos":
-//		return runVersionComparison("~7", version)
-//	default:
-//		return errors.Errorf("os %s is not supported", osInfo["PRETTY_NAME"])
-//	}
-//
-//	// TODO: check hardware resources
-//
-//	out, err := client.ExecuteCmd("which docker")
-//	if err != nil {
-//		return errors.Wrap(err, "unable to determine docker version")
-//	}
-//}
