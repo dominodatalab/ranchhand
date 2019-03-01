@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver"
+	"github.com/cerebrotech/ranchhand/pkg/osi"
 	"github.com/cerebrotech/ranchhand/pkg/ssh"
 	"github.com/pkg/errors"
 )
@@ -49,20 +50,20 @@ func processHost(addr, username, keyPath string) error {
 	}
 
 	// enforce requirements
-	osi, err := client.ExecuteCmd("cat /etc/os-release")
+	i, err := client.ExecuteCmd("cat /etc/os-release")
 	if err != nil {
 		return errors.Wrap(err, "os info check failed")
 	}
-	osInfo := parseOSInfo(osi)
+	osInfo := osi.Parse(i)
 
 	var vErr error
-	switch osInfo["ID"] {
-	case "ubuntu":
-		vErr = runVersionComparison("~16.04", osInfo["VERSION_ID"])
-	case "rhel", "centos":
-		vErr = runVersionComparison("~7", osInfo["VERSION_ID"])
+	switch osInfo.ID {
+	case osi.UbuntuOS:
+		vErr = runVersionComparison("~16.04", osInfo.VersionID)
+	case osi.RHELOS, osi.CentOS:
+		vErr = runVersionComparison("~7", osInfo.VersionID)
 	default:
-		vErr = errors.Errorf("os %s is not supported", osInfo["PRETTY_NAME"])
+		vErr = errors.Errorf("os %s is not supported", osInfo.PrettyName)
 	}
 	if vErr != nil {
 		return vErr
@@ -89,8 +90,8 @@ func processHost(addr, username, keyPath string) error {
 	} else {
 		var cmds []string
 
-		switch osInfo["ID"] {
-		case "ubuntu":
+		switch osInfo.ID {
+		case osi.UbuntuOS:
 			cmds = append(cmds,
 				"sudo apt-get update",
 				"sudo apt-get remove docker docker-engine docker.io containerd runc",
@@ -101,7 +102,7 @@ func processHost(addr, username, keyPath string) error {
 				"sudo apt-get update",
 				"sudo apt-get install -y docker-ce=5:18.09.2~3-0~ubuntu-xenial docker-ce-cli=5:18.09.2~3-0~ubuntu-xenial containerd.io",
 			)
-		case "centos":
+		case osi.CentOS:
 			cmds = append(cmds,
 				"sudo yum remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine",
 				"sudo sudo yum install -y yum-utils device-mapper-persistent-data lvm2",
@@ -109,7 +110,7 @@ func processHost(addr, username, keyPath string) error {
 				"sudo yum install -y docker-ce-18.09.2 docker-ce-cli-18.09.2 containerd.io",
 				"sudo systemctl start docker",
 			)
-		case "rhel":
+		case osi.RHELOS:
 			return errors.New("cannot install docker-ee on rhel, contact admin")
 		}
 
@@ -153,17 +154,4 @@ func unifiedErrorF(format string, errs []error) error { // NOTE: util func
 	fullMsg := strings.Join(msgs, ", ")
 
 	return errors.Errorf(format, fullMsg)
-}
-
-func parseOSInfo(s string) map[string]string {
-	kvPairs := strings.Split(s, "\n")
-	osInfo := make(map[string]string)
-	for _, pair := range kvPairs {
-		if len(pair) > 0 {
-			z := strings.Split(pair, "=")
-			osInfo[z[0]] = strings.Trim(z[1], "\"")
-		}
-	}
-
-	return osInfo
 }
