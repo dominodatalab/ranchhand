@@ -341,8 +341,7 @@
   version = "v2.2.2"
 
 [[projects]]
-  branch = "release-1.13"
-  digest = "1:6cec2c64c7569cd43b9fa5f8973f3a82919ebed36296d19312de057e59651b05"
+  digest = "1:0d299a04c6472e4458461d7034c76d014cc6f632a3262cbf21d123b19ce13e65"
   name = "k8s.io/api"
   packages = [
     "admissionregistration/v1alpha1",
@@ -379,11 +378,11 @@
     "storage/v1beta1",
   ]
   pruneopts = "UT"
-  revision = "5cb15d34447165a97c76ed5a60e4e99c8a01ecfe"
+  revision = "05914d821849570fba9eacfb29466f2d8d3cd229"
+  version = "kubernetes-1.13.1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:97f690e88b67728656d37740d16daeaf0e22c0ecd8b0c7793747c3f156c40858"
+  digest = "1:b2cfe244b03da212f079df14c605a5b11f81172106320f1cf415fc49dff74ebf"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/errors",
@@ -423,7 +422,8 @@
     "third_party/forked/golang/reflect",
   ]
   pruneopts = "UT"
-  revision = "dcb391cde5ca0298013d43336817d20b74650702"
+  revision = "2b1284ed4c93a43499e781493253e2ac5959c4fd"
+  version = "kubernetes-1.13.1"
 
 [[projects]]
   digest = "1:20f641257f6c0c69ddf455a15b63b20bac524b08d90745da796d633724758bac"
@@ -518,6 +518,7 @@
     "k8s.io/apimachinery/pkg/api/errors",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/client-go/kubernetes",
+    "k8s.io/client-go/rest",
     "k8s.io/client-go/tools/clientcmd",
   ]
   solver-name = "gps-cdcl"

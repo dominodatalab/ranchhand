@@ -12,9 +12,9 @@ type Config struct {
 }
 
 // required steps:
-// 	- ensure the k8s cluster came up and is healthy
-//  - deploy rancher into k8s via helm
-//  - use rancher api to check server health
+// todo: ensure the k8s cluster came up and is healthy
+// todo: use rancher api to check server health
+//
 // desired steps:
 // 	- add error ctx via wrapping
 // 	- add logging
