@@ -13,7 +13,6 @@ type Config struct {
 
 // required steps:
 // todo: ensure the k8s cluster came up and is healthy
-// todo: use rancher api to check server health
 //
 // desired steps:
 // 	- add error ctx via wrapping
@@ -44,7 +43,7 @@ func Run(cfg *Config) error {
 		return err
 	}
 
-	return installRancher()
+	return installRancher(cfg.Nodes[0])
 }
 
 func ensureDirectory(dir string) error {

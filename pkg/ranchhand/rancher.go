@@ -1,6 +1,12 @@
 package ranchhand
 
 import (
+	"bytes"
+	"crypto/tls"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -8,7 +14,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-func installRancher() error {
+var rancherDefaultCredentials = map[string]string{
+	"username": "admin",
+	"password": "admin",
+}
+
+func installRancher(nodeIP string) error {
 	helmHome, err := filepath.Abs(".helm")
 	if err != nil {
 		return err
@@ -17,11 +28,11 @@ func installRancher() error {
 
 	// add rancher repo
 	args := []string{"repo", "list"}
-	buffer, err := exec.Command("helm", append(args, commonArgs...)...).Output()
+	buf1, err := exec.Command("helm", append(args, commonArgs...)...).Output()
 	if err != nil {
 		return err
 	}
-	if !strings.Contains(string(buffer), "rancher-stable") {
+	if !strings.Contains(string(buf1), "rancher-stable") {
 		args := []string{"repo", "add", "rancher-stable", "https://releases.rancher.com/server-charts/stable"}
 		if err := exec.Command("helm", append(args, commonArgs...)...).Run(); err != nil {
 			return err
@@ -29,11 +40,11 @@ func installRancher() error {
 	}
 
 	// install cert-manager chart
-	bs, err := exec.Command("helm", append([]string{"list", "cert-manager"}, commonArgs...)...).Output()
+	buf2, err := exec.Command("helm", append([]string{"list", "cert-manager"}, commonArgs...)...).Output()
 	if err != nil {
 		return err
 	}
-	if !strings.Contains(string(bs), "cert-manager") {
+	if !strings.Contains(string(buf2), "cert-manager") {
 		args := []string{
 			"install",
 			"stable/cert-manager",
@@ -51,11 +62,11 @@ func installRancher() error {
 	// todo: kubectl -n kube-system rollout status deploy/cert-manager
 
 	// install rancher chart
-	bs2, err := exec.Command("helm", append([]string{"list", "rancher"}, commonArgs...)...).Output()
+	buf3, err := exec.Command("helm", append([]string{"list", "rancher"}, commonArgs...)...).Output()
 	if err != nil {
 		return err
 	}
-	if !strings.Contains(string(bs2), "rancher") {
+	if !strings.Contains(string(buf3), "rancher") {
 		args := []string{
 			"install",
 			"rancher-stable/rancher",
@@ -72,6 +83,28 @@ func installRancher() error {
 	}
 
 	// todo: kubectl -n cattle-system rollout status deploy/rancher
+
+	loginURL, err := url.Parse(fmt.Sprintf("https://%s/v3-public/localProviders/local?action=login", nodeIP))
+	if err != nil {
+		return err
+	}
+	body, err := json.Marshal(rancherDefaultCredentials)
+	if err != nil {
+		return err
+	}
+
+	client := http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+	}
+	resp, err := client.Post(loginURL.String(), "application/json", bytes.NewBuffer(body))
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusCreated {
+		return errors.Errorf("rancher api check failed with status (%d)", resp.StatusCode)
+	}
 
 	return nil
 }
