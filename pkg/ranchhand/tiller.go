@@ -47,7 +47,7 @@ func installTiller() error {
 
 		crb.Name = sa.Name
 		crb.RoleRef = rbacv1.RoleRef{
-			Kind: cr.Kind,
+			Kind: "ClusterRole",
 			Name: cr.Name,
 		}
 		crb.Subjects = []rbacv1.Subject{
