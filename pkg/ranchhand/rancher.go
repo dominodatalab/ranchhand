@@ -102,6 +102,8 @@ func installRancher(nodeIP string) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
+
 	if resp.StatusCode != http.StatusCreated {
 		return errors.Errorf("rancher api check failed with status (%d)", resp.StatusCode)
 	}
