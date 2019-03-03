@@ -2,9 +2,7 @@ package ranchhand
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -107,20 +105,4 @@ func installRequiredTools() error {
 	}
 
 	return os.Setenv("PATH", fmt.Sprintf("%s:%s", toolsDir, os.Getenv("PATH")))
-}
-
-func downloadFile(filepath, url string) error {
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	file, err := os.Create(filepath)
-	if err != nil {
-		return err
-	}
-
-	_, err = io.Copy(file, resp.Body)
-	return err
 }

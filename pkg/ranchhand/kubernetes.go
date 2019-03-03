@@ -18,6 +18,7 @@ const (
 ssh_key_path: {{ .SSHKeyPath }}
 kubernetes_version: v1.12.4-rancher1-1
 ignore_docker_version: false
+
 nodes:
 {{- range .Nodes }}
   - address: {{ . }}

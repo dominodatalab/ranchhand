@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-const HostCheckTimeout = 1 * time.Minute
+const HostCheckTimeout = 1 * time.Minute // todo: might be too low
 
 func processHosts(cfg *Config) error {
 	errChan := make(chan error)
@@ -72,6 +72,8 @@ func processHost(addr, username, keyPath string) error {
 	// todo: check hardware resources: should be 4 CPUs and 16GB RAM
 
 	// install docker client and server
+	// todo: this check is not good enough. if the provision step bombs out but docker is installed, it will never know
+	// 	what was completed. we need something atomic or some touchfile
 	dockerV, err := client.ExecuteCmd("sudo docker version --format '{{.Server.Version}}'")
 	if err == nil { // docker is already installed
 		v1, err := semver.NewVersion(dockerV)

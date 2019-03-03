@@ -1,6 +1,10 @@
 package ranchhand
 
-import "os"
+import (
+	"os"
+
+	log "github.com/sirupsen/logrus"
+)
 
 const OutputDirectory = "rh-output"
 
@@ -19,6 +23,7 @@ type Config struct {
 // 	- add logging
 // 	- write tests
 func Run(cfg *Config) error {
+	log.Info("hi")
 	if err := ensureDirectory(OutputDirectory); err != nil {
 		return err
 	}
@@ -44,14 +49,4 @@ func Run(cfg *Config) error {
 	}
 
 	return installRancher(cfg.Nodes[0])
-}
-
-func ensureDirectory(dir string) error {
-	if _, serr := os.Stat(dir); os.IsNotExist(serr) {
-		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }

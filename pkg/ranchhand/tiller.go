@@ -7,9 +7,6 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (
@@ -77,23 +74,4 @@ func installTiller() error {
 	}
 
 	return nil
-}
-
-func getKubeConfigAndClient() (*rest.Config, kubernetes.Interface, error) {
-	config, err := clientcmd.BuildConfigFromFlags("", KubeConfig)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return config, clientset, nil
-}
-
-func getKubeClient() (kubernetes.Interface, error) {
-	_, clientset, err := getKubeConfigAndClient()
-	return clientset, err
 }

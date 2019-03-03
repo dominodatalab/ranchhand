@@ -7,84 +7,84 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"os/exec"
-	"path/filepath"
-	"strings"
 
+	"github.com/cerebrotech/ranchhand/pkg/helm"
 	"github.com/pkg/errors"
 )
 
-var rancherDefaultCredentials = map[string]string{
-	"username": "admin",
-	"password": "admin",
-}
+var (
+	rancherRepo = helm.Repository{
+		Name: "rancher-stable",
+		URL:  "https://releases.rancher.com/server-charts/stable",
+	}
+
+	rancherReleases = []struct {
+		Chart string
+		Info  helm.ReleaseInfo
+	}{
+		{
+			"stable/cert-manager",
+			helm.ReleaseInfo{
+				Name:      "cert-manager",
+				Namespace: "kube-system",
+				Version:   "v0.5.2",
+			},
+		},
+		{
+			"rancher-stable/rancher",
+			helm.ReleaseInfo{
+				Name:      "rancher",
+				Namespace: "cattle-system",
+				Version:   "2019.1.2",
+				SetValues: "rancherImageTag=v2.1.6,tls=external",
+			},
+		},
+	}
+
+	rancherDefaultCredentials = map[string]string{
+		"username": "admin",
+		"password": "admin",
+	}
+)
 
 func installRancher(nodeIP string) error {
-	helmHome, err := filepath.Abs(".helm")
+	helmCLI, err := helm.New(".helm", KubeConfig)
 	if err != nil {
 		return err
 	}
-	commonArgs := []string{"--kubeconfig", KubeConfig, "--home", helmHome}
 
-	// add rancher repo
-	args := []string{"repo", "list"}
-	buf1, err := exec.Command("helm", append(args, commonArgs...)...).Output()
+	exists, err := helmCLI.IsRepo(rancherRepo.Name)
 	if err != nil {
 		return err
 	}
-	if !strings.Contains(string(buf1), "rancher-stable") {
-		args := []string{"repo", "add", "rancher-stable", "https://releases.rancher.com/server-charts/stable"}
-		if err := exec.Command("helm", append(args, commonArgs...)...).Run(); err != nil {
+	if !exists {
+		if err := helmCLI.AddRepo(&rancherRepo); err != nil {
 			return err
 		}
 	}
 
-	// install cert-manager chart
-	buf2, err := exec.Command("helm", append([]string{"list", "cert-manager"}, commonArgs...)...).Output()
-	if err != nil {
-		return err
-	}
-	if !strings.Contains(string(buf2), "cert-manager") {
-		args := []string{
-			"install",
-			"stable/cert-manager",
-			"--name=cert-manager",
-			"--namespace=kube-system",
-			"--description='Installed by RanchHand'",
-			"--version=v0.5.2",
-			"--wait",
-		}
-		if err := exec.Command("helm", append(args, commonArgs...)...).Run(); err != nil {
+	for _, rls := range rancherReleases {
+		rlsInfo := rls.Info
+
+		installed, err := helmCLI.IsRelease(rlsInfo.Name)
+		if err != nil {
 			return err
 		}
-	}
+		if !installed {
+			rlsInfo.Description = "Installed by RanchHand"
+			rlsInfo.Wait = true
 
-	// todo: kubectl -n kube-system rollout status deploy/cert-manager
-
-	// install rancher chart
-	buf3, err := exec.Command("helm", append([]string{"list", "rancher"}, commonArgs...)...).Output()
-	if err != nil {
-		return err
-	}
-	if !strings.Contains(string(buf3), "rancher") {
-		args := []string{
-			"install",
-			"rancher-stable/rancher",
-			"--name=rancher",
-			"--namespace=cattle-system",
-			"--description='Installed by RanchHand'",
-			"--version=2019.1.2",
-			"--set", "rancherImageTag=v2.1.6,tls=external",
-			"--wait",
-		}
-		if buffer, err := exec.Command("helm", append(args, commonArgs...)...).CombinedOutput(); err != nil {
-			return errors.Wrapf(err, "helm install failed: %s", string(buffer))
+			if err := helmCLI.InstallRelease(rls.Chart, &rlsInfo); err != nil {
+				return err
+			}
 		}
 	}
 
-	// todo: kubectl -n cattle-system rollout status deploy/rancher
+	return pingRancherAPI(nodeIP)
+}
 
-	loginURL, err := url.Parse(fmt.Sprintf("https://%s/v3-public/localProviders/local?action=login", nodeIP))
+func pingRancherAPI(host string) error {
+	loginURL, err := url.Parse(fmt.Sprintf("https://%s/v3-public/localProviders/local?action=login", host))
 	if err != nil {
 		return err
 	}
@@ -92,12 +92,12 @@ func installRancher(nodeIP string) error {
 	if err != nil {
 		return err
 	}
-
 	client := http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
 	}
+
 	resp, err := client.Post(loginURL.String(), "application/json", bytes.NewBuffer(body))
 	if err != nil {
 		return err
