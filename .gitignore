@@ -11,6 +11,9 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
+# Default binary produced by `go build`
+ranchhand
+
 # Generated output directory
 rh-output/
 
