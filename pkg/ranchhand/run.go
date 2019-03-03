@@ -23,30 +23,34 @@ type Config struct {
 // 	- add logging
 // 	- write tests
 func Run(cfg *Config) error {
-	log.Info("hi")
+	log.Info("ensuring output directory exists")
 	if err := ensureDirectory(OutputDirectory); err != nil {
 		return err
 	}
-
 	if err := os.Chdir(OutputDirectory); err != nil {
 		return err
 	}
 
+	log.Info("installing required cli tools")
 	if err := installRequiredTools(); err != nil {
 		return err
 	}
 
+	log.Info("processing remote hosts")
 	if err := processHosts(cfg); err != nil {
 		return err
 	}
 
+	log.Info("installing kubernetes")
 	if err := installKubernetes(cfg); err != nil {
 		return err
 	}
 
+	log.Info("initializing helm/tiller")
 	if err := installTiller(); err != nil {
 		return err
 	}
 
+	log.Info("installing rancher")
 	return installRancher(cfg.Nodes[0])
 }
