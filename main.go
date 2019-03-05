@@ -1,6 +1,6 @@
 package main
 
-import "github.com/cerebrotech/ranchhand/cmd"
+import "github.com/dominodatalab/ranchhand/cmd"
 
 func main() {
 	cmd.Execute()

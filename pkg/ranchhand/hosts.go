@@ -5,9 +5,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/Masterminds/semver"
-	"github.com/cerebrotech/ranchhand/pkg/osi"
-	"github.com/cerebrotech/ranchhand/pkg/ssh"
+	"github.com/dominodatalab/ranchhand/pkg/osi"
+	"github.com/dominodatalab/ranchhand/pkg/ssh"
 	"github.com/pkg/errors"
 )
 
@@ -81,7 +83,7 @@ func processHost(addr, username, keyPath string) error {
 			return err
 		}
 
-		v2, err := semver.NewVersion("18.09.2")
+		v2, err := semver.NewVersion("17.03.3-ce")
 		if err != nil {
 			return err
 		}
@@ -102,7 +104,7 @@ func processHost(addr, username, keyPath string) error {
 				"sudo apt-key fingerprint 0EBFCD88",
 				"sudo add-apt-repository \"deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\"",
 				"sudo apt-get update",
-				"sudo apt-get install -y docker-ce=5:18.09.2~3-0~ubuntu-xenial docker-ce-cli=5:18.09.2~3-0~ubuntu-xenial containerd.io",
+				"sudo apt-get install -y docker-ce=17.03.3~ce-0~ubuntu-xenial containerd.io",
 			)
 		case osi.CentOS:
 			cmds = append(cmds,
@@ -116,6 +118,7 @@ func processHost(addr, username, keyPath string) error {
 			return errors.New("cannot install docker-ee on rhel, contact admin")
 		}
 
+		logrus.Infof("installing docker [%s] on host [%s]", "17.03.3-ce", addr)
 		cmds = append(cmds, "sudo usermod -aG docker $USER")
 		_, err := client.ExecuteCmd(strings.Join(cmds, " && "))
 		if err != nil {

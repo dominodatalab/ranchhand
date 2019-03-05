@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/cerebrotech/ranchhand/pkg/helm"
+	"github.com/dominodatalab/ranchhand/pkg/helm"
 	"github.com/pkg/errors"
 )
 

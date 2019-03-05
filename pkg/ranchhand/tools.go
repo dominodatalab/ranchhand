@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/sirupsen/logrus"
 	"github.com/mholt/archiver"
 	"github.com/pkg/errors"
 )
@@ -21,7 +22,7 @@ var PlatformToolURLs = map[string]RequiredToolURLs{
 	"darwin": {
 		Kubectl: "https://storage.googleapis.com/kubernetes-release/release/v1.13.3/bin/darwin/amd64/kubectl",
 		Helm:    "https://storage.googleapis.com/kubernetes-helm/helm-v2.12.3-darwin-amd64.tar.gz",
-		RKE:     "https://github.com/rancher/rke/releases/download/v0.1.16/rke_darwin-amd64",
+		RKE:     "https://github.com/rancher/rke/releases/download/v0.2.0-rc7/rke_darwin-amd64",
 	},
 	"linux": {
 		Kubectl: "https://storage.googleapis.com/kubernetes-release/release/v1.13.3/bin/linux/amd64/kubectl",
@@ -98,6 +99,7 @@ func installRequiredTools() error {
 		binPath := filepath.Join(toolsDir, t.binary)
 
 		if _, serr := os.Stat(binPath); os.IsNotExist(serr) {
+			logrus.Infof("downloading tool [%s]", t.binary)
 			if err := t.installFunc(binPath, t.url); err != nil {
 				return err
 			}

@@ -3,7 +3,7 @@ package cmd
 import (
 	"log"
 
-	"github.com/cerebrotech/ranchhand/pkg/ranchhand"
+	"github.com/dominodatalab/ranchhand/pkg/ranchhand"
 	"github.com/spf13/cobra"
 )
 
