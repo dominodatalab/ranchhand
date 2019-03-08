@@ -1,24 +1,22 @@
-package ranchhand
+package helm
 
 import (
-	"os/exec"
-	"path/filepath"
-
+	"github.com/pkg/errors"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
-const (
-	KubeConfig           = "kube_config_rancher-cluster.yml"
-	TillerNamespace      = "kube-system"
-	TillerServiceAccount = "tiller"
-)
-
-func installTiller() error {
-	clientset, err := getKubeClient()
+func (w *wrapper) createK8sResources() error {
+	config, err := clientcmd.BuildConfigFromFlags("", w.kubeConfig)
 	if err != nil {
-		return nil
+		return err
+	}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return err
 	}
 
 	getOpts := metav1.GetOptions{}
@@ -30,7 +28,7 @@ func installTiller() error {
 
 		sa, err = saAPI.Create(sa)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to create serviceaccount %v", sa)
 		}
 	}
 
@@ -39,7 +37,7 @@ func installTiller() error {
 		crAPI := clientset.RbacV1().ClusterRoles()
 		cr, err := crAPI.Get("cluster-admin", getOpts)
 		if err != nil && apierrors.IsNotFound(err) {
-			return err
+			return errors.Wrapf(err, "expected clusterrole \"cluster-admin\" to be present")
 		}
 
 		crb.Name = sa.Name
@@ -56,20 +54,7 @@ func installTiller() error {
 		}
 
 		if _, err := crbAPI.Create(crb); err != nil {
-			return err
-		}
-	}
-
-	checkCmd := exec.Command("helm", "version", "--kubeconfig", KubeConfig, "--server")
-	if cErr := checkCmd.Run(); cErr != nil {
-		helmHome, err := filepath.Abs(".helm")
-		if err != nil {
-			return err
-		}
-
-		initCmd := exec.Command("helm", "init", "--kubeconfig", KubeConfig, "--home", helmHome, "--service-account", TillerServiceAccount, "--wait")
-		if iErr := initCmd.Run(); iErr != nil {
-			return iErr
+			return errors.Wrapf(err, "failed to create clusterrolebinding %v", crb)
 		}
 	}
 

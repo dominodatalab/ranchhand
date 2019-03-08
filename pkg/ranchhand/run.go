@@ -4,6 +4,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/dominodatalab/ranchhand/pkg/helm"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -19,11 +20,6 @@ type Config struct {
 
 // required steps:
 // todo: ensure the k8s cluster came up and is healthy
-//
-// desired steps:
-// 	- add error ctx via wrapping
-// 	- add logging
-// 	- write tests
 func Run(cfg *Config) error {
 	log.Info("ensuring output directory exists")
 	if err := ensureDirectory(OutputDirectory); err != nil {
@@ -49,10 +45,14 @@ func Run(cfg *Config) error {
 	}
 
 	log.Info("initializing helm/tiller")
-	if err := installTiller(); err != nil {
+	hClient, err := helm.New(".helm", RKEKubeConfig)
+	if err != nil {
+		return err
+	}
+	if err := hClient.Init(); err != nil {
 		return err
 	}
 
-	log.Info("installing rancher")
-	return installRancher(cfg.Nodes[0])
+	log.Info("deploying rancher application")
+	return installRancher(hClient, cfg.Nodes[0])
 }

@@ -10,6 +10,19 @@ import (
 	"github.com/pkg/errors"
 )
 
+var (
+	TillerNamespace      = "kube-system"
+	TillerServiceAccount = "tiller"
+)
+
+type Helm interface {
+	Init() error
+	IsRepo(repoName string) (bool, error)
+	IsRelease(releaseName string) (bool, error)
+	AddRepo(repoData *Repository) error
+	InstallRelease(releaseName string, releaseInfo *ReleaseInfo) error
+}
+
 type Repository struct {
 	Name string
 	URL  string
@@ -40,6 +53,23 @@ func New(home, kubeconfig string) (*wrapper, error) {
 	}
 
 	return &wrapper{helmHome: helmHome, kubeConfig: kubeconfig}, nil
+}
+
+func (w *wrapper) Init() error {
+	// checking if tiller is already installed
+	if err := w.helmCommand("version", "--server").Run(); err != nil {
+		if err := w.createK8sResources(); err != nil {
+			return err
+		}
+
+		buffer, err := w.helmCommand("init", "--wait", "--service-account", TillerServiceAccount).CombinedOutput()
+		if err != nil {
+			output := string(buffer)
+			return errors.Wrapf(err, "helm init failed: %s", output)
+		}
+	}
+
+	return nil
 }
 
 func (w *wrapper) IsRepo(name string) (bool, error) {

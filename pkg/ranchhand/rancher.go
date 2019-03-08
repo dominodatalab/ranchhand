@@ -47,18 +47,13 @@ var (
 	}
 )
 
-func installRancher(nodeIP string) error {
-	helmCLI, err := helm.New(".helm", KubeConfig)
-	if err != nil {
-		return err
-	}
-
-	exists, err := helmCLI.IsRepo(rancherRepo.Name)
+func installRancher(h helm.Helm, nodeIP string) error {
+	exists, err := h.IsRepo(rancherRepo.Name)
 	if err != nil {
 		return err
 	}
 	if !exists {
-		if err := helmCLI.AddRepo(&rancherRepo); err != nil {
+		if err := h.AddRepo(&rancherRepo); err != nil {
 			return err
 		}
 	}
@@ -66,7 +61,7 @@ func installRancher(nodeIP string) error {
 	for _, rls := range rancherReleases {
 		rlsInfo := rls.Info
 
-		installed, err := helmCLI.IsRelease(rlsInfo.Name)
+		installed, err := h.IsRelease(rlsInfo.Name)
 		if err != nil {
 			return err
 		}
@@ -74,7 +69,7 @@ func installRancher(nodeIP string) error {
 			rlsInfo.Description = "Installed by RanchHand"
 			rlsInfo.Wait = true
 
-			if err := helmCLI.InstallRelease(rls.Chart, &rlsInfo); err != nil {
+			if err := h.InstallRelease(rls.Chart, &rlsInfo); err != nil {
 				return err
 			}
 		}
