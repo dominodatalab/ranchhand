@@ -8,7 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const OutputDirectory = "rh-output"
+const OutputDirectory = "ranchhand-output"
 
 type Config struct {
 	SSHUser    string
