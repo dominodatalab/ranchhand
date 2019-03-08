@@ -6,12 +6,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	rootCmd = &cobra.Command{
-		Use:   "ranchhand",
-		Short: "HA Rancher installer",
-	}
-)
+var rootCmd = &cobra.Command{
+	Use:   "ranchhand",
+	Short: "HA Rancher installer",
+}
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
