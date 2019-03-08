@@ -5,15 +5,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/Masterminds/semver"
 	"github.com/dominodatalab/ranchhand/pkg/osi"
 	"github.com/dominodatalab/ranchhand/pkg/ssh"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
-
-const HostCheckTimeout = 1 * time.Minute // todo: might be too low
 
 func processHosts(cfg *Config) error {
 	errChan := make(chan error)
@@ -33,7 +30,7 @@ func processHosts(cfg *Config) error {
 			if err != nil {
 				errs = append(errs, err)
 			}
-		case <-time.After(HostCheckTimeout):
+		case <-time.After(cfg.Timeout):
 			return errors.New("host check timeout exceeded")
 		}
 	}

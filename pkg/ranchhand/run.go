@@ -2,6 +2,7 @@ package ranchhand
 
 import (
 	"os"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -10,9 +11,10 @@ const OutputDirectory = "rh-output"
 
 type Config struct {
 	SSHUser    string
-	SSHPort    uint8
+	SSHPort    uint
 	SSHKeyPath string
 	Nodes      []string
+	Timeout    time.Duration
 }
 
 // required steps:
