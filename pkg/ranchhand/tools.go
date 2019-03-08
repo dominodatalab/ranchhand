@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/sirupsen/logrus"
 	"github.com/mholt/archiver"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 type RequiredToolURLs struct {
@@ -18,16 +18,17 @@ type RequiredToolURLs struct {
 	RKE     string
 }
 
+// todo: need a better way structure for managing tool versions
 var PlatformToolURLs = map[string]RequiredToolURLs{
 	"darwin": {
 		Kubectl: "https://storage.googleapis.com/kubernetes-release/release/v1.13.3/bin/darwin/amd64/kubectl",
 		Helm:    "https://storage.googleapis.com/kubernetes-helm/helm-v2.12.3-darwin-amd64.tar.gz",
-		RKE:     "https://github.com/rancher/rke/releases/download/v0.2.0-rc7/rke_darwin-amd64",
+		RKE:     "https://github.com/rancher/rke/releases/download/v0.1.17/rke_darwin-amd64",
 	},
 	"linux": {
 		Kubectl: "https://storage.googleapis.com/kubernetes-release/release/v1.13.3/bin/linux/amd64/kubectl",
 		Helm:    "https://storage.googleapis.com/kubernetes-helm/helm-v2.12.3-linux-amd64.tar.gz",
-		RKE:     "https://github.com/rancher/rke/releases/download/v0.1.16/rke_linux-amd64",
+		RKE:     "https://github.com/rancher/rke/releases/download/v0.1.17/rke_linux-amd64",
 	},
 }
 
