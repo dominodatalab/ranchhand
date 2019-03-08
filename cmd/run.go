@@ -37,7 +37,7 @@ func init() {
 	runCmd.Flags().StringSliceVarP(&nodeIPs, "node-ips", "n", []string{}, "List of remote hosts")
 	runCmd.Flags().StringVarP(&sshUser, "ssh-user", "u", "root", "User used to remote host")
 	runCmd.Flags().UintVarP(&sshPort, "ssh-port", "p", 22, "Port to connect to on the remote host")
-	runCmd.Flags().StringVarP(&sshKeyPath, "ssh-key-path", "k", "", "Path to private key")
+	runCmd.Flags().StringVarP(&sshKeyPath, "ssh-key-path", "i", "", "Path to private key")
 	runCmd.Flags().UintVarP(&timeout, "timeout", "t", 300, "The duration (in seconds) RanchHand will wait process all hosts")
 
 	runCmd.MarkFlagRequired("node-ips")
