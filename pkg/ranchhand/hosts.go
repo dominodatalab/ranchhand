@@ -16,11 +16,9 @@ func processHosts(cfg *Config) error {
 	errChan := make(chan error)
 
 	for _, hostname := range cfg.Nodes {
-		hostAddr := fmt.Sprintf("%s:%d", hostname, cfg.SSHPort)
-
-		go func(addr, user, keyPath string, c chan<- error) {
-			c <- processHost(addr, user, keyPath)
-		}(hostAddr, cfg.SSHUser, cfg.SSHKeyPath, errChan)
+		go func(hostname, sshUser, sshProxyHost, sshProxyUser, sshKeyPath string, sshPort uint, c chan<- error) {
+			c <- processHost(hostname, sshUser, sshProxyHost, sshProxyUser, sshKeyPath, sshPort)
+		}(hostname, cfg.SSHUser, cfg.SSHProxyHost, cfg.SSHProxyUser, cfg.SSHKeyPath, cfg.SSHPort, errChan)
 	}
 
 	var errs []error
@@ -42,18 +40,18 @@ func processHosts(cfg *Config) error {
 	return nil
 }
 
-func processHost(addr, username, keyPath string) error {
-	client, err := ssh.Connect(addr, username, keyPath)
+func processHost(hostname, sshUser, sshProxyHost, sshProxyUser, keyPath string, sshPort uint) error {
+	client, err := ssh.Connect(hostname, sshUser, sshProxyHost, sshProxyUser, keyPath, sshPort)
 	if err != nil {
 		return err
 	}
 
 	// enforce requirements
-	i, err := client.ExecuteCmd("cat /etc/os-release")
+	osrelease, _, _, err := client.Run("cat /etc/os-release")
 	if err != nil {
 		return errors.Wrap(err, "os info check failed")
 	}
-	osInfo := osi.Parse(i)
+	osInfo := osi.Parse(osrelease)
 
 	var vErr error
 	switch osInfo.ID {
@@ -73,12 +71,15 @@ func processHost(addr, username, keyPath string) error {
 	// install docker client and server
 	// todo: this check is not good enough. if the provision step bombs out but docker is installed, it will never know
 	// 	what was completed. we need something atomic or some touchfile
-	dockerV, err := client.ExecuteCmd("sudo docker version --format '{{.Server.Version}}'")
+	dockerV, _, _, err := client.Run("sudo docker version --format '{{.Server.Version}}'")
 	if err == nil { // docker is already installed
-		v1, err := semver.NewVersion(dockerV)
+		v1, err := semver.NewVersion(strings.TrimSpace(dockerV))
+		if dockerV != "17.03.3-ce" {
+                }
 		if err != nil {
 			return err
 		}
+                return err
 
 		v2, err := semver.NewVersion("17.03.3-ce")
 		if err != nil {
@@ -115,9 +116,9 @@ func processHost(addr, username, keyPath string) error {
 			return errors.New("cannot install docker-ee on rhel, contact admin")
 		}
 
-		logrus.Infof("installing docker [%s] on host [%s]", "17.03.3-ce", addr)
+		logrus.Infof("installing docker [%s] on host [%s]", "17.03.3-ce", hostname)
 		cmds = append(cmds, "sudo usermod -aG docker $USER")
-		_, err := client.ExecuteCmd(strings.Join(cmds, " && "))
+		_, _, _, err := client.Run(strings.Join(cmds, " && "))
 		if err != nil {
 			panic(err)
 		}

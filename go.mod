@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/Masterminds/semver v1.4.2
+	github.com/appleboy/easyssh-proxy v1.2.0
 	github.com/dsnet/compress v0.0.0-20171208185109-cc9eb1d7ad76 // indirect
 	github.com/gogo/protobuf v1.2.1 // indirect
 	github.com/golang/protobuf v1.3.0 // indirect
@@ -28,7 +29,7 @@ require (
 	github.com/spf13/pflag v1.0.3 // indirect
 	github.com/ulikunitz/xz v0.5.6 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
-	golang.org/x/crypto v0.0.0-20190225124518-7f87c0fbb88b
+	golang.org/x/crypto v0.0.0-20190228161510-8dd112bcdc25
 	golang.org/x/net v0.0.0-20190228165749-92fc7df08ae7 // indirect
 	golang.org/x/oauth2 v0.0.0-20190226205417-e64efc72b421 // indirect
 	golang.org/x/sys v0.0.0-20190228124157-a34e9553db1e // indirect

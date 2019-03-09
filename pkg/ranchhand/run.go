@@ -11,11 +11,13 @@ import (
 const OutputDirectory = "ranchhand-output"
 
 type Config struct {
-	SSHUser    string
-	SSHPort    uint
-	SSHKeyPath string
-	Nodes      []string
-	Timeout    time.Duration
+	SSHUser          string
+	SSHPort          uint
+        SSHProxyHost     string
+        SSHProxyUser     string
+	SSHKeyPath       string
+	Nodes           []string
+	Timeout         time.Duration
 }
 
 // required steps:

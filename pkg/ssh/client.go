@@ -1,58 +1,32 @@
 package ssh
 
 import (
-	"io/ioutil"
-	"strings"
+        "fmt"
 	"time"
 
-	"github.com/pkg/errors"
-	"golang.org/x/crypto/ssh"
+        "github.com/appleboy/easyssh-proxy"
 )
 
 const Timeout = 5 * time.Second
 
-type Client struct {
-	inner *ssh.Client
-}
+func Connect(hostname, sshUser, proxyHost, proxyUser, sshKeyPath string, sshPort uint) (*easyssh.MakeConfig, error) {
+    port := fmt.Sprint(sshPort)
+    ssh := &easyssh.MakeConfig{
+        User: sshUser,
+        Server: hostname,
+        Port: port,
+        KeyPath: sshKeyPath,
+        Timeout: Timeout,
+    }
 
-func Connect(host, user, sshKeyPath string) (*Client, error) {
-	buffer, err := ioutil.ReadFile(sshKeyPath)
-	if err != nil {
-		return nil, err
-	}
+    if proxyHost != "" {
+        ssh.Proxy = easyssh.DefaultConfig{
+            User: proxyUser,
+            Server: proxyHost,
+            Port: port,
+            KeyPath: sshKeyPath,
+        }
+    }
 
-	signer, err := ssh.ParsePrivateKey(buffer)
-	if err != nil {
-		return nil, err
-	}
-	certAuth := ssh.PublicKeys(signer)
-
-	config := &ssh.ClientConfig{
-		User:            user,
-		Auth:            []ssh.AuthMethod{certAuth},
-		Timeout:         Timeout,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-	}
-	client, err := ssh.Dial("tcp", host, config)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to dial host")
-	}
-
-	return &Client{inner: client}, nil
-}
-
-func (c *Client) ExecuteCmd(cmd string) (string, error) {
-	session, err := c.inner.NewSession()
-	if err != nil {
-		return "", errors.Wrap(err, "failed to create new session")
-	}
-	defer session.Close()
-
-	buffer, err := session.CombinedOutput(cmd)
-	output := string(buffer)
-	if err != nil {
-		return "", errors.Wrapf(err, "failed to run remote command: %s", output)
-	}
-
-	return strings.TrimSpace(output), nil
+    return ssh, nil
 }
