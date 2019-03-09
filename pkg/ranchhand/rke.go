@@ -20,11 +20,14 @@ ssh_key_path: {{ .SSHKeyPath }}
 ignore_docker_version: false
 
 nodes:
-{{- range .Nodes }}
+{{- range $index, $element := .Nodes }}
   - address: {{ . }}
     user: {{ $.SSHUser }}
     port: {{ $.SSHPort }}
     role: [controlplane,worker,etcd]
+    {{- with (index $.NodeInternalIPs $index) }}
+    internal_address: {{ . }}
+    {{- end }}
 {{- end }}
 
 {{- if .SSHProxyHost }}

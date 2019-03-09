@@ -17,6 +17,7 @@ type Config struct {
         SSHProxyUser     string
 	SSHKeyPath       string
 	Nodes           []string
+        NodeInternalIPs []string
 	Timeout         time.Duration
 }
 
