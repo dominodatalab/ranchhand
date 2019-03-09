@@ -13,8 +13,6 @@ var (
         internalIPs  []string
 	sshUser      string
 	sshPort      uint
-        sshProxyHost string
-        sshProxyUser string
 	sshKeyPath   string
 	timeout      uint
 
@@ -27,8 +25,6 @@ var (
                                 NodeInternalIPs: internalIPs,
 				SSHUser:         sshUser,
 				SSHPort:         sshPort,
-                                SSHProxyUser:    sshProxyUser,
-                                SSHProxyHost:    sshProxyHost,
 				SSHKeyPath:      sshKeyPath,
 				Timeout:         time.Duration(timeout) * time.Second,
 			}
@@ -44,8 +40,6 @@ func init() {
         runCmd.Flags().StringSliceVarP(&internalIPs, "internal-ips", "", []string{}, "Comma-delimited list of hosts' private ips (optional)")
 	runCmd.Flags().StringVarP(&sshUser, "ssh-user", "u", "root", "User used to remote host")
 	runCmd.Flags().UintVarP(&sshPort, "ssh-port", "p", 22, "Port to connect to on the remote host")
-	runCmd.Flags().StringVarP(&sshProxyHost, "ssh-proxy-host", "", "", "Bastion host to proxy SSH connections through")
-	runCmd.Flags().StringVarP(&sshProxyUser, "ssh-proxy-user", "", "", "Bastion host SSH Username")
 	runCmd.Flags().StringVarP(&sshKeyPath, "ssh-key-path", "i", "", "Path to private key")
 	runCmd.Flags().UintVarP(&timeout, "timeout", "t", 300, "The duration (in seconds) RanchHand will wait process all hosts")
 

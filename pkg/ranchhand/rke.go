@@ -30,14 +30,6 @@ nodes:
     {{- end }}
 {{- end }}
 
-{{- if .SSHProxyHost }}
-bastion_host:
-    address: {{ .SSHProxyHost }}
-    user: {{ .SSHProxyUser }}
-    port: {{ .SSHPort }}
-    ssh_key_path: {{ .SSHKeyPath }}
-{{- end }}
-
 services:
   etcd:
     snapshot: true

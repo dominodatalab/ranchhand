@@ -13,8 +13,6 @@ const OutputDirectory = "ranchhand-output"
 type Config struct {
 	SSHUser          string
 	SSHPort          uint
-        SSHProxyHost     string
-        SSHProxyUser     string
 	SSHKeyPath       string
 	Nodes           []string
         NodeInternalIPs []string

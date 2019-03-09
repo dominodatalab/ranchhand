@@ -16,9 +16,9 @@ func processHosts(cfg *Config) error {
 	errChan := make(chan error)
 
 	for _, hostname := range cfg.Nodes {
-		go func(hostname, sshUser, sshProxyHost, sshProxyUser, sshKeyPath string, sshPort uint, c chan<- error) {
-			c <- processHost(hostname, sshUser, sshProxyHost, sshProxyUser, sshKeyPath, sshPort)
-		}(hostname, cfg.SSHUser, cfg.SSHProxyHost, cfg.SSHProxyUser, cfg.SSHKeyPath, cfg.SSHPort, errChan)
+		go func(hostname, sshUser, sshKeyPath string, sshPort uint, c chan<- error) {
+			c <- processHost(hostname, sshUser, sshKeyPath, sshPort)
+		}(hostname, cfg.SSHUser, cfg.SSHKeyPath, cfg.SSHPort, errChan)
 	}
 
 	var errs []error
@@ -40,8 +40,8 @@ func processHosts(cfg *Config) error {
 	return nil
 }
 
-func processHost(hostname, sshUser, sshProxyHost, sshProxyUser, keyPath string, sshPort uint) error {
-	client, err := ssh.Connect(hostname, sshUser, sshProxyHost, sshProxyUser, keyPath, sshPort)
+func processHost(hostname, sshUser, keyPath string, sshPort uint) error {
+	client, err := ssh.Connect(hostname, sshUser, keyPath, sshPort)
 	if err != nil {
 		return err
 	}
