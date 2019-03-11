@@ -74,8 +74,6 @@ func processHost(hostname, sshUser, keyPath string, sshPort uint) error {
 	dockerV, _, _, err := client.Run("sudo docker version --format '{{.Server.Version}}'")
 	if err == nil { // docker is already installed
 		v1, err := semver.NewVersion(strings.TrimSpace(dockerV))
-		if dockerV != "17.03.3-ce" {
-                }
 		if err != nil {
 			return err
 		}
@@ -113,7 +111,14 @@ func processHost(hostname, sshUser, keyPath string, sshPort uint) error {
 				"sudo systemctl start docker",
 			)
 		case osi.RHELOS:
-			return errors.New("cannot install docker-ee on rhel, contact admin")
+			cmds = append(cmds,
+				"sudo yum remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine",
+                                "sudo subscription-manager repos --enable rhel-7-server-extras-rpms || echo 'Error enabling rhel extras repo, continuing...'",
+				"sudo sudo yum install -y yum-utils device-mapper-persistent-data lvm2",
+				"sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo",
+				"sudo yum install -y docker-ce-18.09.2 docker-ce-cli-18.09.2 containerd.io",
+				"sudo systemctl start docker",
+			)
 		}
 
 		logrus.Infof("installing docker [%s] on host [%s]", "17.03.3-ce", hostname)
