@@ -12,15 +12,15 @@ function setup_instance() {
     --tags "key=Environment,value=Test key=BuildUrl,value=$CIRCLE_BUILD_URL"
 
   local COUNTER=0
-  while [[ $COUNTER -lt 10 ]]; do
+  while [[ $COUNTER -lt 12 ]]; do
     state=$(aws lightsail get-instance-state --instance-name $INSTANCE_NAME | jq -r '.state.name')
     if [[ $state == "running" ]]; then
       break
     fi
     let COUNTER+=1
 
-    echo "$INSTANCE_NAME is not ready (state: $state), trying again in 5 secs"
-    sleep 5
+    echo "$INSTANCE_NAME is not ready (state: $state), trying again in 10 secs"
+    sleep 10
   done
 
   aws lightsail open-instance-public-ports \
