@@ -30,3 +30,15 @@ func Parse(s string) *Info {
 		PrettyName: info["PRETTY_NAME"],
 	}
 }
+
+func (i *Info) IsUbuntu() bool {
+	return i.ID == UbuntuOS
+}
+
+func (i *Info) IsCentOS() bool {
+	return i.ID == CentOS
+}
+
+func (i *Info) IsRHEL() bool {
+	return i.ID == RHELOS
+}
