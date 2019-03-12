@@ -5,11 +5,17 @@ executors:
     - image: circleci/golang:1.12
     environment:
       GORELEASER_VERSION: v0.102.0
+      AWSCLI_VERSION: 1.16.122
 jobs:
   test_ubuntu:
     executor: builder
     steps:
     - checkout
+    - run:
+        name: Install system requirements
+        command: |
+          sudo apt-get install -y python3-pip
+          pip3 install awscli==$AWSCLI_VERSION --upgrade
     - restore_cache:
         keys:
         - v1-gomod-cache-{{ checksum "go.sum" }}
@@ -20,6 +26,14 @@ jobs:
         key: v1-gomod-cache-{{ checksum "go.sum" }}
         paths:
         - /go/pkg/mod
+    - run:
+        name: Create test environment
+        command: test/e2e/setup.sh
+    - run:
+        command: cat instance-ip
+    - run:
+        when: always
+        command: test/e2e/teardown.sh
   release:
     executor: builder
     steps:
