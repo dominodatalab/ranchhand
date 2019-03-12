@@ -15,4 +15,4 @@
 ranchhand-output/
 
 # End-to-end vagrant private dirs
-e2e/.vagrant/
+test/e2e/.vagrant/
