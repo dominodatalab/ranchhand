@@ -10,8 +10,24 @@ jobs:
     machine: true
     steps:
     - checkout
-    - run: sudo apt-get install -y vagrant virtualbox
-    - run: pwd
+    - run:
+        name: Update golang
+        command:
+          curl -L https://dl.google.com/go/go1.12.linux-amd64.tar.gz | tar -xzf
+          sudo rm -rf /usr/local/go
+          sudo mv go /usr/local/
+    - run:
+        name: Build project
+        command: make build
+    - run:
+        name: Install system requirements
+        command: sudo apt-get install -y vagrant virtualbox
+    - run:
+        name: Create vagrant environment
+        command: cd test/e2e && vagrant up
+    - run:
+        name: Execute ranchhand
+        command: ./ranchhand up -n 192.168.50.10 -u vagrant -i ~/.ssh/id_rsa
   release:
     executor: builder
     steps:
