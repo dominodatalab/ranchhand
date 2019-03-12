@@ -7,30 +7,19 @@ executors:
       GORELEASER_VERSION: v0.102.0
 jobs:
   test_ubuntu:
-    machine: true
+    executor: builder
     steps:
     - checkout
-    - run:
-        name: Update golang
-        command: |
-          curl -L https://dl.google.com/go/go1.12.linux-amd64.tar.gz | tar -xz
-          sudo rm -rf /usr/local/go
-          sudo mv go /usr/local/
+    # - restore_cache:
+    #     key:
+    #     - v1-gomod-cache-{{ checksum "go.sum" }}
     - run:
         name: Build project
         command: make build
-    - run:
-        name: Install system requirements
-        command: |
-          sudo apt-get install -y linux-headers-$(uname -r) virtualbox vagrant
-          exit 1
-          # sudo dpkg-reconfigure virtualbox-dkms
-    - run:
-        name: Create vagrant environment
-        command: cd test/e2e && vagrant up
-    - run:
-        name: Execute ranchhand
-        command: ./ranchhand up -n 192.168.50.10 -u vagrant -i ~/.ssh/id_rsa
+    # - save_cache:
+    #     key: v1-gomod-cache-{{ checksum "go.sum" }}
+    #     paths:
+    #     - ~/.go_workspace/pkg/mod
   release:
     executor: builder
     steps:
