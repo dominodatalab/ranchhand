@@ -123,9 +123,9 @@ func processHost(hostname, sshUser, keyPath string, sshPort uint) error {
                                 "timeout 3m /bin/bash -c 'until sudo docker version; do sleep 1; done'")
 		stdout, stderr, isTimeout, err := client.ExecuteCmd(strings.Join(cmds, " && "))
 		if err != nil {
-                    panic(fmt.Sprintf("Host %s docker installation returned error: %s\nstdout: %s\nstderr: %s", hostname, err, stdout, stderr))
-		} else if isTimeout {
-                    panic(fmt.Sprintf("Host %s docker installation timed out.\nstdout: %s\nstderr: %s", hostname, stdout, stderr))
+                    return errors.Errorf("Host %s docker installation returned error: %s\nstdout: %s\nstderr: %s", hostname, err, stdout, stderr)
+		} else if !isTimeout {
+                    return errors.Errorf("Host %s docker installation timed out.\nstdout: %s\nstderr: %s", hostname, stdout, stderr)
                 }
 	}
 
