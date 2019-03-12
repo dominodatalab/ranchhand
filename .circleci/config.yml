@@ -35,10 +35,7 @@ jobs:
         command: test/e2e/run.sh setup
     - run:
         name: Execute ranchhand
-        command: ./ranchhand run \
-          --node-ips $(cat instance-ip) \
-          --ssh-user ubuntu \
-          --ssh-key-path ~/.ssh/id_rsa_5e5a997a9869ec6b38ea4fc586c5ccf6
+        command: ./ranchhand run --node-ips $(cat instance-ip) --ssh-user ubuntu --ssh-key-path ~/.ssh/id_rsa_5e5a997a9869ec6b38ea4fc586c5ccf6
     - run:
         name: Teardown test environment
         when: always
