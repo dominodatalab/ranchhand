@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -ex
 
-INSTANCE_NAME="${CIRCLE_JOB:-manual}-${CIRCLE_BUILD_NUM:-$USER}"
+INSTANCE_NAME="ranchhand-${CIRCLE_WORKFLOW_JOB_ID:-local-$USER}"
 
 aws lightsail create-instances \
   --instance-names $INSTANCE_NAME \
   --availability-zone us-east-1a \
   --blueprint-id ubuntu_16_04_2 \
   --bundle-id medium_2_0 \
-  --tags "key=Environment,value=Test"
+  --tags "key=Environment,value=Test key=BuildUrl,value=$CIRCLE_BUILD_URL"
 
 COUNTER=0
 while [[ $COUNTER -lt 10 ]]; do
