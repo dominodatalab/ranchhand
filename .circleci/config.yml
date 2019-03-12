@@ -6,6 +6,12 @@ executors:
     environment:
       GORELEASER_VERSION: v0.102.0
 jobs:
+  test_ubuntu:
+    machine: true
+    steps:
+    - checkout
+    - run: sudo apt-get install -y vagrant virtualbox
+    - run: pwd
   release:
     executor: builder
     steps:
@@ -13,6 +19,9 @@ jobs:
     - run: curl -sL https://git.io/goreleaser | VERSION=${GORELEASER_VERSION} bash
 workflows:
   version: 2
+  e2e_tests:
+    jobs:
+    - test_ubuntu
   release:
     jobs:
     - release:
