@@ -9,6 +9,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+// todo: should we add retry logic here?
 const Timeout = 5 * time.Second
 
 type Client struct {
