@@ -10,16 +10,16 @@ jobs:
     executor: builder
     steps:
     - checkout
-    # - restore_cache:
-    #     key:
-    #     - v1-gomod-cache-{{ checksum "go.sum" }}
+    - restore_cache:
+        key:
+        - v1-gomod-cache-{{ checksum "go.sum" }}
     - run:
         name: Build project
         command: make build
-    # - save_cache:
-    #     key: v1-gomod-cache-{{ checksum "go.sum" }}
-    #     paths:
-    #     - ~/.go_workspace/pkg/mod
+    - save_cache:
+        key: v1-gomod-cache-{{ checksum "go.sum" }}
+        paths:
+        - /go/pkg/mod
   release:
     executor: builder
     steps:
