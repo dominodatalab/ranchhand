@@ -20,12 +20,13 @@ var (
 		Short: "Create a Rancher HA installation",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg := ranchhand.Config{
-				Nodes:      nodeIPs,
+				Nodes:      ranchhand.BuildNodes(nodeIPs),
 				SSHUser:    sshUser,
 				SSHPort:    sshPort,
 				SSHKeyPath: sshKeyPath,
 				Timeout:    time.Duration(timeout) * time.Second,
 			}
+
 			if err := ranchhand.Run(&cfg); err != nil {
 				log.Fatalln(err)
 			}
@@ -34,7 +35,7 @@ var (
 )
 
 func init() {
-	runCmd.Flags().StringSliceVarP(&nodeIPs, "node-ips", "n", []string{}, "List of remote hosts")
+	runCmd.Flags().StringSliceVarP(&nodeIPs, "node-ips", "n", []string{}, "List of remote hosts (comma-delimited)")
 	runCmd.Flags().StringVarP(&sshUser, "ssh-user", "u", "root", "User used to remote host")
 	runCmd.Flags().UintVarP(&sshPort, "ssh-port", "p", 22, "Port to connect to on the remote host")
 	runCmd.Flags().StringVarP(&sshKeyPath, "ssh-key-path", "i", "", "Path to private key")

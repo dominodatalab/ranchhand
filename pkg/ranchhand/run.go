@@ -10,11 +10,16 @@ import (
 
 const OutputDirectory = "ranchhand-output"
 
+type Node struct {
+	PublicIP  string
+	PrivateIP string
+}
+
 type Config struct {
 	SSHUser    string
 	SSHPort    uint
 	SSHKeyPath string
-	Nodes      []string
+	Nodes      []Node
 	Timeout    time.Duration
 }
 
@@ -54,5 +59,5 @@ func Run(cfg *Config) error {
 	}
 
 	log.Info("deploying rancher application")
-	return installRancher(hClient, cfg.Nodes[0])
+	return installRancher(hClient, cfg.Nodes[0].PublicIP)
 }
