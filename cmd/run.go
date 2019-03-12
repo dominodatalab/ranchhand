@@ -9,12 +9,12 @@ import (
 )
 
 var (
-	nodeIPs      []string
-        internalIPs  []string
-	sshUser      string
-	sshPort      uint
-	sshKeyPath   string
-	timeout      uint
+	nodeIPs     []string
+	internalIPs []string
+	sshUser     string
+	sshPort     uint
+	sshKeyPath  string
+	timeout     uint
 
 	runCmd = &cobra.Command{
 		Use:   "run",
@@ -22,7 +22,7 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg := ranchhand.Config{
 				Nodes:           nodeIPs,
-                                NodeInternalIPs: internalIPs,
+				NodeInternalIPs: internalIPs,
 				SSHUser:         sshUser,
 				SSHPort:         sshPort,
 				SSHKeyPath:      sshKeyPath,
@@ -36,8 +36,8 @@ var (
 )
 
 func init() {
-        runCmd.Flags().StringSliceVarP(&nodeIPs, "node-ips", "n", []string{}, "Comma-delimited list of remote hosts")
-        runCmd.Flags().StringSliceVarP(&internalIPs, "internal-ips", "", []string{}, "Comma-delimited list of hosts' private ips (optional)")
+	runCmd.Flags().StringSliceVarP(&nodeIPs, "node-ips", "n", []string{}, "Comma-delimited list of remote hosts")
+	runCmd.Flags().StringSliceVarP(&internalIPs, "internal-ips", "", []string{}, "Comma-delimited list of hosts' private ips (optional)")
 	runCmd.Flags().StringVarP(&sshUser, "ssh-user", "u", "root", "User used to remote host")
 	runCmd.Flags().UintVarP(&sshPort, "ssh-port", "p", 22, "Port to connect to on the remote host")
 	runCmd.Flags().StringVarP(&sshKeyPath, "ssh-key-path", "i", "", "Path to private key")
