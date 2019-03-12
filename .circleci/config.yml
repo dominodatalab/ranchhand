@@ -12,7 +12,7 @@ jobs:
     - checkout
     - run:
         name: Update golang
-        command:
+        command: |
           curl -L https://dl.google.com/go/go1.12.linux-amd64.tar.gz | tar -xzf
           sudo rm -rf /usr/local/go
           sudo mv go /usr/local/
