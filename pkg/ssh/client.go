@@ -9,7 +9,11 @@ import (
 
 const Timeout = 5 * time.Second
 
-func Connect(hostname, sshUser, sshKeyPath string, sshPort uint) (*easyssh.MakeConfig, error) {
+type Client struct {
+    inner *easyssh.MakeConfig
+}
+
+func Connect(hostname, sshUser, sshKeyPath string, sshPort uint) (*Client) {
     port := fmt.Sprint(sshPort)
     ssh := &easyssh.MakeConfig{
         User: sshUser,
@@ -19,5 +23,9 @@ func Connect(hostname, sshUser, sshKeyPath string, sshPort uint) (*easyssh.MakeC
         Timeout: Timeout,
     }
 
-    return ssh, nil
+    return &Client{inner: ssh}
+}
+
+func (c *Client) ExecuteCmd(cmd string) (string, string, bool, error) {
+    return(c.inner.Run(cmd, 300 * time.Second))
 }

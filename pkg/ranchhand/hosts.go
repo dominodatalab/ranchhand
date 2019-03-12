@@ -41,13 +41,10 @@ func processHosts(cfg *Config) error {
 }
 
 func processHost(hostname, sshUser, keyPath string, sshPort uint) error {
-	client, err := ssh.Connect(hostname, sshUser, keyPath, sshPort)
-	if err != nil {
-		return err
-	}
+	client := ssh.Connect(hostname, sshUser, keyPath, sshPort)
 
 	// enforce requirements
-	osrelease, _, _, err := client.Run("cat /etc/os-release")
+	osrelease, _, _, err := client.ExecuteCmd("cat /etc/os-release")
 	if err != nil {
 		return errors.Wrap(err, "os info check failed")
 	}
@@ -71,7 +68,7 @@ func processHost(hostname, sshUser, keyPath string, sshPort uint) error {
 	// install docker client and server
 	// todo: this check is not good enough. if the provision step bombs out but docker is installed, it will never know
 	// 	what was completed. we need something atomic or some touchfile
-	dockerV, _, _, err := client.Run("sudo docker version --format '{{.Server.Version}}'")
+	dockerV, _, _, err := client.ExecuteCmd("sudo docker version --format '{{.Server.Version}}'")
 	if err == nil { // docker is already installed
 		v1, err := semver.NewVersion(strings.TrimSpace(dockerV))
 		if err != nil {
@@ -122,11 +119,14 @@ func processHost(hostname, sshUser, keyPath string, sshPort uint) error {
 		}
 
 		logrus.Infof("installing docker [%s] on host [%s]", "17.03.3-ce", hostname)
-		cmds = append(cmds, "sudo usermod -aG docker $USER")
-		_, _, _, err := client.Run(strings.Join(cmds, " && "))
+		cmds = append(cmds, "sudo usermod -aG docker $USER",
+                                "timeout 3m /bin/bash -c 'until sudo docker version; do sleep 1; done'")
+		stdout, stderr, isTimeout, err := client.ExecuteCmd(strings.Join(cmds, " && "))
 		if err != nil {
-			panic(err)
-		}
+                    panic(fmt.Sprintf("Host %s docker installation returned error: %s\nstdout: %s\nstderr: %s", hostname, err, stdout, stderr))
+		} else if isTimeout {
+                    panic(fmt.Sprintf("Host %s docker installation timed out.\nstdout: %s\nstderr: %s", hostname, stdout, stderr))
+                }
 	}
 
 	return nil
