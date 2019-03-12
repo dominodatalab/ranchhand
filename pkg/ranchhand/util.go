@@ -4,6 +4,9 @@ import (
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/Masterminds/semver"
+	"github.com/pkg/errors"
 )
 
 func ensureDirectory(dir string) error {
@@ -30,4 +33,22 @@ func downloadFile(filepath, url string) error {
 
 	_, err = io.Copy(file, resp.Body)
 	return err
+}
+
+func constrainVersion(constraint, version string) error {
+	c, err := semver.NewConstraint(constraint)
+	if err != nil {
+		return err
+	}
+
+	v, err := semver.NewVersion(version)
+	if err != nil {
+		return err
+	}
+
+	if ok, errs := c.Validate(v); !ok {
+		return errors.Errorf("version validation failed: %v", errs)
+	}
+
+	return nil
 }
