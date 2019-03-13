@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/Masterminds/semver"
 	"github.com/pkg/errors"
@@ -51,4 +52,18 @@ func constrainVersion(constraint, version string) error {
 	}
 
 	return nil
+}
+
+func BuildNodes(nodeIPs []string) (nodes []Node) {
+	for _, compIP := range nodeIPs {
+		bits := strings.Split(compIP, ":")
+
+		node := Node{PublicIP: bits[0]}
+		if len(bits) == 2 {
+			node.PrivateIP = bits[1]
+		}
+		nodes = append(nodes, node)
+	}
+
+	return nodes
 }

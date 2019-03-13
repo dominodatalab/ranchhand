@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Rican7/retry"
+	"github.com/Rican7/retry/strategy"
 	"github.com/dominodatalab/ranchhand/pkg/osi"
 	"github.com/dominodatalab/ranchhand/pkg/ssh"
 	"github.com/pkg/errors"
@@ -41,6 +43,15 @@ var (
 			"sudo yum install -y yum-utils device-mapper-persistent-data lvm2",
 			"sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo",
 			"sudo yum install -y docker-ce-18.06.3.ce-3.el7 containerd.io",
+			"sudo systemctl enable docker",
+			"sudo systemctl start docker",
+		},
+		"rhel": {
+			"sudo subscription-manager repos --enable rhel-7-server-extras-rpms || echo 'Error enabling rhel extras repo, continuing...'",
+			"sudo yum install -y yum-utils device-mapper-persistent-data lvm2",
+			"sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo",
+			"sudo yum install -y docker-ce-18.09.2 docker-ce-cli-18.09.2 containerd.io",
+			"sudo systemctl enable docker",
 			"sudo systemctl start docker",
 		},
 	}
@@ -54,8 +65,8 @@ func processHosts(cfg *Config) error {
 	}
 
 	errChan := make(chan error)
-	for _, hostname := range cfg.Nodes {
-		hostAddr := fmt.Sprintf("%s:%d", hostname, cfg.SSHPort)
+	for _, node := range cfg.Nodes {
+		hostAddr := fmt.Sprintf("%s:%d", node.PublicIP, cfg.SSHPort)
 		routine := func(addr, user, keyPath string, c chan<- error) {
 			c <- processHost(addr, user, keyPath)
 		}
@@ -146,20 +157,26 @@ func installDocker(client *ssh.Client, osInfo *osi.Info) error {
 		return nil
 	}
 
-	var cmds []string
-	switch {
-	case osInfo.IsUbuntu(), osInfo.IsCentOS():
-		cmds = append(cmds, dockerInstallCmds[osInfo.ID]...)
-	case osInfo.IsRHEL():
-		return errors.New("cannot install docker-ee on rhel, contact admin")
-	}
-	cmds = append(cmds, "sudo usermod -aG docker $USER")
-
+	cmds := append(dockerInstallCmds[osInfo.ID], "sudo usermod -aG docker $USER")
 	if _, err := client.ExecuteCmd(strings.Join(cmds, " && ")); err != nil {
 		return errors.Wrap(err, "docker install failed")
 	}
 
-	_, err := client.ExecuteCmd(fmt.Sprintf("sudo touch %s", indicator))
+	err := retry.Retry(
+		func(attempt uint) (err error) {
+			if _, err = client.ExecuteCmd("docker version"); err != nil {
+				log.Warnf("attempt [%d] to verify docker is running failed", attempt)
+			}
+			return err
+		},
+		strategy.Wait(10*time.Second),
+		strategy.Limit(12),
+	)
+	if err != nil {
+		return errors.Wrap(err, "unable to verify docker install")
+	}
+
+	_, err = client.ExecuteCmd(fmt.Sprintf("sudo touch %s", indicator))
 	return errors.Wrap(err, "cannot mark docker install complete")
 }
 

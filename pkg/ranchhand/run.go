@@ -10,16 +10,19 @@ import (
 
 const OutputDirectory = "ranchhand-output"
 
+type Node struct {
+	PublicIP  string
+	PrivateIP string
+}
+
 type Config struct {
 	SSHUser    string
 	SSHPort    uint
 	SSHKeyPath string
-	Nodes      []string
+	Nodes      []Node
 	Timeout    time.Duration
 }
 
-// required steps:
-// todo: ensure the k8s cluster came up and is healthy
 func Run(cfg *Config) error {
 	log.Infof("ensuring output directory [%s] exists", OutputDirectory)
 	if err := ensureDirectory(OutputDirectory); err != nil {
@@ -54,5 +57,5 @@ func Run(cfg *Config) error {
 	}
 
 	log.Info("deploying rancher application")
-	return installRancher(hClient, cfg.Nodes[0])
+	return installRancher(hClient, cfg.Nodes[0].PublicIP)
 }
