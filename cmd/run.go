@@ -2,11 +2,23 @@ package cmd
 
 import (
 	"log"
+	"strings"
 	"time"
 
 	"github.com/dominodatalab/ranchhand/pkg/ranchhand"
 	"github.com/spf13/cobra"
 )
+
+const runExamples = `
+  # Single node cluster
+  ranchhand -n 54.78.22.1
+
+  # Multi-node cluster
+  ranchhand -n "54.78.22.1, 77.13.122.9"
+
+  # Cluster with nodes that need to use private IPs for internal communication
+  ranchhand -n "54.78.22.1:10.100.2.2, 77.13.122.9:10.100.2.5""
+`
 
 var (
 	nodeIPs    []string
@@ -16,8 +28,9 @@ var (
 	timeout    uint
 
 	runCmd = &cobra.Command{
-		Use:   "run",
-		Short: "Create a Rancher HA installation",
+		Use:     "run",
+		Short:   "Create a Rancher HA installation",
+		Example: strings.TrimLeft(runExamples, "\n"),
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg := ranchhand.Config{
 				Nodes:      ranchhand.BuildNodes(nodeIPs),
