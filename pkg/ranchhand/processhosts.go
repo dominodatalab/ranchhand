@@ -43,6 +43,13 @@ var (
 			"sudo yum install -y docker-ce-18.06.3.ce-3.el7 containerd.io",
 			"sudo systemctl start docker",
 		},
+		"rhel": {
+			"sudo subscription-manager repos --enable rhel-7-server-extras-rpms || echo 'Error enabling rhel extras repo, continuing...'",
+			"sudo yum install -y yum-utils device-mapper-persistent-data lvm2",
+			"sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo",
+			"sudo yum install -y docker-ce-18.09.2 docker-ce-cli-18.09.2 containerd.io",
+			"sudo systemctl start docker",
+		},
 	}
 )
 
@@ -146,18 +153,12 @@ func installDocker(client *ssh.Client, osInfo *osi.Info) error {
 		return nil
 	}
 
-	var cmds []string
-	switch {
-	case osInfo.IsUbuntu(), osInfo.IsCentOS():
-		cmds = append(cmds, dockerInstallCmds[osInfo.ID]...)
-	case osInfo.IsRHEL():
-		return errors.New("cannot install docker-ee on rhel, contact admin")
-	}
-	cmds = append(cmds, "sudo usermod -aG docker $USER")
-
+	cmds := append(dockerInstallCmds[osInfo.ID], "sudo usermod -aG docker $USER")
 	if _, err := client.ExecuteCmd(strings.Join(cmds, " && ")); err != nil {
 		return errors.Wrap(err, "docker install failed")
 	}
+
+	// todo: make sure docker is running
 
 	_, err := client.ExecuteCmd(fmt.Sprintf("sudo touch %s", indicator))
 	return errors.Wrap(err, "cannot mark docker install complete")
