@@ -67,7 +67,7 @@ func installKubernetes(cfg *Config) error {
 		return errors.Wrap(err, "cannot install kubernetes")
 	}
 
-	// todo: add cluster-ready check
+	// todo: ensure the k8s cluster came up and is healthy
 
 	return nil
 }

@@ -23,8 +23,6 @@ type Config struct {
 	Timeout    time.Duration
 }
 
-// required steps:
-// todo: ensure the k8s cluster came up and is healthy
 func Run(cfg *Config) error {
 	log.Infof("ensuring output directory [%s] exists", OutputDirectory)
 	if err := ensureDirectory(OutputDirectory); err != nil {
