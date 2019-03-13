@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Rican7/retry"
+	"github.com/Rican7/retry/strategy"
 	"github.com/dominodatalab/ranchhand/pkg/osi"
 	"github.com/dominodatalab/ranchhand/pkg/ssh"
 	"github.com/pkg/errors"
@@ -41,6 +43,15 @@ var (
 			"sudo yum install -y yum-utils device-mapper-persistent-data lvm2",
 			"sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo",
 			"sudo yum install -y docker-ce-18.06.3.ce-3.el7 containerd.io",
+			"sudo systemctl enable docker",
+			"sudo systemctl start docker",
+		},
+		"rhel": {
+			"sudo subscription-manager repos --enable rhel-7-server-extras-rpms || echo 'Error enabling rhel extras repo, continuing...'",
+			"sudo yum install -y yum-utils device-mapper-persistent-data lvm2",
+			"sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo",
+			"sudo yum install -y docker-ce-18.09.2 docker-ce-cli-18.09.2 containerd.io",
+			"sudo systemctl enable docker",
 			"sudo systemctl start docker",
 		},
 	}
@@ -54,13 +65,12 @@ func processHosts(cfg *Config) error {
 	}
 
 	errChan := make(chan error)
-	for _, hostname := range cfg.Nodes {
-		hostAddr := fmt.Sprintf("%s:%d", hostname, cfg.SSHPort)
-		routine := func(addr, user, keyPath string, c chan<- error) {
-			c <- processHost(addr, user, keyPath)
+	for _, node := range cfg.Nodes {
+		routine := func(addr string, port uint, user, keyPath string, c chan<- error) {
+			c <- processHost(addr, port, user, keyPath)
 		}
 
-		go routine(hostAddr, cfg.SSHUser, cfg.SSHKeyPath, errChan)
+		go routine(node.PublicIP, cfg.SSHPort, cfg.SSHUser, cfg.SSHKeyPath, errChan)
 	}
 
 	var errs []error
@@ -82,10 +92,10 @@ func processHosts(cfg *Config) error {
 }
 
 // connect to the host, enforce node requirements, and install docker onto a vm
-func processHost(addr, username, keyPath string) error {
+func processHost(addr string, port uint, username, keyPath string) error {
 	var osInfo *osi.Info
 
-	client, err := ssh.Connect(addr, username, keyPath)
+	client, err := ssh.Connect(addr, port, username, keyPath)
 	if err == nil {
 		osInfo, err = loadOSInfo(client)
 	}
@@ -146,20 +156,26 @@ func installDocker(client *ssh.Client, osInfo *osi.Info) error {
 		return nil
 	}
 
-	var cmds []string
-	switch {
-	case osInfo.IsUbuntu(), osInfo.IsCentOS():
-		cmds = append(cmds, dockerInstallCmds[osInfo.ID]...)
-	case osInfo.IsRHEL():
-		return errors.New("cannot install docker-ee on rhel, contact admin")
-	}
-	cmds = append(cmds, "sudo usermod -aG docker $USER")
-
+	cmds := append(dockerInstallCmds[osInfo.ID], "sudo usermod -aG docker $USER")
 	if _, err := client.ExecuteCmd(strings.Join(cmds, " && ")); err != nil {
 		return errors.Wrap(err, "docker install failed")
 	}
 
-	_, err := client.ExecuteCmd(fmt.Sprintf("sudo touch %s", indicator))
+	err := retry.Retry(
+		func(attempt uint) (err error) {
+			if _, err = client.ExecuteCmd("sudo docker version"); err != nil {
+				log.Warnf("attempt [%d] to verify docker is running failed on host [%s]", attempt, client.RemoteAddr())
+			}
+			return err
+		},
+		strategy.Wait(10*time.Second),
+		strategy.Limit(12),
+	)
+	if err != nil {
+		return errors.Wrap(err, "unable to verify docker install")
+	}
+
+	_, err = client.ExecuteCmd(fmt.Sprintf("sudo touch %s", indicator))
 	return errors.Wrap(err, "cannot mark docker install complete")
 }
 
@@ -188,7 +204,8 @@ func constrainCPU(client *ssh.Client) error {
 	}
 
 	if cpuCount < cpuRecommendation {
-		log.Warnf("cpu count [%d] is less than recommended value [%d]", cpuCount, cpuRecommendation)
+		log.Warnf("cpu count [%d] is less than recommended value [%d] on host [%s]",
+			cpuCount, cpuRecommendation, client.RemoteAddr())
 	}
 	return nil
 }
@@ -207,7 +224,8 @@ func constrainMemory(client *ssh.Client) error {
 	}
 
 	if memSize < memoryRecommendation {
-		log.Warnf("memory size [%.1fGB] is less than recommended value [%.1fGB]", memSize, memoryRecommendation)
+		log.Warnf("memory size [%.1fGB] is less than recommended value [%.1fGB] on host [%s]",
+			memSize, memoryRecommendation, client.RemoteAddr())
 	}
 	return nil
 }
