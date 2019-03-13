@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Rican7/retry"
+	"github.com/Rican7/retry/strategy"
 	"github.com/dominodatalab/ranchhand/pkg/osi"
 	"github.com/dominodatalab/ranchhand/pkg/ssh"
 	"github.com/pkg/errors"
@@ -61,8 +63,8 @@ func processHosts(cfg *Config) error {
 	}
 
 	errChan := make(chan error)
-	for _, hostname := range cfg.Nodes {
-		hostAddr := fmt.Sprintf("%s:%d", hostname, cfg.SSHPort)
+	for _, node := range cfg.Nodes {
+		hostAddr := fmt.Sprintf("%s:%d", node.PublicIP, cfg.SSHPort)
 		routine := func(addr, user, keyPath string, c chan<- error) {
 			c <- processHost(addr, user, keyPath)
 		}
@@ -158,9 +160,21 @@ func installDocker(client *ssh.Client, osInfo *osi.Info) error {
 		return errors.Wrap(err, "docker install failed")
 	}
 
-	// todo: make sure docker is running
+	err := retry.Retry(
+		func(attempt uint) (err error) {
+			if _, err = client.ExecuteCmd("docker version"); err != nil {
+				log.Warnf("attempt [%d] to verify docker is running failed", attempt)
+			}
+			return err
+		},
+		strategy.Wait(10*time.Second),
+		strategy.Limit(12),
+	)
+	if err != nil {
+		return errors.Wrap(err, "unable to verify docker install")
+	}
 
-	_, err := client.ExecuteCmd(fmt.Sprintf("sudo touch %s", indicator))
+	_, err = client.ExecuteCmd(fmt.Sprintf("sudo touch %s", indicator))
 	return errors.Wrap(err, "cannot mark docker install complete")
 }
 
