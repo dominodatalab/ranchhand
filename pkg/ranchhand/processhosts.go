@@ -66,12 +66,11 @@ func processHosts(cfg *Config) error {
 
 	errChan := make(chan error)
 	for _, node := range cfg.Nodes {
-		hostAddr := fmt.Sprintf("%s:%d", node.PublicIP, cfg.SSHPort)
-		routine := func(addr, user, keyPath string, c chan<- error) {
-			c <- processHost(addr, user, keyPath)
+		routine := func(addr string, port uint, user, keyPath string, c chan<- error) {
+			c <- processHost(addr, port, user, keyPath)
 		}
 
-		go routine(hostAddr, cfg.SSHUser, cfg.SSHKeyPath, errChan)
+		go routine(node.PublicIP, cfg.SSHPort, cfg.SSHUser, cfg.SSHKeyPath, errChan)
 	}
 
 	var errs []error
@@ -93,10 +92,10 @@ func processHosts(cfg *Config) error {
 }
 
 // connect to the host, enforce node requirements, and install docker onto a vm
-func processHost(addr, username, keyPath string) error {
+func processHost(addr string, port uint, username, keyPath string) error {
 	var osInfo *osi.Info
 
-	client, err := ssh.Connect(addr, username, keyPath)
+	client, err := ssh.Connect(addr, port, username, keyPath)
 	if err == nil {
 		osInfo, err = loadOSInfo(client)
 	}
