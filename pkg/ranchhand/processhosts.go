@@ -163,7 +163,7 @@ func installDocker(client *ssh.Client, osInfo *osi.Info) error {
 
 	err := retry.Retry(
 		func(attempt uint) (err error) {
-			if _, err = client.ExecuteCmd("newgrp - && docker version"); err != nil {
+			if _, err = client.ExecuteCmd("sudo docker version"); err != nil {
 				log.Warnf("attempt [%d] to verify docker is running failed on host [%s]", attempt, client.RemoteAddr())
 			}
 			return err
