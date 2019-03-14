@@ -94,8 +94,17 @@ func processHosts(cfg *Config) error {
 // connect to the host, enforce node requirements, and install docker onto a vm
 func processHost(addr string, port uint, username, keyPath string) error {
 	var osInfo *osi.Info
+	var client *ssh.Client
 
-	client, err := ssh.Connect(addr, port, username, keyPath)
+	err := retry.Retry(func(attempt uint) (err error) {
+		client, err = ssh.Connect(addr, port, username, keyPath)
+
+		if err != nil {
+			log.Warnf("ssh connect failed on host [%s], trying again in 5 secs", addr)
+		}
+		return err
+	}, strategy.Limit(6), strategy.Wait(5*time.Second))
+
 	if err == nil {
 		osInfo, err = loadOSInfo(client)
 	}
