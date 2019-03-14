@@ -2,6 +2,7 @@
 set -e
 
 INSTANCE_NAME="${INSTANCE_NAME:-"ranchhand-local-$USER"}"
+INSTANCE_BLUEPRINT_ID="${INSTANCE_BLUEPRINT_ID:-ubuntu_16_04_2}"
 
 function setup_instance() {
   if [[ -n $INSTANCE_TAGS ]]; then
@@ -13,7 +14,7 @@ function setup_instance() {
   aws lightsail create-instances \
     --instance-names $INSTANCE_NAME \
     --availability-zone us-east-1a \
-    --blueprint-id ubuntu_16_04_2 \
+    --blueprint-id $INSTANCE_BLUEPRINT_ID \
     --bundle-id medium_2_0 \
     --tags ${tags[@]}
 
