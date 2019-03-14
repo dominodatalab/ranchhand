@@ -33,8 +33,8 @@ jobs:
     - run:
         name: Configure test env
         command: |
-          'export INSTANCE_NAME="ranchhand-$CIRCLE_WORKFLOW_JOB_ID-$CIRCLE_BUILD_NUM"' >> $BASH_ENV
-          'export INSTANCE_TAGS="key=Repo,value=$CIRCLE_REPOSITORY_URL key=Branch,value=$CIRCLE_BRANCH key=Commit,value=$CIRCLE_SHA1 key=BuildUrl,value=$CIRCLE_BUILD_URL"' >> $BASH_ENV
+          echo 'export INSTANCE_NAME="ranchhand-$CIRCLE_WORKFLOW_JOB_ID-$CIRCLE_BUILD_NUM"' >> $BASH_ENV
+          echo 'export INSTANCE_TAGS="key=Repo,value=$CIRCLE_REPOSITORY_URL key=Branch,value=$CIRCLE_BRANCH key=Commit,value=$CIRCLE_SHA1 key=BuildUrl,value=$CIRCLE_BUILD_URL"' >> $BASH_ENV
     - run:
         name: Create test env
         command: test/e2e/run.sh setup
