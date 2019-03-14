@@ -50,7 +50,7 @@ var (
 			"sudo subscription-manager repos --enable rhel-7-server-extras-rpms || echo 'Error enabling rhel extras repo, continuing...'",
 			"sudo yum install -y yum-utils device-mapper-persistent-data lvm2",
 			"sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo",
-			"sudo yum install -y docker-ce-18.09.2 docker-ce-cli-18.09.2 containerd.io",
+			"sudo yum install -y docker-ce-18.06.3.ce-3.el7 containerd.io",
 			"sudo systemctl enable docker",
 			"sudo systemctl start docker",
 		},
