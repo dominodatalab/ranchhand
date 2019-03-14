@@ -1,32 +1,14 @@
 version: 2.1
 executors:
-  builder:
+  default:
     docker:
     - image: circleci/golang:1.12
     environment:
       GORELEASER_VERSION: v0.102.0
       AWSCLI_VERSION: 1.16.122
-jobs:
-  build:
-    executor: builder
-    steps:
-    - checkout
-    - restore_cache:
-        keys:
-        - v1-gomod-cache-{{ checksum "go.sum" }}
-    - run:
-        name: Build project
-        command: make build
-    - save_cache:
-        key: v1-gomod-cache-{{ checksum "go.sum" }}
-        paths:
-        - /go/pkg/mod
-    - persist_to_workspace:
-        root: .
-        paths:
-        - ranchhand
-  e2e_ubuntu:
-    executor: builder
+commands:
+  launch_e2e:
+    description: ""
     steps:
     - checkout
     - attach_workspace:
@@ -59,16 +41,39 @@ jobs:
         name: Teardown test env
         when: always
         command: test/e2e/run.sh teardown
+jobs:
+  build:
+    executor: default
+    steps:
+    - checkout
+    - restore_cache:
+        keys:
+        - v1-gomod-cache-{{ checksum "go.sum" }}
+    - run:
+        name: Build project
+        command: make build
+    - save_cache:
+        key: v1-gomod-cache-{{ checksum "go.sum" }}
+        paths:
+        - /go/pkg/mod
+    - persist_to_workspace:
+        root: .
+        paths:
+        - ranchhand
+  e2e_ubuntu:
+    executor: default
+    steps:
+      - launch_e2e
   e2e_centos:
-    executor: builder
+    executor: default
     steps:
     - run: echo noop
   e2e_rhel:
-    executor: builder
+    executor: default
     steps:
     - run: echo noop
   release:
-    executor: builder
+    executor: default
     steps:
     - checkout
     - run: curl -sL https://git.io/goreleaser | VERSION=${GORELEASER_VERSION} bash
