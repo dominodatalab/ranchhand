@@ -103,7 +103,7 @@ func processHost(addr string, port uint, username, keyPath string) error {
 			log.Warnf("ssh connect failed on host [%s], trying again in 5 secs", addr)
 		}
 		return err
-	}, strategy.Limit(6), strategy.Wait(5*time.Second))
+	}, strategy.Limit(12), strategy.Wait(5*time.Second))
 
 	if err == nil {
 		osInfo, err = loadOSInfo(client)
