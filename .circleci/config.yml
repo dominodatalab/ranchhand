@@ -70,12 +70,13 @@ jobs:
   e2e_ubuntu:
     executor: default
     steps:
-      - launch_e2e:
-          blueprint_id: ubuntu_16_04_2
+    - launch_e2e:
+        blueprint_id: ubuntu_16_04_2
   e2e_centos:
     executor: default
     steps:
-    - run: echo noop
+    - launch_e2e:
+        blueprint_id: centos_7_1901_01
   e2e_rhel:
     executor: default
     steps:
