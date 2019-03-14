@@ -31,13 +31,22 @@ jobs:
         paths:
         - /go/pkg/mod
     - run:
-        name: Create test environment
+        name: Configure test env
+        command: |
+          'export INSTANCE_NAME="ranchhand-$CIRCLE_WORKFLOW_JOB_ID-$CIRCLE_BUILD_NUM"' >> $BASH_ENV
+          'export INSTANCE_TAGS="key=Repo,value=$CIRCLE_REPOSITORY_URL key=Branch,value=$CIRCLE_BRANCH key=Commit,value=$CIRCLE_SHA1 key=BuildUrl,value=$CIRCLE_BUILD_URL"' >> $BASH_ENV
+    - run:
+        name: Create test env
         command: test/e2e/run.sh setup
     - run:
         name: Execute ranchhand
-        command: ./ranchhand run --node-ips $(cat instance-ip) --ssh-user ubuntu --ssh-key-path ~/.ssh/id_rsa_5a19aee7ef984f2f68c3be7262f91d35
+        command: |
+          ./ranchhand run \
+            --node-ips $(cat instance-ip) \
+            --ssh-user ubuntu \
+            --ssh-key-path ~/.ssh/id_rsa_5a19aee7ef984f2f68c3be7262f91d35
     - run:
-        name: Teardown test environment
+        name: Teardown test env
         when: always
         command: test/e2e/run.sh teardown
   release:
