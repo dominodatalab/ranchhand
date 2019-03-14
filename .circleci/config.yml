@@ -98,9 +98,6 @@ workflows:
     - e2e_centos:
         requires:
         - build
-    - e2e_rhel:
-        requires:
-        - build
   release:
     jobs:
     - release:
