@@ -14,6 +14,8 @@ commands:
     parameters:
       blueprint_id:
         type: string
+      ssh_user:
+        type: string
     steps:
     - checkout
     - attach_workspace:
@@ -41,7 +43,7 @@ commands:
         command: |
           ./ranchhand run \
             --node-ips $(cat instance-ip) \
-            --ssh-user ubuntu \
+            --ssh-user << parameters.ssh_user >> \
             --ssh-key-path ~/.ssh/id_rsa_5a19aee7ef984f2f68c3be7262f91d35
     - run:
         name: Teardown test env
@@ -71,21 +73,20 @@ jobs:
     executor: default
     steps:
     - launch_e2e:
+        ssh_user: ubuntu
         blueprint_id: ubuntu_16_04_2
   e2e_centos:
     executor: default
     steps:
     - launch_e2e:
+        ssh_user: centos
         blueprint_id: centos_7_1901_01
-  e2e_rhel:
-    executor: default
-    steps:
-    - run: echo noop
   release:
     executor: default
     steps:
     - checkout
     - run: curl -sL https://git.io/goreleaser | VERSION=${GORELEASER_VERSION} bash
+
 workflows:
   version: 2
   e2e_tests:
