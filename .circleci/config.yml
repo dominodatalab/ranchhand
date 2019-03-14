@@ -7,19 +7,10 @@ executors:
       GORELEASER_VERSION: v0.102.0
       AWSCLI_VERSION: 1.16.122
 jobs:
-  test_ubuntu:
+  build:
     executor: builder
     steps:
     - checkout
-    - add_ssh_keys:
-        fingerprints:
-          - "5a:19:ae:e7:ef:98:4f:2f:68:c3:be:72:62:f9:1d:35"
-    - run:
-        name: Install system requirements
-        command: |
-          sudo apt-get install -y python3-pip
-          pip3 install awscli==$AWSCLI_VERSION --upgrade --user
-          echo 'export PATH="$HOME/.local/bin:$PATH"' >> $BASH_ENV
     - restore_cache:
         keys:
         - v1-gomod-cache-{{ checksum "go.sum" }}
@@ -30,6 +21,24 @@ jobs:
         key: v1-gomod-cache-{{ checksum "go.sum" }}
         paths:
         - /go/pkg/mod
+    - persist_to_workspace:
+        root: .
+        paths:
+        - ranchhand
+  e2e_ubuntu:
+    executor: builder
+    steps:
+    - attach_workspace:
+        at: .
+    - add_ssh_keys:
+        fingerprints:
+          - "5a:19:ae:e7:ef:98:4f:2f:68:c3:be:72:62:f9:1d:35"
+    - run:
+        name: Install system requirements
+        command: |
+          sudo apt-get install -y python3-pip
+          pip3 install awscli==$AWSCLI_VERSION --upgrade --user
+          echo 'export PATH="$HOME/.local/bin:$PATH"' >> $BASH_ENV
     - run:
         name: Configure test env
         command: |
@@ -58,7 +67,10 @@ workflows:
   version: 2
   e2e_tests:
     jobs:
-    - test_ubuntu
+    - build
+    - e2e_ubuntu:
+        requires:
+        - build
   release:
     jobs:
     - release:
