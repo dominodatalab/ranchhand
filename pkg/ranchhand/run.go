@@ -15,12 +15,17 @@ type Node struct {
 	PrivateIP string
 }
 
+type SSHConfig struct {
+	User              string
+	Port              uint
+	KeyPath           string
+	ConnectionTimeout uint
+}
+
 type Config struct {
-	SSHUser    string
-	SSHPort    uint
-	SSHKeyPath string
-	Nodes      []Node
-	Timeout    time.Duration
+	SSH     *SSHConfig
+	Nodes   []Node
+	Timeout time.Duration
 }
 
 func Run(cfg *Config) error {

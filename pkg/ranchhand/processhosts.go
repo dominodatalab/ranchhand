@@ -2,6 +2,7 @@ package ranchhand
 
 import (
 	"fmt"
+	"net"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -66,11 +67,11 @@ func processHosts(cfg *Config) error {
 
 	errChan := make(chan error)
 	for _, node := range cfg.Nodes {
-		routine := func(addr string, port uint, user, keyPath string, c chan<- error) {
-			c <- processHost(addr, port, user, keyPath)
+		routine := func(addr string, sshCfg *SSHConfig, c chan<- error) {
+			c <- processHost(addr, sshCfg)
 		}
 
-		go routine(node.PublicIP, cfg.SSHPort, cfg.SSHUser, cfg.SSHKeyPath, errChan)
+		go routine(node.PublicIP, cfg.SSH, errChan)
 	}
 
 	var errs []error
@@ -92,19 +93,14 @@ func processHosts(cfg *Config) error {
 }
 
 // connect to the host, enforce node requirements, and install docker onto a vm
-func processHost(addr string, port uint, username, keyPath string) error {
+func processHost(addr string, cfg *SSHConfig) error {
 	var osInfo *osi.Info
 	var client *ssh.Client
 
-	err := retry.Retry(func(attempt uint) (err error) {
-		client, err = ssh.Connect(addr, port, username, keyPath)
-
-		if err != nil {
-			log.Warnf("ssh connect failed on host [%s], trying again in 5 secs", addr)
-		}
-		return err
-	}, strategy.Limit(12), strategy.Wait(5*time.Second))
-
+	err := dialHost(addr, cfg.Port, cfg.ConnectionTimeout)
+	if err == nil {
+		client, err = ssh.Connect(addr, cfg.Port, cfg.User, cfg.KeyPath)
+	}
 	if err == nil {
 		osInfo, err = loadOSInfo(client)
 	}
@@ -116,6 +112,23 @@ func processHost(addr string, port uint, username, keyPath string) error {
 	}
 
 	return errors.Wrapf(err, addr)
+}
+
+// attempt to verify that a host is listening at port until timeout
+func dialHost(addr string, port, timeout uint) error {
+	waitTime := 5 * time.Second
+	attempts := timeout / uint(waitTime.Seconds())
+	fullAddr := fmt.Sprintf("%s:%d", addr, port)
+
+	return retry.Retry(func(attempt uint) error {
+		conn, err := net.Dial("tcp", fullAddr)
+		if err != nil {
+			log.Warnf("attempt [%d] to verify host [%s] is listening failed", attempt, fullAddr)
+			return err
+		}
+
+		return conn.Close()
+	}, strategy.Wait(waitTime), strategy.Limit(attempts))
 }
 
 // fetch and parse os identification data
