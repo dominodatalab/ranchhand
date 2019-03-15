@@ -25,7 +25,7 @@ const (
 var (
 	versionConstraints = map[string]string{
 		"ubuntu": "~16.04.x",
-		"centos": "~7.5.x",
+		"centos": "~7.x",
 		"rhel":   "~7.5.x",
 		"docker": "~18.06.x-ce",
 	}
