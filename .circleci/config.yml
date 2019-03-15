@@ -44,7 +44,8 @@ commands:
           ./ranchhand run \
             --node-ips $(cat instance-ip) \
             --ssh-user << parameters.ssh_user >> \
-            --ssh-key-path ~/.ssh/id_rsa_5a19aee7ef984f2f68c3be7262f91d35
+            --ssh-key-path ~/.ssh/id_rsa_5a19aee7ef984f2f68c3be7262f91d35 \
+            --ssh-connect-timeout 180
     - run:
         name: Teardown test env
         when: always
