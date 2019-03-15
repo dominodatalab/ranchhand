@@ -90,15 +90,21 @@ jobs:
 
 workflows:
   version: 2
-  e2e_tests:
+  build_and_test:
     jobs:
     - build
     - e2e_ubuntu:
         requires:
         - build
+        filters:
+          branches:
+            only: master
     - e2e_centos:
         requires:
         - build
+        filters:
+          branches:
+            only: master
   release:
     jobs:
     - release:
