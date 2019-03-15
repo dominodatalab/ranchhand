@@ -2,6 +2,7 @@ package ranchhand
 
 import (
 	"fmt"
+	"net"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -24,7 +25,7 @@ const (
 var (
 	versionConstraints = map[string]string{
 		"ubuntu": "~16.04.x",
-		"centos": "~7.5.x",
+		"centos": "~7.x",
 		"rhel":   "~7.5.x",
 		"docker": "~18.06.x-ce",
 	}
@@ -66,11 +67,11 @@ func processHosts(cfg *Config) error {
 
 	errChan := make(chan error)
 	for _, node := range cfg.Nodes {
-		routine := func(addr string, port uint, user, keyPath string, c chan<- error) {
-			c <- processHost(addr, port, user, keyPath)
+		routine := func(addr string, sshCfg *SSHConfig, c chan<- error) {
+			c <- processHost(addr, sshCfg)
 		}
 
-		go routine(node.PublicIP, cfg.SSHPort, cfg.SSHUser, cfg.SSHKeyPath, errChan)
+		go routine(node.PublicIP, cfg.SSH, errChan)
 	}
 
 	var errs []error
@@ -92,10 +93,14 @@ func processHosts(cfg *Config) error {
 }
 
 // connect to the host, enforce node requirements, and install docker onto a vm
-func processHost(addr string, port uint, username, keyPath string) error {
+func processHost(addr string, cfg *SSHConfig) error {
 	var osInfo *osi.Info
+	var client *ssh.Client
 
-	client, err := ssh.Connect(addr, port, username, keyPath)
+	err := dialHost(addr, cfg.Port, cfg.ConnectionTimeout)
+	if err == nil {
+		client, err = ssh.Connect(addr, cfg.Port, cfg.User, cfg.KeyPath)
+	}
 	if err == nil {
 		osInfo, err = loadOSInfo(client)
 	}
@@ -107,6 +112,23 @@ func processHost(addr string, port uint, username, keyPath string) error {
 	}
 
 	return errors.Wrapf(err, addr)
+}
+
+// attempt to verify that a host is listening at port until timeout
+func dialHost(addr string, port, timeout uint) error {
+	waitTime := 5 * time.Second
+	attempts := timeout / uint(waitTime.Seconds())
+	fullAddr := fmt.Sprintf("%s:%d", addr, port)
+
+	return retry.Retry(func(attempt uint) error {
+		conn, err := net.Dial("tcp", fullAddr)
+		if err != nil {
+			log.Warnf("attempt [%d] to verify host [%s] is listening failed", attempt, fullAddr)
+			return err
+		}
+
+		return conn.Close()
+	}, strategy.Wait(waitTime), strategy.Limit(attempts))
 }
 
 // fetch and parse os identification data

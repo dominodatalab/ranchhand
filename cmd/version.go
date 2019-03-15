@@ -27,7 +27,7 @@ var (
 )
 
 func init() {
-	versionCmd.Flags().BoolVarP(&shortVersion, "short", "s", false, "Only print the version number")
+	versionCmd.Flags().BoolVarP(&shortVersion, "short", "s", false, "only print the version number")
 
 	rootCmd.AddCommand(versionCmd)
 }
