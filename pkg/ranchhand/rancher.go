@@ -35,8 +35,10 @@ var (
 			helm.ReleaseInfo{
 				Name:      "rancher",
 				Namespace: "cattle-system",
-				Version:   "2019.1.2",
-				SetValues: "rancherImageTag=v2.1.6,tls=external",
+				Version:   "2019.3.1",
+				SetValues: map[string]string{
+					"tls": "external",
+				},
 			},
 		},
 	}

@@ -2,11 +2,13 @@ package ranchhand
 
 import (
 	"context"
+	"encoding/base64"
 	"os"
 	"os/exec"
 	"text/template"
 	"time"
 
+	"github.com/dominodatalab/ranchhand/pkg/x509"
 	"github.com/pkg/errors"
 )
 
@@ -35,15 +37,38 @@ services:
     snapshot: true
     creation: 6h
     retention: 24h
+
+ingress:
+  provider: nginx
+  extra_args:
+    default-ssl-certificate: ingress-nginx/ingress-default-cert
+
+addons: |-
+  ---
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: ingress-default-cert
+    namespace: ingress-nginx
+  type: kubernetes.io/tls
+  data:
+    tls.crt: {{ .TLSCert | base64Encode }}
+    tls.key: {{ .TLSKey | base64Encode }}
 `
 )
 
-var tpl = template.Must(template.New("rke-tmpl").Parse(RKETemplate))
+var tpl *template.Template
+
+type tmplData struct {
+	TLSCert []byte
+	TLSKey  []byte
+	*Config
+}
 
 func installKubernetes(cfg *Config) error {
+	// exit early if cluster is already running
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-
 	if err := exec.CommandContext(ctx, "rke", "version", "--config", RKEConfigFile).Run(); err == nil {
 		return nil
 	}
@@ -55,7 +80,19 @@ func installKubernetes(cfg *Config) error {
 	}
 	defer file.Close()
 
-	if err := tpl.Execute(file, cfg); err != nil {
+	// generate ingress certificate
+	certPEM, keyPEM, err := x509.CreateSelfSignedCert()
+	if err != nil {
+		return err
+	}
+
+	// render file contents
+	data := tmplData{
+		TLSCert: certPEM,
+		TLSKey:  keyPEM,
+		Config:  cfg,
+	}
+	if err := tpl.Execute(file, data); err != nil {
 		return errors.Wrap(err, "rke template render failed")
 	}
 
@@ -67,7 +104,15 @@ func installKubernetes(cfg *Config) error {
 		return errors.Wrap(err, "cannot install kubernetes")
 	}
 
-	// todo: ensure the k8s cluster came up and is healthy
-
 	return nil
+}
+
+func init() {
+	tpl = template.New("rke-tmpl")
+	tpl.Funcs(template.FuncMap{
+		"base64Encode": func(bs []byte) string {
+			return base64.StdEncoding.EncodeToString(bs)
+		},
+	})
+	template.Must(tpl.Parse(RKETemplate))
 }
