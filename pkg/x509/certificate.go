@@ -61,7 +61,7 @@ func certTemplate() (*x509.Certificate, error) {
 		SerialNumber: serialNumber,
 		Subject: pkix.Name{
 			Organization: []string{"Domino Data Lab, Inc."},
-			CommonName:   "rancher.dominodatalab.io",
+			CommonName:   "rancher.dominodatalab.com",
 		},
 		SignatureAlgorithm:    x509.SHA256WithRSA,
 		NotBefore:             now,
