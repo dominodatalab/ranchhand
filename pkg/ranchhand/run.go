@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/dominodatalab/ranchhand/pkg/helm"
+	"github.com/dominodatalab/ranchhand/pkg/x509"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -26,6 +27,8 @@ type Config struct {
 	SSH     *SSHConfig
 	Nodes   []Node
 	Timeout time.Duration
+	CertPEM []byte
+	KeyPEM  []byte
 }
 
 func Run(cfg *Config) error {
@@ -34,6 +37,12 @@ func Run(cfg *Config) error {
 		return err
 	}
 	if err := os.Chdir(OutputDirectory); err != nil {
+		return err
+	}
+
+	log.Info("generating ingress certificate")
+	var err error
+	if cfg.CertPEM, cfg.KeyPEM, err = x509.CreateSelfSignedCert(); err != nil {
 		return err
 	}
 
@@ -57,7 +66,7 @@ func Run(cfg *Config) error {
 	if err != nil {
 		return err
 	}
-	if err := hClient.Init(); err != nil {
+	if err := hClient.Init(cfg.CertPEM); err != nil {
 		return err
 	}
 

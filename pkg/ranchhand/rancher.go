@@ -37,7 +37,8 @@ var (
 				Namespace: "cattle-system",
 				Version:   "2019.3.1",
 				SetValues: map[string]string{
-					"tls": "external",
+					"tls":       "external",
+					"privateCA": "true",
 				},
 			},
 		},

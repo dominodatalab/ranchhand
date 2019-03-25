@@ -8,7 +8,6 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/dominodatalab/ranchhand/pkg/x509"
 	"github.com/pkg/errors"
 )
 
@@ -52,16 +51,14 @@ addons: |-
     namespace: ingress-nginx
   type: kubernetes.io/tls
   data:
-    tls.crt: {{ .TLSCert | base64Encode }}
-    tls.key: {{ .TLSKey | base64Encode }}
+    tls.crt: {{ .CertPEM | base64Encode }}
+    tls.key: {{ .KeyPEM | base64Encode }}
 `
 )
 
 var tpl *template.Template
 
 type tmplData struct {
-	TLSCert []byte
-	TLSKey  []byte
 	*Config
 }
 
@@ -80,17 +77,9 @@ func installKubernetes(cfg *Config) error {
 	}
 	defer file.Close()
 
-	// generate ingress certificate
-	certPEM, keyPEM, err := x509.CreateSelfSignedCert()
-	if err != nil {
-		return err
-	}
-
 	// render file contents
 	data := tmplData{
-		TLSCert: certPEM,
-		TLSKey:  keyPEM,
-		Config:  cfg,
+		Config: cfg,
 	}
 	if err := tpl.Execute(file, data); err != nil {
 		return errors.Wrap(err, "rke template render failed")
