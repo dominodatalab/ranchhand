@@ -31,7 +31,6 @@ func CreateSelfSignedCert(certIPs []string, certDNSNames []string) (certPEM, key
 	certTmpl.DNSNames = certDNSNames
 
 	// parse ips
-	certTmpl.IPAddresses = []net.IP{}
 	for _, ip := range certIPs {
 		certTmpl.IPAddresses = append(certTmpl.IPAddresses, net.ParseIP(ip))
 	}
