@@ -19,18 +19,26 @@ type RequiredToolURLs struct {
 }
 
 // todo: need a better way structure for managing tool versions
-var PlatformToolURLs = map[string]RequiredToolURLs{
-	"darwin": {
-		Kubectl: "https://storage.googleapis.com/kubernetes-release/release/v1.13.3/bin/darwin/amd64/kubectl",
-		Helm:    "https://storage.googleapis.com/kubernetes-helm/helm-v2.12.3-darwin-amd64.tar.gz",
-		RKE:     "https://github.com/rancher/rke/releases/download/v0.1.17/rke_darwin-amd64",
-	},
-	"linux": {
-		Kubectl: "https://storage.googleapis.com/kubernetes-release/release/v1.13.3/bin/linux/amd64/kubectl",
-		Helm:    "https://storage.googleapis.com/kubernetes-helm/helm-v2.12.3-linux-amd64.tar.gz",
-		RKE:     "https://github.com/rancher/rke/releases/download/v0.1.17/rke_linux-amd64",
-	},
-}
+var (
+	PlatformToolVersions = map[string]string{
+		"kubectl": "v1.14.0",
+		"helm":    "v2.13.1",
+		"rke":     "v0.2.0",
+	}
+
+	PlatformToolURLs = map[string]RequiredToolURLs{
+		"darwin": {
+			Kubectl: fmt.Sprintf("https://storage.googleapis.com/kubernetes-release/release/%s/bin/darwin/amd64/kubectl", PlatformToolVersions["kubectl"]),
+			Helm:    fmt.Sprintf("https://storage.googleapis.com/kubernetes-helm/helm-%s-darwin-amd64.tar.gz", PlatformToolVersions["helm"]),
+			RKE:     fmt.Sprintf("https://github.com/rancher/rke/releases/download/%s/rke_darwin-amd64", PlatformToolVersions["rke"]),
+		},
+		"linux": {
+			Kubectl: fmt.Sprintf("https://storage.googleapis.com/kubernetes-release/release/%s/bin/linux/amd64/kubectl", PlatformToolVersions["kubectl"]),
+			Helm:    fmt.Sprintf("https://storage.googleapis.com/kubernetes-helm/helm-%s-linux-amd64.tar.gz", PlatformToolVersions["helm"]),
+			RKE:     fmt.Sprintf("https://github.com/rancher/rke/releases/download/%s/rke_linux-amd64", PlatformToolVersions["rke"]),
+		},
+	}
+)
 
 func installRequiredTools() error {
 	toolsDir, err := filepath.Abs("tools")
