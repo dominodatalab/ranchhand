@@ -7,6 +7,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"math/big"
+	"net"
 	"time"
 
 	"github.com/pkg/errors"
@@ -27,6 +28,7 @@ func CreateSelfSignedCert() (certPEM, keyPEM []byte, err error) {
 	certTmpl.IsCA = true
 	certTmpl.KeyUsage = x509.KeyUsageCertSign | x509.KeyUsageDigitalSignature
 	certTmpl.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth}
+	certTmpl.IPAddresses = []net.IP{net.ParseIP("127.0.0.1")}
 
 	// generate self-signed certificate
 	certDER, err := x509.CreateCertificate(rand.Reader, certTmpl, certTmpl, &rootKey.PublicKey, rootKey)
