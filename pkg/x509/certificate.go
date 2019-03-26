@@ -13,7 +13,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func CreateSelfSignedCert() (certPEM, keyPEM []byte, err error) {
+func CreateSelfSignedCert(certIPs []string, certDNSNames []string) (certPEM, keyPEM []byte, err error) {
 	// generate a new key-pair
 	rootKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
@@ -21,14 +21,20 @@ func CreateSelfSignedCert() (certPEM, keyPEM []byte, err error) {
 	}
 
 	// generate cert template used to self-sign
-	certTmpl, err := certTemplate()
+	certTmpl, err := certTemplate(certDNSNames[0])
 	if err != nil {
 		return
 	}
 	certTmpl.IsCA = true
 	certTmpl.KeyUsage = x509.KeyUsageCertSign | x509.KeyUsageDigitalSignature
 	certTmpl.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth}
-	certTmpl.IPAddresses = []net.IP{net.ParseIP("127.0.0.1")}
+	certTmpl.DNSNames = certDNSNames
+
+	// parse ips
+	certTmpl.IPAddresses = []net.IP{}
+	for _, ip := range certIPs {
+		certTmpl.IPAddresses = append(certTmpl.IPAddresses, net.ParseIP(ip))
+	}
 
 	// generate self-signed certificate
 	certDER, err := x509.CreateCertificate(rand.Reader, certTmpl, certTmpl, &rootKey.PublicKey, rootKey)
@@ -48,7 +54,7 @@ func CreateSelfSignedCert() (certPEM, keyPEM []byte, err error) {
 	return
 }
 
-func certTemplate() (*x509.Certificate, error) {
+func certTemplate(commonName string) (*x509.Certificate, error) {
 	// generate a random serial number
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
@@ -61,7 +67,7 @@ func certTemplate() (*x509.Certificate, error) {
 		SerialNumber: serialNumber,
 		Subject: pkix.Name{
 			Organization: []string{"Domino Data Lab, Inc."},
-			CommonName:   "domino.rancher",
+			CommonName:   commonName,
 		},
 		SignatureAlgorithm:    x509.SHA256WithRSA,
 		NotBefore:             now,

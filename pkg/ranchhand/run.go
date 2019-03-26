@@ -24,11 +24,13 @@ type SSHConfig struct {
 }
 
 type Config struct {
-	SSH     *SSHConfig
-	Nodes   []Node
-	Timeout time.Duration
-	CertPEM []byte
-	KeyPEM  []byte
+	SSH          *SSHConfig
+	Nodes        []Node
+	Timeout      time.Duration
+	CertPEM      []byte
+	KeyPEM       []byte
+	CertIPs      []string
+	CertDNSNames []string
 }
 
 func Run(cfg *Config) error {
@@ -42,7 +44,7 @@ func Run(cfg *Config) error {
 
 	log.Info("generating ingress certificate")
 	var err error
-	if cfg.CertPEM, cfg.KeyPEM, err = x509.CreateSelfSignedCert(); err != nil {
+	if cfg.CertPEM, cfg.KeyPEM, err = x509.CreateSelfSignedCert(cfg.CertIPs, cfg.CertDNSNames); err != nil {
 		return err
 	}
 
