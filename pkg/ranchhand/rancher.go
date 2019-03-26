@@ -39,6 +39,7 @@ var (
 				SetValues: map[string]string{
 					"tls":       "external",
 					"privateCA": "true",
+                                        "additionalTrustedCAs": "true",
 				},
 			},
 		},

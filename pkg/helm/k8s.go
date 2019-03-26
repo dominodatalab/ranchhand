@@ -77,5 +77,14 @@ func (w *wrapper) createK8sResources(cacert []byte) error {
 		}
 	}
 
+	if s, sErr := sAPI.Get("tls-ca-additional", getOpts); sErr != nil && apierrors.IsNotFound(sErr) {
+		s.Name = "tls-ca-additional"
+		s.StringData = map[string]string{"ca-additional.pem": string(cacert)}
+		s, err = sAPI.Create(s)
+		if err != nil {
+			return errors.Wrapf(err, "failed to create rancher private ca secret %s", "tls-ca-additional")
+		}
+	}
+
 	return nil
 }
