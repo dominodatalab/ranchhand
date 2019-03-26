@@ -62,12 +62,11 @@ func init() {
 	runCmd.Flags().StringVarP(&sshKeyPath, "ssh-key-path", "i", "", "path to private ssh key")
 	runCmd.Flags().UintVarP(&sshTimeout, "ssh-connect-timeout", "c", 30, "time to wait (in secs) for hosts to accept connection")
 	runCmd.Flags().UintVarP(&timeout, "timeout", "t", 300, "total time to wait (in secs) for host processing to complete")
-	runCmd.Flags().StringSliceVarP(&certIPs, "cert-ips", "", []string{}, "list of ips in ca cert (comma-delimited)")
-	runCmd.Flags().StringSliceVarP(&certDNSNames, "cert-dns-names", "", []string{}, "list of dns names in ca cert (comma-delimited)")
+	runCmd.Flags().StringSliceVarP(&certIPs, "cert-ips", "a", []string{"127.0.0.1"}, "list of ip addresses in ca cert (comma-delimited)")
+	runCmd.Flags().StringSliceVarP(&certDNSNames, "cert-dns-names", "d", []string{"rancher.example.org"}, "list of dns names in ca cert (comma-delimited, first is CN)")
 
 	runCmd.MarkFlagRequired("node-ips")
 	runCmd.MarkFlagRequired("ssh-key-path")
-	runCmd.MarkFlagRequired("cert-dns-names")
 
 	rootCmd.AddCommand(runCmd)
 }
