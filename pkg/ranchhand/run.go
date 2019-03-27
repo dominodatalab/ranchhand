@@ -23,9 +23,11 @@ type SSHConfig struct {
 }
 
 type Config struct {
-	SSH     *SSHConfig
-	Nodes   []Node
-	Timeout time.Duration
+	SSH          *SSHConfig
+	Nodes        []Node
+	Timeout      time.Duration
+	CertIPs      []string
+	CertDNSNames []string
 }
 
 func Run(cfg *Config) error {
@@ -47,8 +49,14 @@ func Run(cfg *Config) error {
 		return err
 	}
 
+	log.Info("generating ingress certificate")
+	certPEM, keyPEM, err := generateCertificate(cfg)
+	if err != nil {
+		return err
+	}
+
 	log.Info("installing kubernetes")
-	if err := installKubernetes(cfg); err != nil {
+	if err := launchRKE(cfg, certPEM, keyPEM); err != nil {
 		return err
 	}
 
@@ -58,6 +66,11 @@ func Run(cfg *Config) error {
 		return err
 	}
 	if err := hClient.Init(); err != nil {
+		return err
+	}
+
+	log.Info("creating rancher ca cert secret")
+	if err := createRancherSecret(certPEM, RKEKubeConfig); err != nil {
 		return err
 	}
 

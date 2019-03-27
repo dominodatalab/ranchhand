@@ -179,6 +179,7 @@ func installDocker(client *ssh.Client, osInfo *osi.Info) error {
 	}
 
 	cmds := append(dockerInstallCmds[osInfo.ID], "sudo usermod -aG docker $USER")
+	log.Info("installing docker on host [%s]", client.RemoteAddr())
 	if _, err := client.ExecuteCmd(strings.Join(cmds, " && ")); err != nil {
 		return errors.Wrap(err, "docker install failed")
 	}
