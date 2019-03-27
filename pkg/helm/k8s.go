@@ -9,7 +9,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-func (w *wrapper) createK8sResources(cacert []byte) error {
+func (w *wrapper) createK8sResources() error {
 	config, err := clientcmd.BuildConfigFromFlags("", w.kubeConfig)
 	if err != nil {
 		return err
@@ -55,25 +55,6 @@ func (w *wrapper) createK8sResources(cacert []byte) error {
 
 		if _, err := crbAPI.Create(crb); err != nil {
 			return errors.Wrapf(err, "failed to create clusterrolebinding %v", crb)
-		}
-	}
-
-	nsAPI := clientset.CoreV1().Namespaces()
-	if ns, nsErr := nsAPI.Get(RancherNamespace, getOpts); nsErr != nil && apierrors.IsNotFound(nsErr) {
-		ns.Name = RancherNamespace
-		ns, err = nsAPI.Create(ns)
-		if err != nil {
-			return errors.Wrapf(err, "failed to create %s namespace", RancherNamespace)
-		}
-	}
-
-	sAPI := clientset.CoreV1().Secrets(RancherNamespace)
-	if s, sErr := sAPI.Get(RancherSecret, getOpts); sErr != nil && apierrors.IsNotFound(sErr) {
-		s.Name = RancherSecret
-		s.StringData = map[string]string{RancherCAFilename: string(cacert)}
-		s, err = sAPI.Create(s)
-		if err != nil {
-			return errors.Wrapf(err, "failed to create rancher private ca secret %s", RancherSecret)
 		}
 	}
 

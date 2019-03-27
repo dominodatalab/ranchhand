@@ -13,13 +13,10 @@ import (
 var (
 	TillerNamespace      = "kube-system"
 	TillerServiceAccount = "tiller"
-	RancherNamespace     = "cattle-system"
-	RancherSecret        = "tls-ca"
-	RancherCAFilename    = "cacerts.pem"
 )
 
 type Helm interface {
-	Init(cacert []byte) error
+	Init() error
 	IsRepo(repoName string) (bool, error)
 	IsRelease(releaseName string) (bool, error)
 	AddRepo(repoData *Repository) error
@@ -58,10 +55,10 @@ func New(home, kubeconfig string) (*wrapper, error) {
 	return &wrapper{helmHome: helmHome, kubeConfig: kubeconfig}, nil
 }
 
-func (w *wrapper) Init(cacert []byte) error {
+func (w *wrapper) Init() error {
 	// checking if tiller is already installed
 	if err := w.helmCommand("version", "--server").Run(); err != nil {
-		if err := w.createK8sResources(cacert); err != nil {
+		if err := w.createK8sResources(); err != nil {
 			return err
 		}
 

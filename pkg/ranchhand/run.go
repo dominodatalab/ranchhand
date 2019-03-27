@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/dominodatalab/ranchhand/pkg/helm"
-	"github.com/dominodatalab/ranchhand/pkg/x509"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -27,8 +26,6 @@ type Config struct {
 	SSH          *SSHConfig
 	Nodes        []Node
 	Timeout      time.Duration
-	CertPEM      []byte
-	KeyPEM       []byte
 	CertIPs      []string
 	CertDNSNames []string
 }
@@ -42,12 +39,6 @@ func Run(cfg *Config) error {
 		return err
 	}
 
-	log.Info("generating ingress certificate")
-	var err error
-	if cfg.CertPEM, cfg.KeyPEM, err = x509.CreateSelfSignedCert(cfg.CertIPs, cfg.CertDNSNames); err != nil {
-		return err
-	}
-
 	log.Info("installing required cli tools")
 	if err := installRequiredTools(); err != nil {
 		return err
@@ -58,8 +49,14 @@ func Run(cfg *Config) error {
 		return err
 	}
 
+	log.Info("generating ingress certificate")
+	certPEM, keyPEM, err := generateCertificate(cfg)
+	if err != nil {
+		return err
+	}
+
 	log.Info("installing kubernetes")
-	if err := installKubernetes(cfg); err != nil {
+	if err := launchRKE(cfg, certPEM, keyPEM); err != nil {
 		return err
 	}
 
@@ -68,7 +65,12 @@ func Run(cfg *Config) error {
 	if err != nil {
 		return err
 	}
-	if err := hClient.Init(cfg.CertPEM); err != nil {
+	if err := hClient.Init(); err != nil {
+		return err
+	}
+
+	log.Info("creating rancher ca cert secret")
+	if err := createRancherSecret(certPEM, RKEKubeConfig); err != nil {
 		return err
 	}
 
