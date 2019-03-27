@@ -27,7 +27,6 @@ func generateCertificate(cfg *Config) (certPEM, keyPEM []byte, err error) {
 		if err = ioutil.WriteFile(localKeyPEM, keyPEM, 0644); err != nil {
 			return
 		}
-		return
 	} else {
 		if certPEM, err = ioutil.ReadFile(localCertPEM); err != nil {
 			return
@@ -35,6 +34,6 @@ func generateCertificate(cfg *Config) (certPEM, keyPEM []byte, err error) {
 		if keyPEM, err = ioutil.ReadFile(localKeyPEM); err != nil {
 			return
 		}
-		return
 	}
+	return
 }
