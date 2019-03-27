@@ -28,13 +28,13 @@ func generateCertificate(cfg *Config) (certPEM, keyPEM []byte, err error) {
 			return
 		}
 		return
-	}
-
-	if certPEM, err = ioutil.ReadFile(localCertPEM); err != nil {
+	} else {
+		if certPEM, err = ioutil.ReadFile(localCertPEM); err != nil {
+			return
+		}
+		if keyPEM, err = ioutil.ReadFile(localKeyPEM); err != nil {
+			return
+		}
 		return
 	}
-	if keyPEM, err = ioutil.ReadFile(localKeyPEM); err != nil {
-		return
-	}
-	return
 }
