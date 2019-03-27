@@ -77,3 +77,7 @@ func Run(cfg *Config) error {
 	log.Info("deploying rancher application")
 	return installRancher(hClient, cfg.Nodes[0].PublicIP)
 }
+
+func init() {
+	log.SetOutput(os.Stdout)
+}
