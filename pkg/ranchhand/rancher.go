@@ -45,7 +45,7 @@ var (
 			helm.ReleaseInfo{
 				Name:      "rancher",
 				Namespace: rancherNamespace,
-				Version:   "2.1.7",
+				Version:   "2.1.8",
 				SetValues: map[string]string{
 					"tls":       "external",
 					"privateCA": "true",
