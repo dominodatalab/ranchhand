@@ -21,9 +21,9 @@ type RequiredToolURLs struct {
 // todo: need a better way structure for managing tool versions
 var (
 	PlatformToolVersions = map[string]string{
-		"kubectl": "v1.14.0",
+		"kubectl": "v1.14.1",
 		"helm":    "v2.13.1",
-		"rke":     "v0.2.0",
+		"rke":     "v0.2.2",
 	}
 
 	PlatformToolURLs = map[string]RequiredToolURLs{
