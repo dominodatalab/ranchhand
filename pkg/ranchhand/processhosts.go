@@ -27,7 +27,7 @@ var (
 		"ubuntu": "~16.04.x",
 		"centos": "~7.x",
 		"rhel":   "~7.5.x",
-		"docker": "~18.06.x-ce",
+		"docker": "~18.09.x-ce",
 	}
 
 	dockerInstallCmds = map[string][]string{
@@ -38,12 +38,12 @@ var (
 			"sudo apt-key fingerprint 0EBFCD88",
 			"sudo add-apt-repository \"deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\"",
 			"sudo apt-get update",
-			"sudo apt-get install -y docker-ce=18.06.3~ce~3-0~ubuntu containerd.io",
+			"sudo apt-get install -y docker-ce=18.09.6~ce~3-0~ubuntu containerd.io",
 		},
 		"centos": {
 			"sudo yum install -y yum-utils device-mapper-persistent-data lvm2",
 			"sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo",
-			"sudo yum install -y docker-ce-18.06.3.ce-3.el7 containerd.io",
+			"sudo yum install -y docker-ce-18.09.6.ce-3.el7 containerd.io",
 			"sudo systemctl enable docker",
 			"sudo systemctl start docker",
 		},
@@ -51,7 +51,7 @@ var (
 			"sudo subscription-manager repos --enable rhel-7-server-extras-rpms || echo 'Error enabling rhel extras repo, continuing...'",
 			"sudo yum install -y yum-utils device-mapper-persistent-data lvm2",
 			"sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo",
-			"sudo yum install -y docker-ce-18.06.3.ce-3.el7 containerd.io",
+			"sudo yum install -y docker-ce-18.09.6.ce-3.el7 containerd.io",
 			"sudo systemctl enable docker",
 			"sudo systemctl start docker",
 		},
