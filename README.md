@@ -13,7 +13,7 @@ Simple, right?
 
 ## Development
 
-You can test your changes locally using Vagrant and VirtualBox
+You can test your changes locally using Vagrant and VirtualBox.
 
 1. Make sure you have Vagrant and VirtualBox installed.
 
@@ -26,6 +26,6 @@ You can test your changes locally using Vagrant and VirtualBox
     NODE_COUNT=N NODE_DISTRO="ubuntu_xenial|ubuntu_bionic|centos|rhel" vagrant up
     ```
 
-1. Use go to launch the entrypoint to the application.
+1. Use go to launch a ranchhand run.
 
-    `go run main.go -n 192.168.50.10 ...`
+    `go run main.go run -u vagrant -i ~/.ssh/id_rsa -n 192.168.50.10,...`
