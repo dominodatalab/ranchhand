@@ -2,21 +2,28 @@
 # vi: set ft=ruby :
 
 VAGRANT_BOXES = {
-  ubuntu: {
+  ubuntu_bionic: {
+    box: "ubuntu/bionic64",
+    box_version: "20190513.0.0"
+  },
+  ubuntu_xenial: {
     box: "ubuntu/xenial64",
     box_version: "20190308.0.0"
   },
   centos: {
     box: "centos/7",
     box_version: "1902.01",
+  },
+  rhel: {
+    box: "generic/rhel7",
+    box_version: "1.9.10",
   }
-  # rhel: "generic/rhel" ???
 }
 
 count  = (ENV["NODE_COUNT"] || 1).to_i
 fail("NODE_COUNT must be a positive integer") if count < 1
 
-distro = (ENV["NODE_DISTRO"] || "ubuntu").to_sym
+distro = (ENV["NODE_DISTRO"] || "ubuntu_xenial").to_sym
 fail("NODE_DISTRO '#{distro}' is not supported") unless VAGRANT_BOXES.key?(distro)
 
 node_info = VAGRANT_BOXES[distro]
