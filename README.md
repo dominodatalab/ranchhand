@@ -10,3 +10,22 @@ This tool deploys Rancher in HA mode onto existing hardware.
 **ranchhand -> rke -> k8s -> rancher -> rke -> k8s**
 
 Simple, right?
+
+## Development
+
+You can test your changes locally using Vagrant and VirtualBox.
+
+1. Make sure you have Vagrant and VirtualBox installed.
+
+    `brew cask install vagrant virtualbox`
+
+1. Create one or more VMs.
+
+    ```
+    cd test/
+    NODE_COUNT=N NODE_DISTRO="ubuntu_xenial|ubuntu_bionic|centos|rhel" vagrant up
+    ```
+
+1. Use go to launch a ranchhand run.
+
+    `go run main.go run -u vagrant -i ~/.ssh/id_rsa -n 192.168.50.10,...`
