@@ -17,6 +17,7 @@ commands:
       ssh_user:
         type: string
     steps:
+    - run: '[[ $CIRCLE_BRANCH != "master" && -z $CIRCLE_PR_NUMBER ]] && circleci step halt || true'
     - checkout
     - attach_workspace:
         at: .
@@ -96,15 +97,9 @@ workflows:
     - e2e_ubuntu:
         requires:
         - build
-        filters:
-          branches:
-            only: master
     - e2e_centos:
         requires:
         - build
-        filters:
-          branches:
-            only: master
   release:
     jobs:
     - release:
