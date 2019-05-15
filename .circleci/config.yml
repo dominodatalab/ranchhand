@@ -17,7 +17,7 @@ commands:
       ssh_user:
         type: string
     steps:
-    - run: '[[ $CIRCLE_BRANCH != "master" && -z $CIRCLE_PR_NUMBER ]] && circleci step halt || true'
+    - run: '[[ $CIRCLE_BRANCH != "master" && -z $CIRCLE_PULL_REQUEST ]] && circleci step halt || true'
     - checkout
     - attach_workspace:
         at: .
