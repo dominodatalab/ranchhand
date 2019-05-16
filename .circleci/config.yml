@@ -5,7 +5,7 @@ executors:
     docker:
     - image: circleci/golang:1.12
     environment:
-      GORELEASER_VERSION: v0.102.0
+      GORELEASER_VERSION: v0.106.0
       AWSCLI_VERSION: 1.16.122
 
 commands:
@@ -17,6 +17,7 @@ commands:
       ssh_user:
         type: string
     steps:
+    - run: '[[ $CIRCLE_BRANCH != "master" && -z $CIRCLE_PULL_REQUEST ]] && circleci step halt || true'
     - checkout
     - attach_workspace:
         at: .
@@ -96,15 +97,9 @@ workflows:
     - e2e_ubuntu:
         requires:
         - build
-        filters:
-          branches:
-            only: master
     - e2e_centos:
         requires:
         - build
-        filters:
-          branches:
-            only: master
   release:
     jobs:
     - release:
