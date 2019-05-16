@@ -10,10 +10,10 @@ import (
 
 	"github.com/Rican7/retry"
 	"github.com/Rican7/retry/strategy"
-	"github.com/dominodatalab/ranchhand/pkg/osi"
 	"github.com/dominodatalab/ranchhand/pkg/ssh"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	"github.com/sonnysideup/os-release"
 )
 
 const (
@@ -94,7 +94,7 @@ func processHosts(cfg *Config) error {
 
 // connect to the host, enforce node requirements, and install docker onto a vm
 func processHost(addr string, cfg *SSHConfig) error {
-	var osInfo *osi.Info
+	var osInfo *osrelease.Data
 	var client *ssh.Client
 
 	err := dialHost(addr, cfg.Port, cfg.ConnectionTimeout)
@@ -132,17 +132,17 @@ func dialHost(addr string, port, timeout uint) error {
 }
 
 // fetch and parse os identification data
-func loadOSInfo(client *ssh.Client) (*osi.Info, error) {
+func loadOSInfo(client *ssh.Client) (*osrelease.Data, error) {
 	contents, err := client.ExecuteCmd("cat /etc/os-release")
 	if err != nil {
 		return nil, errors.Wrap(err, "os info check failed")
 	}
 
-	return osi.Parse(contents), nil
+	return osrelease.Parse(contents), nil
 }
 
 // coordinate system checks
-func enforceSysRequirements(client *ssh.Client, osInfo *osi.Info) error {
+func enforceSysRequirements(client *ssh.Client, osInfo *osrelease.Data) error {
 	var errs []error
 
 	if err := constrainOS(osInfo); err != nil {
@@ -165,7 +165,7 @@ func enforceSysRequirements(client *ssh.Client, osInfo *osi.Info) error {
 }
 
 // install docker onto a new system and mark the operation as complete thereafter
-func installDocker(client *ssh.Client, osInfo *osi.Info) error {
+func installDocker(client *ssh.Client, osInfo *osrelease.Data) error {
 	remoteStateDir := "/var/lib/ranchhand"
 	if _, cerr := client.ExecuteCmd(fmt.Sprintf("test -d %s", remoteStateDir)); cerr != nil {
 		if _, err := client.ExecuteCmd(fmt.Sprintf("sudo mkdir -p %s", remoteStateDir)); err != nil {
@@ -203,8 +203,8 @@ func installDocker(client *ssh.Client, osInfo *osi.Info) error {
 }
 
 // ensure operating system is compatible
-func constrainOS(osInfo *osi.Info) (err error) {
-	if osInfo.IsUbuntu() || osInfo.IsCentOS() || osInfo.IsRHEL() {
+func constrainOS(osInfo *osrelease.Data) (err error) {
+	if osInfo.IsLikeDebian() || osInfo.IsLikeFedora() {
 		err = constrainVersion(versionConstraints[osInfo.ID], osInfo.VersionID)
 	} else {
 		err = errors.New("support not implemented")
