@@ -47,8 +47,10 @@ var (
 				Namespace: rancherNamespace,
 				Version:   "2.2.3",
 				SetValues: map[string]string{
-					"tls":       "external",
-					"privateCA": "true",
+					"tls":            "external",
+					"privateCA":      "true",
+					"addLocal":       "false",
+					"auditLog.level": "1",
 				},
 			},
 		},
