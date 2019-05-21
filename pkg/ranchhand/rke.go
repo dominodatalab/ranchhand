@@ -43,6 +43,10 @@ services:
       protect-kernel-defaults: "true"
       make-iptables-util-chains: "true"
       event-qps: "0"
+  scheduler:
+    extra_args:
+      profiling: "false"
+      address: "127.0.0.1"
 
 ingress:
   provider: nginx
