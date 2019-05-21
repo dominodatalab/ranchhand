@@ -39,6 +39,23 @@ services:
     snapshot: true
     creation: 6h
     retention: 24h
+  kube-api:
+    pod_security_policy: true
+    extra_args:
+      anonymous-auth: "false"
+      profiling: "false"
+      repair-malformed-updates: "false"
+      service-account-lookup: "true"
+      enable-admission-plugins: "ServiceAccount,NamespaceLifecycle,LimitRanger,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota,DefaultTolerationSeconds,AlwaysPullImages,DenyEscalatingExec,NodeRestriction,EventRateLimit,PodSecurityPolicy"
+      admission-control-config-file: "/etc/kubernetes/admission.yaml"
+      audit-log-path: "/var/log/kube-audit/audit-log.json"
+      audit-log-maxage: "30"
+      audit-log-maxbackup: "10"
+      audit-log-maxsize: "100"
+      audit-log-format: "json"
+      audit-policy-file: "/etc/kubernetes/audit.yaml"
+    extra_binds:
+    - "/var/log/kube-audit:/var/log/kube-audit"
   kube-controller:
     extra_args:
       profiling: "false"
