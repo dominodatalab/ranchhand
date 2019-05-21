@@ -2,11 +2,13 @@ package ranchhand
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"text/template"
+	"time"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -45,7 +47,7 @@ services:
   kubelet:
     extra_args:
       streaming-connection-idle-timeout: "30m"
-      protect-kernel-defaults: "true"
+      protect-kernel-defaults: "false"
       make-iptables-util-chains: "true"
       event-qps: "0"
   scheduler:
@@ -80,6 +82,7 @@ type tmplData struct {
 }
 
 func launchRKE(cfg *Config, certPEM, keyPEM []byte) error {
+	// render template data
 	var buf bytes.Buffer
 	tplData := tmplData{
 		Config:  cfg,
@@ -91,33 +94,41 @@ func launchRKE(cfg *Config, certPEM, keyPEM []byte) error {
 	}
 	tplContents := buf.Bytes()
 
+	// write cfg if missing or template has changed
+	var changeCfg bool
 	if _, err := os.Stat(RKEConfigFile); os.IsNotExist(err) {
-		return configAndRunCLI(tplContents)
+		changeCfg = true
+	} else {
+		fileContents, err := ioutil.ReadFile(RKEConfigFile)
+		if err != nil {
+			return errors.Wrap(err, "rke config read failed")
+		}
+		changeCfg = !bytes.Equal(fileContents, tplContents)
+	}
+	if changeCfg {
+		if err := ioutil.WriteFile(RKEConfigFile, tplContents, 0644); err != nil {
+			return errors.Wrap(err, "rke config write failed")
+		}
 	}
 
-	fileContents, err := ioutil.ReadFile(RKEConfigFile)
-	if err != nil {
-		return errors.Wrap(err, "rke config read failed")
-	}
-	if !bytes.Equal(fileContents, tplContents) {
-		log.Info("rewriting rke config because of template change")
-		return configAndRunCLI(tplContents)
-	}
+	// converge is cfg changed or k8s is not bootstrapped
+	if changeCfg || !hasRKEConverged() {
+		cmd := exec.Command("rke", "up", "--config", RKEConfigFile)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
 
+		log.Info("launching rke up")
+		return errors.Wrap(cmd.Run(), "cannot install kubernetes")
+	}
 	return nil
 }
 
-func configAndRunCLI(contents []byte) error {
-	if err := ioutil.WriteFile(RKEConfigFile, contents, 0644); err != nil {
-		return errors.Wrap(err, "rke config write failed")
-	}
+func hasRKEConverged() bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
 
-	cmd := exec.Command("rke", "up", "--config", RKEConfigFile)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	log.Info("launching rke up")
-	return errors.Wrap(cmd.Run(), "cannot install kubernetes")
+	cmd := exec.CommandContext(ctx, "rke", "version", "--config", RKEConfigFile)
+	return cmd.Run() == nil
 }
 
 func init() {
