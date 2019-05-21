@@ -1,14 +1,15 @@
 package ranchhand
 
 import (
-	"context"
+	"bytes"
 	"encoding/base64"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"text/template"
-	"time"
 
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -64,35 +65,44 @@ type tmplData struct {
 }
 
 func launchRKE(cfg *Config, certPEM, keyPEM []byte) error {
-	// exit early if cluster is already running
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-	if err := exec.CommandContext(ctx, "rke", "version", "--config", RKEConfigFile).Run(); err == nil {
-		return nil
+	var buf bytes.Buffer
+	tplData := tmplData{
+		Config:  cfg,
+		CertPEM: certPEM,
+		KeyPEM:  keyPEM,
 	}
-
-	// generate rke config
-	file, err := os.Create(RKEConfigFile)
-	if err != nil {
-		return errors.Wrapf(err, "cannot create %s", RKEConfigFile)
-	}
-	defer file.Close()
-
-	// render file contents
-	data := tmplData{Config: cfg, CertPEM: certPEM, KeyPEM: keyPEM}
-	if err := tpl.Execute(file, data); err != nil {
+	if err := tpl.Execute(&buf, tplData); err != nil {
 		return errors.Wrap(err, "rke template render failed")
 	}
+	tplContents := buf.Bytes()
 
-	// execute rke up
-	cmd := exec.Command("rke", "up", "--config", RKEConfigFile)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		return errors.Wrap(err, "cannot install kubernetes")
+	if _, err := os.Stat(RKEConfigFile); os.IsNotExist(err) {
+		return configAndRunCLI(tplContents)
+	}
+
+	fileContents, err := ioutil.ReadFile(RKEConfigFile)
+	if err != nil {
+		return errors.Wrap(err, "rke config read failed")
+	}
+	if !bytes.Equal(fileContents, tplContents) {
+		log.Info("rewriting rke config because of template change")
+		return configAndRunCLI(tplContents)
 	}
 
 	return nil
+}
+
+func configAndRunCLI(contents []byte) error {
+	if err := ioutil.WriteFile(RKEConfigFile, contents, 0644); err != nil {
+		return errors.Wrap(err, "rke config write failed")
+	}
+
+	cmd := exec.Command("rke", "up", "--config", RKEConfigFile)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	log.Info("launching rke up")
+	return errors.Wrap(cmd.Run(), "cannot install kubernetes")
 }
 
 func init() {
