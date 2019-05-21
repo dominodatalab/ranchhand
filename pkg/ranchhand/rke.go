@@ -37,6 +37,12 @@ services:
     snapshot: true
     creation: 6h
     retention: 24h
+  kubelet:
+    extra_args:
+      streaming-connection-idle-timeout: "30m"
+      protect-kernel-defaults: "true"
+      make-iptables-util-chains: "true"
+      event-qps: "0"
 
 ingress:
   provider: nginx
