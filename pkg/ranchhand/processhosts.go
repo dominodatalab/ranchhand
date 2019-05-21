@@ -20,6 +20,24 @@ const (
 	nodeRecommendation   = 3
 	cpuRecommendation    = 4
 	memoryRecommendation = 16.0
+
+	remoteStateDir = "/var/lib/ranchhand"
+
+	k8sAuditCfg = `apiVersion: audit.k8s.io/v1beta1
+kind: Policy
+rules:
+- level: Metadata`
+	k8sAdmissionCfg = `apiVersion: apiserver.k8s.io/v1alpha1
+kind: AdmissionConfiguration
+plugins:
+- name: EventRateLimit
+  path: /etc/kubernetes/event.yaml`
+	k8sEventCfg = `apiVersion: eventratelimit.admission.k8s.io/v1alpha1
+kind: Configuration
+limits:
+- type: Server
+  qps: 500
+  burst: 5000`
 )
 
 var (
@@ -110,6 +128,9 @@ func processHost(addr string, cfg *SSHConfig) error {
 	if err == nil {
 		err = installDocker(client, osInfo)
 	}
+	if err == nil {
+		err = installK8sConfigs(client)
+	}
 
 	return errors.Wrapf(err, addr)
 }
@@ -162,44 +183,6 @@ func enforceSysRequirements(client *ssh.Client, osInfo *osi.Info) error {
 		return errors.Errorf("system checks failed: %v", errs)
 	}
 	return nil
-}
-
-// install docker onto a new system and mark the operation as complete thereafter
-func installDocker(client *ssh.Client, osInfo *osi.Info) error {
-	remoteStateDir := "/var/lib/ranchhand"
-	if _, cerr := client.ExecuteCmd(fmt.Sprintf("test -d %s", remoteStateDir)); cerr != nil {
-		if _, err := client.ExecuteCmd(fmt.Sprintf("sudo mkdir -p %s", remoteStateDir)); err != nil {
-			return errors.Wrapf(err, "cannot create remote state directory %q", remoteStateDir)
-		}
-	}
-
-	indicator := filepath.Join(remoteStateDir, "docker-installed")
-	if _, err := client.ExecuteCmd(fmt.Sprintf("test -f %s", indicator)); err == nil {
-		return nil
-	}
-
-	cmds := append(dockerInstallCmds[osInfo.ID], "sudo usermod -aG docker $USER")
-	log.Infof("installing docker on host [%s]", client.RemoteAddr())
-	if _, err := client.ExecuteCmd(strings.Join(cmds, " && ")); err != nil {
-		return errors.Wrap(err, "docker install failed")
-	}
-
-	err := retry.Retry(
-		func(attempt uint) (err error) {
-			if _, err = client.ExecuteCmd("sudo docker version"); err != nil {
-				log.Warnf("attempt [%d] to verify docker is running failed on host [%s]", attempt, client.RemoteAddr())
-			}
-			return err
-		},
-		strategy.Wait(10*time.Second),
-		strategy.Limit(12),
-	)
-	if err != nil {
-		return errors.Wrap(err, "unable to verify docker install")
-	}
-
-	_, err = client.ExecuteCmd(fmt.Sprintf("sudo touch %s", indicator))
-	return errors.Wrap(err, "cannot mark docker install complete")
 }
 
 // ensure operating system is compatible
@@ -261,5 +244,77 @@ func constrainDockerVersion(client *ssh.Client) error {
 		return errors.Wrap(err, "invalid docker installed")
 	}
 
+	return nil
+}
+
+// install docker onto a new system and mark the operation as complete thereafter
+func installDocker(client *ssh.Client, osInfo *osi.Info) error {
+	if err := createRemoteDir(client, remoteStateDir); err != nil {
+		return errors.Wrap(err, "cannot create remote state dir")
+	}
+
+	indicator := filepath.Join(remoteStateDir, "docker-installed")
+	if _, err := client.ExecuteCmd(fmt.Sprintf("test -f %s", indicator)); err == nil {
+		return nil
+	}
+
+	cmds := append(dockerInstallCmds[osInfo.ID], "sudo usermod -aG docker $USER")
+	log.Infof("installing docker on host [%s]", client.RemoteAddr())
+	if _, err := client.ExecuteCmd(strings.Join(cmds, " && ")); err != nil {
+		return errors.Wrap(err, "docker install failed")
+	}
+
+	err := retry.Retry(
+		func(attempt uint) (err error) {
+			if _, err = client.ExecuteCmd("sudo docker version"); err != nil {
+				log.Warnf("attempt [%d] to verify docker is running failed on host [%s]", attempt, client.RemoteAddr())
+			}
+			return err
+		},
+		strategy.Wait(10*time.Second),
+		strategy.Limit(12),
+	)
+	if err != nil {
+		return errors.Wrap(err, "unable to verify docker install")
+	}
+
+	_, err = client.ExecuteCmd(fmt.Sprintf("sudo touch %s", indicator))
+	return errors.Wrap(err, "cannot mark docker install complete")
+}
+
+// install static k8s config files
+func installK8sConfigs(client *ssh.Client) error {
+	if err := createRemoteDir(client, "/etc/kubernetes"); err != nil {
+		return errors.Wrap(err, "cannot create k8s cfg dir")
+	}
+	if err := createStaticCfg(client, k8sAuditCfg, "/etc/kubernetes/audit.yaml"); err != nil {
+		return errors.Wrap(err, "cannot create k8s audit logging cfg")
+	}
+	if err := createStaticCfg(client, k8sAdmissionCfg, "/etc/kubernetes/admission.yaml"); err != nil {
+		return errors.Wrap(err, "cannot create k8s admission policy cfg")
+	}
+	if err := createStaticCfg(client, k8sEventCfg, "/etc/kubernetes/event.yaml"); err != nil {
+		return errors.Wrap(err, "cannot create k8s event limiting cfg")
+	}
+
+	return nil
+}
+
+func createStaticCfg(client *ssh.Client, contents, filename string) error {
+	if _, cerr := client.ExecuteCmd(fmt.Sprintf("test -f %s", filename)); cerr != nil {
+		genCmds := fmt.Sprintf("echo -e %[1]q | sudo tee %[2]s && sudo chown root:root %[2]s && sudo chmod 0600 %[2]s", contents, filename)
+		if _, err := client.ExecuteCmd(genCmds); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func createRemoteDir(client *ssh.Client, name string) error {
+	if _, cerr := client.ExecuteCmd(fmt.Sprintf("test -d %s", name)); cerr != nil {
+		if _, err := client.ExecuteCmd(fmt.Sprintf("sudo mkdir -p %s", name)); err != nil {
+			return err
+		}
+	}
 	return nil
 }
