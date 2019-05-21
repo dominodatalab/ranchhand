@@ -37,6 +37,11 @@ services:
     snapshot: true
     creation: 6h
     retention: 24h
+  kube-controller:
+    extra_args:
+      profiling: "false"
+      address: "127.0.0.1"
+      terminated-pod-gc-threshold: "1000"
   kubelet:
     extra_args:
       streaming-connection-idle-timeout: "30m"
