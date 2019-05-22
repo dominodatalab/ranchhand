@@ -10,10 +10,10 @@ import (
 
 	"github.com/Rican7/retry"
 	"github.com/Rican7/retry/strategy"
+	"github.com/dominodatalab/os-release"
 	"github.com/dominodatalab/ranchhand/pkg/ssh"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"github.com/sonnysideup/os-release"
 )
 
 const (
