@@ -21,26 +21,13 @@ const (
 	cpuRecommendation    = 4
 	memoryRecommendation = 16.0
 
+	k8sCfgDir      = "/etc/kubernetes"
 	remoteStateDir = "/var/lib/ranchhand"
-
-	k8sAuditCfg = `apiVersion: audit.k8s.io/v1beta1
-kind: Policy
-rules:
-- level: Metadata`
-	k8sAdmissionCfg = `apiVersion: apiserver.k8s.io/v1alpha1
-kind: AdmissionConfiguration
-plugins:
-- name: EventRateLimit
-  path: /etc/kubernetes/event.yaml`
-	k8sEventCfg = `apiVersion: eventratelimit.admission.k8s.io/v1alpha1
-kind: Configuration
-limits:
-- type: Server
-  qps: 500
-  burst: 5000`
 )
 
 var (
+	k8sConfigs map[string]k8sConfig
+
 	versionConstraints = map[string]string{
 		"ubuntu": ">=16.04.x",
 		"centos": "~7.x",
@@ -75,6 +62,10 @@ var (
 		},
 	}
 )
+
+type k8sConfig struct {
+	filename, contents string
+}
 
 // process remote hosts concurrently and return any errors that occurred
 func processHosts(cfg *Config) error {
@@ -249,7 +240,7 @@ func constrainDockerVersion(client *ssh.Client) error {
 
 // install docker onto a new system and mark the operation as complete thereafter
 func installDocker(client *ssh.Client, osInfo *osi.Info) error {
-	if err := createRemoteDir(client, remoteStateDir); err != nil {
+	if err := ensureRemoteDirectory(client, remoteStateDir); err != nil {
 		return errors.Wrap(err, "cannot create remote state dir")
 	}
 
@@ -284,37 +275,53 @@ func installDocker(client *ssh.Client, osInfo *osi.Info) error {
 
 // install static k8s config files
 func installK8sConfigs(client *ssh.Client) error {
-	if err := createRemoteDir(client, "/etc/kubernetes"); err != nil {
-		return errors.Wrap(err, "cannot create k8s cfg dir")
-	}
-	if err := createStaticCfg(client, k8sAuditCfg, "/etc/kubernetes/audit.yaml"); err != nil {
-		return errors.Wrap(err, "cannot create k8s audit logging cfg")
-	}
-	if err := createStaticCfg(client, k8sAdmissionCfg, "/etc/kubernetes/admission.yaml"); err != nil {
-		return errors.Wrap(err, "cannot create k8s admission policy cfg")
-	}
-	if err := createStaticCfg(client, k8sEventCfg, "/etc/kubernetes/event.yaml"); err != nil {
-		return errors.Wrap(err, "cannot create k8s event limiting cfg")
-	}
+	log.Info("creating kubernetes host configs")
 
-	return nil
-}
-
-func createStaticCfg(client *ssh.Client, contents, filename string) error {
-	if _, cerr := client.ExecuteCmd(fmt.Sprintf("test -f %s", filename)); cerr != nil {
-		genCmds := fmt.Sprintf("echo -e %[1]q | sudo tee %[2]s && sudo chown root:root %[2]s && sudo chmod 0600 %[2]s", contents, filename)
-		if _, err := client.ExecuteCmd(genCmds); err != nil {
-			return err
+	if err := ensureRemoteDirectory(client, k8sCfgDir); err != nil {
+		return errors.Wrap(err, "cannot create k8s config dir")
+	}
+	for _, cfg := range k8sConfigs {
+		cmdTmpl := "test -f %[1]q || echo -e %[2]q | sudo tee %[1]s && sudo chown root:root %[1]s && sudo chmod 0600 %[1]s"
+		if _, err := client.ExecuteCmd(fmt.Sprintf(cmdTmpl, cfg.filename, cfg.contents)); err != nil {
+			return errors.Wrap(err, "cannot create k8s config")
 		}
 	}
 	return nil
 }
 
-func createRemoteDir(client *ssh.Client, name string) error {
-	if _, cerr := client.ExecuteCmd(fmt.Sprintf("test -d %s", name)); cerr != nil {
-		if _, err := client.ExecuteCmd(fmt.Sprintf("sudo mkdir -p %s", name)); err != nil {
-			return err
-		}
+func init() {
+	k8sAuditCfgFile := filepath.Join(k8sCfgDir, "audit.yaml")
+	k8sEventRateCfgFile := filepath.Join(k8sCfgDir, "event.yaml")
+	k8sAdmissionCfgFile := filepath.Join(k8sCfgDir, "admission.yaml")
+
+	k8sAuditCfgContents := `apiVersion: audit.k8s.io/v1beta1
+kind: Policy
+rules:
+- level: Metadata`
+	k8sEventRateCfgContents := `apiVersion: eventratelimit.admission.k8s.io/v1alpha1
+kind: Configuration
+limits:
+- type: Server
+  qps: 500
+  burst: 5000`
+	k8sAdmissionCfgContents := fmt.Sprintf(`apiVersion: apiserver.k8s.io/v1alpha1
+kind: AdmissionConfiguration
+plugins:
+- name: EventRateLimit
+  path: %s`, k8sEventRateCfgFile)
+
+	k8sConfigs = map[string]k8sConfig{
+		"admission": {
+			filename: k8sAdmissionCfgFile,
+			contents: k8sAdmissionCfgContents,
+		},
+		"audit": {
+			filename: k8sAuditCfgFile,
+			contents: k8sAuditCfgContents,
+		},
+		"event": {
+			filename: k8sEventRateCfgFile,
+			contents: k8sEventRateCfgContents,
+		},
 	}
-	return nil
 }

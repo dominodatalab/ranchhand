@@ -47,13 +47,13 @@ services:
       repair-malformed-updates: "false"
       service-account-lookup: "true"
       enable-admission-plugins: "ServiceAccount,NamespaceLifecycle,LimitRanger,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota,DefaultTolerationSeconds,AlwaysPullImages,DenyEscalatingExec,NodeRestriction,EventRateLimit,PodSecurityPolicy"
-      admission-control-config-file: "/etc/kubernetes/admission.yaml"
+      admission-control-config-file: "{{ .AdmissionControlConfigFile }}"
       audit-log-path: "/var/log/kube-audit/audit-log.json"
       audit-log-maxage: "30"
       audit-log-maxbackup: "10"
       audit-log-maxsize: "100"
       audit-log-format: "json"
-      audit-policy-file: "/etc/kubernetes/audit.yaml"
+      audit-policy-file: "{{ .AuditPolicyFile }}"
     extra_binds:
     - "/var/log/kube-audit:/var/log/kube-audit"
   kube-controller:
@@ -219,16 +219,19 @@ var tpl *template.Template
 
 type tmplData struct {
 	*Config
-	CertPEM, KeyPEM []byte
+	CertPEM, KeyPEM                             []byte
+	AdmissionControlConfigFile, AuditPolicyFile string
 }
 
 func launchRKE(cfg *Config, certPEM, keyPEM []byte) error {
 	// render template data
 	var buf bytes.Buffer
 	tplData := tmplData{
-		Config:  cfg,
-		CertPEM: certPEM,
-		KeyPEM:  keyPEM,
+		Config:                     cfg,
+		CertPEM:                    certPEM,
+		KeyPEM:                     keyPEM,
+		AdmissionControlConfigFile: k8sConfigs["admission"].filename,
+		AuditPolicyFile:            k8sConfigs["audit"].filename,
 	}
 	if err := tpl.Execute(&buf, tplData); err != nil {
 		return errors.Wrap(err, "rke template render failed")

@@ -1,12 +1,14 @@
 package ranchhand
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"strings"
 
 	"github.com/Masterminds/semver"
+	"github.com/dominodatalab/ranchhand/pkg/ssh"
 	"github.com/pkg/errors"
 )
 
@@ -18,6 +20,11 @@ func ensureDirectory(dir string) error {
 	}
 
 	return nil
+}
+
+func ensureRemoteDirectory(client *ssh.Client, name string) error {
+	_, err := client.ExecuteCmd(fmt.Sprintf("sudo mkdir -p %s", name))
+	return err
 }
 
 func downloadFile(filepath, url string) error {
