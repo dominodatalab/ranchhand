@@ -10,7 +10,7 @@ import (
 
 	"github.com/Rican7/retry"
 	"github.com/Rican7/retry/strategy"
-	"github.com/dominodatalab/ranchhand/pkg/osi"
+	"github.com/dominodatalab/os-release"
 	"github.com/dominodatalab/ranchhand/pkg/ssh"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -103,7 +103,7 @@ func processHosts(cfg *Config) error {
 
 // connect to the host, enforce node requirements, and install docker onto a vm
 func processHost(addr string, cfg *SSHConfig) error {
-	var osInfo *osi.Info
+	var osInfo *osrelease.Data
 	var client *ssh.Client
 
 	err := dialHost(addr, cfg.Port, cfg.ConnectionTimeout)
@@ -144,17 +144,17 @@ func dialHost(addr string, port, timeout uint) error {
 }
 
 // fetch and parse os identification data
-func loadOSInfo(client *ssh.Client) (*osi.Info, error) {
+func loadOSInfo(client *ssh.Client) (*osrelease.Data, error) {
 	contents, err := client.ExecuteCmd("cat /etc/os-release")
 	if err != nil {
 		return nil, errors.Wrap(err, "os info check failed")
 	}
 
-	return osi.Parse(contents), nil
+	return osrelease.Parse(contents), nil
 }
 
 // coordinate system checks
-func enforceSysRequirements(client *ssh.Client, osInfo *osi.Info) error {
+func enforceSysRequirements(client *ssh.Client, osInfo *osrelease.Data) error {
 	var errs []error
 
 	if err := constrainOS(osInfo); err != nil {
@@ -176,9 +176,44 @@ func enforceSysRequirements(client *ssh.Client, osInfo *osi.Info) error {
 	return nil
 }
 
+// install docker onto a new system and mark the operation as complete thereafter
+func installDocker(client *ssh.Client, osInfo *osrelease.Data) error {
+	if err := ensureRemoteDirectory(client, remoteStateDir); err != nil {
+		return errors.Wrap(err, "cannot create remote state dir")
+	}
+
+	indicator := filepath.Join(remoteStateDir, "docker-installed")
+	if _, err := client.ExecuteCmd(fmt.Sprintf("test -f %s", indicator)); err == nil {
+		return nil
+	}
+
+	cmds := append(dockerInstallCmds[osInfo.ID], "sudo usermod -aG docker $USER")
+	log.Infof("installing docker on host [%s]", client.RemoteAddr())
+	if _, err := client.ExecuteCmd(strings.Join(cmds, " && ")); err != nil {
+		return errors.Wrap(err, "docker install failed")
+	}
+
+	err := retry.Retry(
+		func(attempt uint) (err error) {
+			if _, err = client.ExecuteCmd("sudo docker version"); err != nil {
+				log.Warnf("attempt [%d] to verify docker is running failed on host [%s]", attempt, client.RemoteAddr())
+			}
+			return err
+		},
+		strategy.Wait(10*time.Second),
+		strategy.Limit(12),
+	)
+	if err != nil {
+		return errors.Wrap(err, "unable to verify docker install")
+	}
+
+	_, err = client.ExecuteCmd(fmt.Sprintf("sudo touch %s", indicator))
+	return errors.Wrap(err, "cannot mark docker install complete")
+}
+
 // ensure operating system is compatible
-func constrainOS(osInfo *osi.Info) (err error) {
-	if osInfo.IsUbuntu() || osInfo.IsCentOS() || osInfo.IsRHEL() {
+func constrainOS(osInfo *osrelease.Data) (err error) {
+	if osInfo.IsLikeDebian() || osInfo.IsLikeFedora() {
 		err = constrainVersion(versionConstraints[osInfo.ID], osInfo.VersionID)
 	} else {
 		err = errors.New("support not implemented")
@@ -236,41 +271,6 @@ func constrainDockerVersion(client *ssh.Client) error {
 	}
 
 	return nil
-}
-
-// install docker onto a new system and mark the operation as complete thereafter
-func installDocker(client *ssh.Client, osInfo *osi.Info) error {
-	if err := ensureRemoteDirectory(client, remoteStateDir); err != nil {
-		return errors.Wrap(err, "cannot create remote state dir")
-	}
-
-	indicator := filepath.Join(remoteStateDir, "docker-installed")
-	if _, err := client.ExecuteCmd(fmt.Sprintf("test -f %s", indicator)); err == nil {
-		return nil
-	}
-
-	cmds := append(dockerInstallCmds[osInfo.ID], "sudo usermod -aG docker $USER")
-	log.Infof("installing docker on host [%s]", client.RemoteAddr())
-	if _, err := client.ExecuteCmd(strings.Join(cmds, " && ")); err != nil {
-		return errors.Wrap(err, "docker install failed")
-	}
-
-	err := retry.Retry(
-		func(attempt uint) (err error) {
-			if _, err = client.ExecuteCmd("sudo docker version"); err != nil {
-				log.Warnf("attempt [%d] to verify docker is running failed on host [%s]", attempt, client.RemoteAddr())
-			}
-			return err
-		},
-		strategy.Wait(10*time.Second),
-		strategy.Limit(12),
-	)
-	if err != nil {
-		return errors.Wrap(err, "unable to verify docker install")
-	}
-
-	_, err = client.ExecuteCmd(fmt.Sprintf("sudo touch %s", indicator))
-	return errors.Wrap(err, "cannot mark docker install complete")
 }
 
 // install static k8s config files
