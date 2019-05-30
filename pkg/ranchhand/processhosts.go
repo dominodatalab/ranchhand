@@ -13,7 +13,6 @@ import (
 	"github.com/dominodatalab/os-release"
 	"github.com/dominodatalab/ranchhand/pkg/ssh"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
