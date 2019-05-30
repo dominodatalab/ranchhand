@@ -23,11 +23,12 @@ type SSHConfig struct {
 }
 
 type Config struct {
-	SSH          *SSHConfig
-	Nodes        []Node
-	Timeout      time.Duration
-	CertIPs      []string
-	CertDNSNames []string
+	SSH           *SSHConfig
+	Nodes         []Node
+	Timeout       time.Duration
+	CertIPs       []string
+	CertDNSNames  []string
+	AdminPassword string
 }
 
 func Run(cfg *Config) error {
@@ -55,7 +56,7 @@ func Run(cfg *Config) error {
 		return err
 	}
 
-	log.Info("installing kubernetes")
+	log.Info("installing kubernetes via rke")
 	if err := launchRKE(cfg, certPEM, keyPEM); err != nil {
 		return err
 	}
