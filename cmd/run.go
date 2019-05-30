@@ -67,7 +67,7 @@ func init() {
 	runCmd.Flags().UintVarP(&sshTimeout, "ssh-connect-timeout", "c", 30, "time to wait (in secs) for hosts to accept connection")
 	runCmd.Flags().StringSliceVarP(&certIPs, "cert-ips", "a", []string{"127.0.0.1"}, "list of ip addresses in ca cert (comma-delimited)")
 	runCmd.Flags().StringSliceVarP(&certDNSNames, "cert-dns-names", "d", []string{"rancher.example.org"}, "list of dns names in ca cert (comma-delimited, first is CN)")
-	runCmd.Flags().StringVarP(&adminPassword, "reset-password", "r", "", "reset default admin password")
+	runCmd.Flags().StringVarP(&adminPassword, "admin-password", "r", "", "change default admin password")
 	runCmd.Flags().UintVarP(&timeout, "timeout", "t", 300, "total time to wait (in secs) for host processing to complete")
 
 	runCmd.MarkFlagRequired("node-ips")
