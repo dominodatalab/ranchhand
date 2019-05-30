@@ -138,5 +138,10 @@ func modifyRancherAdminPassword(host, password string) error {
 		CurrentPassword: rancherDefaultCredentials.Password,
 		NewPassword:     password,
 	}
-	return rancher.ChangePassword(host, token, input)
+	if err := rancher.ChangePassword(host, token, input); err != nil {
+		return err
+	}
+
+	log.Info("changed rancher admin password")
+	return nil
 }
