@@ -13,16 +13,20 @@ import (
 	"github.com/dominodatalab/os-release"
 	"github.com/dominodatalab/ranchhand/pkg/ssh"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
 	nodeRecommendation   = 3
 	cpuRecommendation    = 4
 	memoryRecommendation = 16.0
+
+	k8sCfgDir      = "/etc/kubernetes"
+	remoteStateDir = "/var/lib/ranchhand"
 )
 
 var (
+	k8sConfigs map[string]k8sConfig
+
 	versionConstraints = map[string]string{
 		"ubuntu": ">=16.04.x",
 		"centos": "~7.x",
@@ -57,6 +61,10 @@ var (
 		},
 	}
 )
+
+type k8sConfig struct {
+	filename, contents string
+}
 
 // process remote hosts concurrently and return any errors that occurred
 func processHosts(cfg *Config) error {
@@ -109,6 +117,9 @@ func processHost(addr string, cfg *SSHConfig) error {
 	}
 	if err == nil {
 		err = installDocker(client, osInfo)
+	}
+	if err == nil {
+		err = installK8sConfigs(client)
 	}
 
 	return errors.Wrapf(err, addr)
@@ -166,11 +177,8 @@ func enforceSysRequirements(client *ssh.Client, osInfo *osrelease.Data) error {
 
 // install docker onto a new system and mark the operation as complete thereafter
 func installDocker(client *ssh.Client, osInfo *osrelease.Data) error {
-	remoteStateDir := "/var/lib/ranchhand"
-	if _, cerr := client.ExecuteCmd(fmt.Sprintf("test -d %s", remoteStateDir)); cerr != nil {
-		if _, err := client.ExecuteCmd(fmt.Sprintf("sudo mkdir -p %s", remoteStateDir)); err != nil {
-			return errors.Wrapf(err, "cannot create remote state directory %q", remoteStateDir)
-		}
+	if err := ensureRemoteDirectory(client, remoteStateDir); err != nil {
+		return errors.Wrap(err, "cannot create remote state dir")
 	}
 
 	indicator := filepath.Join(remoteStateDir, "docker-installed")
@@ -262,4 +270,57 @@ func constrainDockerVersion(client *ssh.Client) error {
 	}
 
 	return nil
+}
+
+// install static k8s config files
+func installK8sConfigs(client *ssh.Client) error {
+	log.Info("creating kubernetes host configs")
+
+	if err := ensureRemoteDirectory(client, k8sCfgDir); err != nil {
+		return errors.Wrap(err, "cannot create k8s config dir")
+	}
+	for _, cfg := range k8sConfigs {
+		cmdTmpl := "test -f %[1]q || echo -e %[2]q | sudo tee %[1]s && sudo chown root:root %[1]s && sudo chmod 0600 %[1]s"
+		if _, err := client.ExecuteCmd(fmt.Sprintf(cmdTmpl, cfg.filename, cfg.contents)); err != nil {
+			return errors.Wrap(err, "cannot create k8s config")
+		}
+	}
+	return nil
+}
+
+func init() {
+	k8sAuditCfgFile := filepath.Join(k8sCfgDir, "audit.yaml")
+	k8sEventRateCfgFile := filepath.Join(k8sCfgDir, "event.yaml")
+	k8sAdmissionCfgFile := filepath.Join(k8sCfgDir, "admission.yaml")
+
+	k8sAuditCfgContents := `apiVersion: audit.k8s.io/v1beta1
+kind: Policy
+rules:
+- level: Metadata`
+	k8sEventRateCfgContents := `apiVersion: eventratelimit.admission.k8s.io/v1alpha1
+kind: Configuration
+limits:
+- type: Server
+  qps: 500
+  burst: 5000`
+	k8sAdmissionCfgContents := fmt.Sprintf(`apiVersion: apiserver.k8s.io/v1alpha1
+kind: AdmissionConfiguration
+plugins:
+- name: EventRateLimit
+  path: %s`, k8sEventRateCfgFile)
+
+	k8sConfigs = map[string]k8sConfig{
+		"admission": {
+			filename: k8sAdmissionCfgFile,
+			contents: k8sAdmissionCfgContents,
+		},
+		"audit": {
+			filename: k8sAuditCfgFile,
+			contents: k8sAuditCfgContents,
+		},
+		"event": {
+			filename: k8sEventRateCfgFile,
+			contents: k8sEventRateCfgContents,
+		},
+	}
 }

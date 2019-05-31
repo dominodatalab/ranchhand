@@ -1,8 +1,10 @@
 package ranchhand
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"text/template"
@@ -36,14 +38,45 @@ services:
     snapshot: true
     creation: 6h
     retention: 24h
+  kube-api:
+    pod_security_policy: true
+    extra_args:
+      anonymous-auth: "false"
+      profiling: "false"
+      repair-malformed-updates: "false"
+      service-account-lookup: "true"
+      enable-admission-plugins: "ServiceAccount,NamespaceLifecycle,LimitRanger,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota,DefaultTolerationSeconds,AlwaysPullImages,DenyEscalatingExec,NodeRestriction,EventRateLimit,PodSecurityPolicy"
+      admission-control-config-file: "{{ .AdmissionControlConfigFile }}"
+      audit-log-path: "/var/log/kube-audit/audit-log.json"
+      audit-log-maxage: "30"
+      audit-log-maxbackup: "10"
+      audit-log-maxsize: "100"
+      audit-log-format: "json"
+      audit-policy-file: "{{ .AuditPolicyFile }}"
+    extra_binds:
+    - "/var/log/kube-audit:/var/log/kube-audit"
+  kube-controller:
+    extra_args:
+      profiling: "false"
+      address: "127.0.0.1"
+      terminated-pod-gc-threshold: "1000"
+  kubelet:
+    extra_args:
+      streaming-connection-idle-timeout: "30m"
+      protect-kernel-defaults: "false"
+      make-iptables-util-chains: "true"
+      event-qps: "0"
+  scheduler:
+    extra_args:
+      profiling: "false"
+      address: "127.0.0.1"
 
 ingress:
   provider: nginx
   extra_args:
     default-ssl-certificate: ingress-nginx/ingress-default-cert
 
-addons: |-
-  ---
+addons: |
   apiVersion: v1
   kind: Secret
   metadata:
@@ -53,6 +86,131 @@ addons: |-
   data:
     tls.crt: {{ .CertPEM | base64Encode }}
     tls.key: {{ .KeyPEM | base64Encode }}
+  ---
+  apiVersion: rbac.authorization.k8s.io/v1
+  kind: Role
+  metadata:
+    name: default-psp-role
+    namespace: ingress-nginx
+  rules:
+  - apiGroups:
+    - extensions
+    resourceNames:
+    - default-psp
+    resources:
+    - podsecuritypolicies
+    verbs:
+    - use
+  ---
+  apiVersion: rbac.authorization.k8s.io/v1
+  kind: RoleBinding
+  metadata:
+    name: default-psp-rolebinding
+    namespace: ingress-nginx
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: Role
+    name: default-psp-role
+  subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: system:serviceaccounts
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: system:authenticated
+  ---
+  apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: cattle-system
+  ---
+  apiVersion: rbac.authorization.k8s.io/v1
+  kind: Role
+  metadata:
+    name: default-psp-role
+    namespace: cattle-system
+  rules:
+  - apiGroups:
+    - extensions
+    resourceNames:
+    - default-psp
+    resources:
+    - podsecuritypolicies
+    verbs:
+    - use
+  ---
+  apiVersion: rbac.authorization.k8s.io/v1
+  kind: RoleBinding
+  metadata:
+    name: default-psp-rolebinding
+    namespace: cattle-system
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: Role
+    name: default-psp-role
+  subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: system:serviceaccounts
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: system:authenticated
+  ---
+  apiVersion: extensions/v1beta1
+  kind: PodSecurityPolicy
+  metadata:
+    name: restricted
+  spec:
+    requiredDropCapabilities:
+    - NET_RAW
+    privileged: false
+    allowPrivilegeEscalation: false
+    defaultAllowPrivilegeEscalation: false
+    fsGroup:
+      rule: RunAsAny
+    runAsUser:
+      rule: MustRunAsNonRoot
+    seLinux:
+      rule: RunAsAny
+    supplementalGroups:
+      rule: RunAsAny
+    volumes:
+    - emptyDir
+    - secret
+    - persistentVolumeClaim
+    - downwardAPI
+    - configMap
+    - projected
+  ---
+  apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRole
+  metadata:
+    name: psp:restricted
+  rules:
+  - apiGroups:
+    - extensions
+    resourceNames:
+    - restricted
+    resources:
+    - podsecuritypolicies
+    verbs:
+    - use
+  ---
+  apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRoleBinding
+  metadata:
+    name: psp:restricted
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: psp:restricted
+  subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: system:serviceaccounts
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: system:authenticated
 `
 )
 
@@ -60,39 +218,60 @@ var tpl *template.Template
 
 type tmplData struct {
 	*Config
-	CertPEM, KeyPEM []byte
+	CertPEM, KeyPEM                             []byte
+	AdmissionControlConfigFile, AuditPolicyFile string
 }
 
 func launchRKE(cfg *Config, certPEM, keyPEM []byte) error {
-	// exit early if cluster is already running
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-	if err := exec.CommandContext(ctx, "rke", "version", "--config", RKEConfigFile).Run(); err == nil {
-		return nil
+	// render template data
+	var buf bytes.Buffer
+	tplData := tmplData{
+		Config:                     cfg,
+		CertPEM:                    certPEM,
+		KeyPEM:                     keyPEM,
+		AdmissionControlConfigFile: k8sConfigs["admission"].filename,
+		AuditPolicyFile:            k8sConfigs["audit"].filename,
 	}
-
-	// generate rke config
-	file, err := os.Create(RKEConfigFile)
-	if err != nil {
-		return errors.Wrapf(err, "cannot create %s", RKEConfigFile)
-	}
-	defer file.Close()
-
-	// render file contents
-	data := tmplData{Config: cfg, CertPEM: certPEM, KeyPEM: keyPEM}
-	if err := tpl.Execute(file, data); err != nil {
+	if err := tpl.Execute(&buf, tplData); err != nil {
 		return errors.Wrap(err, "rke template render failed")
 	}
+	tplContents := buf.Bytes()
 
-	// execute rke up
-	cmd := exec.Command("rke", "up", "--config", RKEConfigFile)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		return errors.Wrap(err, "cannot install kubernetes")
+	// write cfg if missing or template has changed
+	var changeCfg bool
+	if _, err := os.Stat(RKEConfigFile); os.IsNotExist(err) {
+		changeCfg = true
+	} else {
+		fileContents, err := ioutil.ReadFile(RKEConfigFile)
+		if err != nil {
+			return errors.Wrap(err, "rke config read failed")
+		}
+		changeCfg = !bytes.Equal(fileContents, tplContents)
+	}
+	if changeCfg {
+		if err := ioutil.WriteFile(RKEConfigFile, tplContents, 0644); err != nil {
+			return errors.Wrap(err, "rke config write failed")
+		}
 	}
 
+	// converge is cfg changed or k8s is not bootstrapped
+	if changeCfg || !hasRKEConverged() {
+		cmd := exec.Command("rke", "up", "--config", RKEConfigFile)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		log.Info("launching rke up")
+		return errors.Wrap(cmd.Run(), "cannot install kubernetes")
+	}
 	return nil
+}
+
+func hasRKEConverged() bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "rke", "version", "--config", RKEConfigFile)
+	return cmd.Run() == nil
 }
 
 func init() {

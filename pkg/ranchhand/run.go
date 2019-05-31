@@ -5,10 +5,12 @@ import (
 	"time"
 
 	"github.com/dominodatalab/ranchhand/pkg/helm"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 const OutputDirectory = "ranchhand-output"
+
+var log = logrus.StandardLogger()
 
 type Node struct {
 	PublicIP  string
@@ -23,11 +25,12 @@ type SSHConfig struct {
 }
 
 type Config struct {
-	SSH          *SSHConfig
-	Nodes        []Node
-	Timeout      time.Duration
-	CertIPs      []string
-	CertDNSNames []string
+	SSH           *SSHConfig
+	Nodes         []Node
+	Timeout       time.Duration
+	CertIPs       []string
+	CertDNSNames  []string
+	AdminPassword string
 }
 
 func Run(cfg *Config) error {
@@ -55,7 +58,7 @@ func Run(cfg *Config) error {
 		return err
 	}
 
-	log.Info("installing kubernetes")
+	log.Info("installing kubernetes via rke")
 	if err := launchRKE(cfg, certPEM, keyPEM); err != nil {
 		return err
 	}
@@ -74,8 +77,16 @@ func Run(cfg *Config) error {
 		return err
 	}
 
+	nodeIP := cfg.Nodes[0].PublicIP
+
 	log.Info("deploying rancher application")
-	return installRancher(hClient, cfg.Nodes[0].PublicIP)
+	if err := installRancher(hClient, nodeIP); err != nil {
+		return err
+	}
+
+	log.Info("checking rancher admin password")
+	return modifyRancherAdminPassword(nodeIP, cfg.AdminPassword)
+
 }
 
 func init() {

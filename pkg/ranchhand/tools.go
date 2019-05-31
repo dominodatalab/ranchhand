@@ -12,17 +12,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type RequiredToolURLs struct {
-	Kubectl string
-	Helm    string
-	RKE     string
-}
-
 // todo: need a better way structure for managing tool versions
 var (
 	PlatformToolVersions = map[string]string{
-		"kubectl": "v1.14.1",
-		"helm":    "v2.13.1",
+		"kubectl": "v1.14.2",
+		"helm":    "v2.14.0",
 		"rke":     "v0.2.2",
 	}
 
@@ -39,6 +33,12 @@ var (
 		},
 	}
 )
+
+type RequiredToolURLs struct {
+	Kubectl string
+	Helm    string
+	RKE     string
+}
 
 func installRequiredTools() error {
 	toolsDir, err := filepath.Abs("tools")

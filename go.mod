@@ -28,6 +28,7 @@ require (
 	github.com/sirupsen/logrus v1.3.0
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3 // indirect
+	github.com/stretchr/testify v1.3.0
 	github.com/ulikunitz/xz v0.5.6 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	golang.org/x/crypto v0.0.0-20190225124518-7f87c0fbb88b

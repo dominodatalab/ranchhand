@@ -5,7 +5,7 @@ executors:
     docker:
     - image: circleci/golang:1.12
     environment:
-      GORELEASER_VERSION: v0.106.0
+      GORELEASER_VERSION: v0.108.0
       AWSCLI_VERSION: 1.16.122
 
 commands:
@@ -46,7 +46,8 @@ commands:
             --node-ips $(cat instance-ip) \
             --ssh-user << parameters.ssh_user >> \
             --ssh-key-path ~/.ssh/id_rsa_5a19aee7ef984f2f68c3be7262f91d35 \
-            --ssh-connect-timeout 180
+            --ssh-connect-timeout 180 \
+            --admin-password "$3cr3t$auc3"
     - run:
         name: Teardown test env
         when: always
@@ -71,6 +72,14 @@ jobs:
         root: .
         paths:
         - ranchhand
+  unittest:
+    executor: default
+    steps:
+    - checkout
+    - restore_cache:
+        keys:
+        - v1-gomod-cache-{{ checksum "go.sum" }}
+    - run: go test -v ./pkg/...
   e2e_ubuntu:
     executor: default
     steps:
@@ -94,12 +103,15 @@ workflows:
   build_and_test:
     jobs:
     - build
+    - unittest:
+        requires:
+        - build
     - e2e_ubuntu:
         requires:
-        - build
+        - unittest
     - e2e_centos:
         requires:
-        - build
+        - unittest
   release:
     jobs:
     - release:

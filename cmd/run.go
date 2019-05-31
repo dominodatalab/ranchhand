@@ -21,14 +21,15 @@ const runExamples = `
 `
 
 var (
-	nodeIPs      []string
-	sshUser      string
-	sshPort      uint
-	sshKeyPath   string
-	sshTimeout   uint
-	timeout      uint
-	certIPs      []string
-	certDNSNames []string
+	nodeIPs       []string
+	sshUser       string
+	sshPort       uint
+	sshKeyPath    string
+	sshTimeout    uint
+	timeout       uint
+	certIPs       []string
+	certDNSNames  []string
+	adminPassword string
 
 	runCmd = &cobra.Command{
 		Use:     "run",
@@ -42,10 +43,11 @@ var (
 					KeyPath:           sshKeyPath,
 					ConnectionTimeout: sshTimeout,
 				},
-				Nodes:        ranchhand.BuildNodes(nodeIPs),
-				Timeout:      time.Duration(timeout) * time.Second,
-				CertIPs:      certIPs,
-				CertDNSNames: certDNSNames,
+				Nodes:         ranchhand.BuildNodes(nodeIPs),
+				Timeout:       time.Duration(timeout) * time.Second,
+				CertIPs:       certIPs,
+				CertDNSNames:  certDNSNames,
+				AdminPassword: adminPassword,
 			}
 
 			if err := ranchhand.Run(&cfg); err != nil {
@@ -56,14 +58,17 @@ var (
 )
 
 func init() {
+	runCmd.Flags().SortFlags = false
+
 	runCmd.Flags().StringSliceVarP(&nodeIPs, "node-ips", "n", []string{}, "list of hosts (comma-delimited)")
 	runCmd.Flags().StringVarP(&sshUser, "ssh-user", "u", "root", "host ssh username")
 	runCmd.Flags().UintVarP(&sshPort, "ssh-port", "p", 22, "host ssh port")
 	runCmd.Flags().StringVarP(&sshKeyPath, "ssh-key-path", "i", "", "path to private ssh key")
 	runCmd.Flags().UintVarP(&sshTimeout, "ssh-connect-timeout", "c", 30, "time to wait (in secs) for hosts to accept connection")
-	runCmd.Flags().UintVarP(&timeout, "timeout", "t", 300, "total time to wait (in secs) for host processing to complete")
 	runCmd.Flags().StringSliceVarP(&certIPs, "cert-ips", "a", []string{"127.0.0.1"}, "list of ip addresses in ca cert (comma-delimited)")
 	runCmd.Flags().StringSliceVarP(&certDNSNames, "cert-dns-names", "d", []string{"rancher.example.org"}, "list of dns names in ca cert (comma-delimited, first is CN)")
+	runCmd.Flags().StringVarP(&adminPassword, "admin-password", "r", "", "change default admin password")
+	runCmd.Flags().UintVarP(&timeout, "timeout", "t", 300, "total time to wait (in secs) for host processing to complete")
 
 	runCmd.MarkFlagRequired("node-ips")
 	runCmd.MarkFlagRequired("ssh-key-path")

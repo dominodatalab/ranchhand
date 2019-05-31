@@ -1,14 +1,8 @@
 package ranchhand
 
 import (
-	"bytes"
-	"crypto/tls"
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"net/url"
-
 	"github.com/dominodatalab/ranchhand/pkg/helm"
+	"github.com/dominodatalab/ranchhand/pkg/rancher"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -47,16 +41,18 @@ var (
 				Namespace: rancherNamespace,
 				Version:   "2.2.3",
 				SetValues: map[string]string{
-					"tls":       "external",
-					"privateCA": "true",
+					"tls":            "external",
+					"privateCA":      "true",
+					"addLocal":       "false",
+					"auditLog.level": "1",
 				},
 			},
 		},
 	}
 
-	rancherDefaultCredentials = map[string]string{
-		"username": "admin",
-		"password": "admin",
+	rancherDefaultCredentials = rancher.LoginCredentials{
+		Username: "admin",
+		Password: "admin",
 	}
 )
 
@@ -90,11 +86,10 @@ func createRancherSecret(certPEM []byte, kubeConfig string) error {
 			return errors.Wrapf(err, "failed to create rancher private ca secret %s", rancherSecret)
 		}
 	}
-
 	return nil
 }
 
-func installRancher(h helm.Helm, nodeIP string) error {
+func installRancher(h helm.Helm, host string) error {
 	exists, err := h.IsRepo(rancherRepo.Name)
 	if err != nil {
 		return err
@@ -121,34 +116,32 @@ func installRancher(h helm.Helm, nodeIP string) error {
 			}
 		}
 	}
-
-	return pingRancherAPI(nodeIP)
+	return rancher.Ping(host)
 }
 
-func pingRancherAPI(host string) error {
-	loginURL, err := url.Parse(fmt.Sprintf("https://%s/v3-public/localProviders/local?action=login", host))
+func modifyRancherAdminPassword(host, password string) error {
+	token, err := rancher.Login(host, &rancherDefaultCredentials)
 	if err != nil {
+		if rancher.IsUnauthorized(err) {
+			log.Info("default rancher admin password has already been changed, nothing to do")
+			return nil
+		}
 		return err
 	}
-	body, err := json.Marshal(rancherDefaultCredentials)
-	if err != nil {
+	if len(password) == 0 {
+		log.Warn("default rancher admin password should be changed for security reasons")
+		return nil
+	}
+
+	log.Info("attempting to change rancher admin password")
+	input := &rancher.ChangePasswordInput{
+		CurrentPassword: rancherDefaultCredentials.Password,
+		NewPassword:     password,
+	}
+	if err := rancher.ChangePassword(host, token, input); err != nil {
 		return err
 	}
-	client := http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
 
-	resp, err := client.Post(loginURL.String(), "application/json", bytes.NewBuffer(body))
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusCreated {
-		return errors.Errorf("rancher api check failed with status (%d)", resp.StatusCode)
-	}
-
+	log.Info("changed rancher admin password")
 	return nil
 }
