@@ -79,7 +79,7 @@ jobs:
     - restore_cache:
         keys:
         - v1-gomod-cache-{{ checksum "go.sum" }}
-    - run: go test -v ./pkg/...
+    - run: make test
   e2e_ubuntu:
     executor: default
     steps:
