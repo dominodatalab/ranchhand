@@ -16,6 +16,28 @@ This tool aims to automate the steps listed in Rancher's official [HA Install][]
 1. Download the latest [latest release][] from GitHub.
 2. Execute `ranchhand run -h` to see all of the available options.
 
+## Terraform
+
+Using the Terraform module, you can leverage Ranchhand to create a Rancher cluster on a specific set of nodes.
+
+```hcl
+module "ranchhand" {
+  source = "github.com/dominodatalab/ranchhand/terraform"
+
+  node_ips         = ["..."]
+  distro           = "darwin"
+  release          = "latest"
+  working_dir      = "..."
+  cert_dnsnames    = ["..."]
+  cert_ipaddresses = ["..."]
+
+  ssh_username   = "..."
+  ssh_key_path   = "..."
+  ssh_proxy_user = "..."
+  ssh_proxy_host = "..."
+}
+```
+
 ## Development
 
 Please submit any feature enhancements, bug fixes, or ideas via pull requests or issues.  If you need to test local changes e2e, you can do so using Vagrant and Virtualbox. Here are the recommended steps:
