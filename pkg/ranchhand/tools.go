@@ -12,12 +12,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// todo: need a better way structure for managing tool versions
 var (
 	PlatformToolVersions = map[string]string{
-		"kubectl": "v1.14.2",
-		"helm":    "v2.14.0",
-		"rke":     "v0.2.2",
+		"kubectl": "v1.14.3",
+		"helm":    "v2.14.1",
+		"rke":     "v0.2.4",
 	}
 
 	PlatformToolURLs = map[string]RequiredToolURLs{
