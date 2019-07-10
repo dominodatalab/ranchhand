@@ -93,7 +93,7 @@ launch_ranchhand() {
   # post-run cleanup and file sync from proxy
   if [[ -n $ssh_proxy_host ]]; then
     ssh $ssh_args $ssh_host_str rm $remote_key_path
-    rsync -ai --rsh="ssh $ssh_args" $ssh_host_str:$workdir/ ./
+    rsync -ai --exclude=ranchhand-output/tools --rsh="ssh $ssh_args" $ssh_host_str:$workdir/ ./
     echo "retrieved output from bastion: $ssh_proxy_host"
   fi
 
