@@ -43,7 +43,6 @@ services:
     extra_args:
       anonymous-auth: "false"
       profiling: "false"
-      repair-malformed-updates: "false"
       service-account-lookup: "true"
       enable-admission-plugins: "ServiceAccount,NamespaceLifecycle,LimitRanger,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota,DefaultTolerationSeconds,AlwaysPullImages,DenyEscalatingExec,NodeRestriction,EventRateLimit,PodSecurityPolicy"
       admission-control-config-file: "{{ .AdmissionControlConfigFile }}"
