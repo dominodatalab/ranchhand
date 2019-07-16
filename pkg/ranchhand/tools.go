@@ -14,9 +14,9 @@ import (
 
 var (
 	PlatformToolVersions = map[string]string{
-		"kubectl": "v1.14.3",
-		"helm":    "v2.14.1",
-		"rke":     "v0.2.4",
+		"kubectl": "v1.15.0",
+		"helm":    "v2.14.2",
+		"rke":     "v0.2.5",
 	}
 
 	PlatformToolURLs = map[string]RequiredToolURLs{
