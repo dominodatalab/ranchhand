@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -222,7 +223,7 @@ type tmplData struct {
 }
 
 func launchRKE(cfg *Config, certPEM, keyPEM []byte) error {
-	// render template data
+	// render config template
 	var buf bytes.Buffer
 	tplData := tmplData{
 		Config:                     cfg,
@@ -236,25 +237,44 @@ func launchRKE(cfg *Config, certPEM, keyPEM []byte) error {
 	}
 	tplContents := buf.Bytes()
 
-	// write cfg if missing or template has changed
-	var changeCfg bool
-	if _, err := os.Stat(RKEConfigFile); os.IsNotExist(err) {
-		changeCfg = true
-	} else {
-		fileContents, err := ioutil.ReadFile(RKEConfigFile)
+	// decided if file needs to be [over]written
+	var writeConfig, saveState bool
+	_, err := os.Stat(RKEConfigFile)
+	switch {
+	case os.IsNotExist(err):
+		writeConfig = true
+	case cfg.UpgradeKubernetes:
+		configContents, err := ioutil.ReadFile(RKEConfigFile)
 		if err != nil {
 			return errors.Wrap(err, "rke config read failed")
 		}
-		changeCfg = !bytes.Equal(fileContents, tplContents)
+		writeConfig = !bytes.Equal(configContents, tplContents)
+		saveState = writeConfig
 	}
-	if changeCfg {
-		if err := ioutil.WriteFile(RKEConfigFile, tplContents, 0644); err != nil {
+
+	// write config to file
+	if writeConfig {
+		err := ioutil.WriteFile(RKEConfigFile, tplContents, 0644)
+		if err != nil {
 			return errors.Wrap(err, "rke config write failed")
 		}
 	}
 
-	// converge is cfg changed or k8s is not bootstrapped
-	if changeCfg || !hasRKEConverged() {
+	// take a snapshot of etcd state before applying upgrade
+	if saveState {
+		snapshotName := fmt.Sprintf("snapshot-%s", time.Now().UTC().Format(time.RFC3339))
+		cmd := exec.Command("rke", "etcd", "snapshot-save", "--name", snapshotName, "--config", RKEConfigFile)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		log.Info("taking snapshot of etcd state prior to upgrade")
+		if err := cmd.Run(); err != nil {
+			return errors.Wrap(cmd.Run(), "cannot snapshot etcd")
+		}
+	}
+
+	// run `rke up` if file was just written or cluster has not converged
+	if writeConfig || hasNotConverged() {
 		cmd := exec.Command("rke", "up", "--config", RKEConfigFile)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
@@ -262,15 +282,16 @@ func launchRKE(cfg *Config, certPEM, keyPEM []byte) error {
 		log.Info("launching rke up")
 		return errors.Wrap(cmd.Run(), "cannot install kubernetes")
 	}
+
 	return nil
 }
 
-func hasRKEConverged() bool {
+func hasNotConverged() bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, "rke", "version", "--config", RKEConfigFile)
-	return cmd.Run() == nil
+	return cmd.Run() != nil
 }
 
 func init() {

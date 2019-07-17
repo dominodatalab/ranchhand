@@ -32,7 +32,8 @@ type Config struct {
 	CertDNSNames  []string
 	AdminPassword string
 
-	UpgradeRancher bool
+	UpgradeRancher    bool
+	UpgradeKubernetes bool
 }
 
 func Run(cfg *Config) error {
