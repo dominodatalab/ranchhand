@@ -31,6 +31,8 @@ type Config struct {
 	CertIPs       []string
 	CertDNSNames  []string
 	AdminPassword string
+
+	UpgradeRancher bool
 }
 
 func Run(cfg *Config) error {
@@ -80,7 +82,7 @@ func Run(cfg *Config) error {
 	nodeIP := cfg.Nodes[0].PublicIP
 
 	log.Info("deploying rancher application")
-	if err := installRancher(hClient, nodeIP); err != nil {
+	if err := installRancher(hClient, nodeIP, cfg.UpgradeRancher); err != nil {
 		return err
 	}
 

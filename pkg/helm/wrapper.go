@@ -20,7 +20,8 @@ type Helm interface {
 	IsRepo(repoName string) (bool, error)
 	IsRelease(releaseName string) (bool, error)
 	AddRepo(repoData *Repository) error
-	InstallRelease(releaseName string, releaseInfo *ReleaseInfo) error
+	InstallRelease(chstr string, releaseInfo *ReleaseInfo) error
+	UpgradeRelease(chstr string, releaseInfo *ReleaseInfo) error
 }
 
 type Repository struct {
@@ -131,6 +132,32 @@ func (w *wrapper) InstallRelease(chstr string, ri *ReleaseInfo) error {
 	output := string(buffer)
 
 	return errors.Wrapf(err, "helm install release (%s) failed: %s", chstr, output)
+}
+
+func (w *wrapper) UpgradeRelease(chstr string, ri *ReleaseInfo) error {
+	args := []string{"upgrade", ri.Name, chstr}
+
+	var flags []string
+	if ri.Namespace != "" {
+		flags = append(flags, fmt.Sprintf("--namespace=%s", ri.Namespace))
+	}
+	if ri.Description != "" {
+		flags = append(flags, fmt.Sprintf("--description=%q", ri.Description))
+	}
+	if ri.Version != "" {
+		flags = append(flags, fmt.Sprintf("--version=%s", ri.Version))
+	}
+	if ri.Wait {
+		flags = append(flags, "--wait")
+	}
+	if len(flags) > 0 {
+		args = append(args, flags...)
+	}
+
+	buffer, err := w.helmCommand(args...).CombinedOutput()
+	output := string(buffer)
+
+	return errors.Wrapf(err, "helm upgrade release (%s) failed: %s", chstr, output)
 }
 
 func (w *wrapper) helmCommand(args ...string) *exec.Cmd {
