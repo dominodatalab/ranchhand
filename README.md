@@ -57,6 +57,10 @@ Please submit any feature enhancements, bug fixes, or ideas via pull requests or
 
     `go run main.go run -u vagrant -i ~/.ssh/id_rsa -n 192.168.50.10,...`
 
+## Contribute
+
+Contributions are always welcome! Please submit any questions, bugs or changes via an issue or PR. Thank you.
+
 [vagrantfile]: test/Vagrantfile
 
 [rke]: https://github.com/rancher/rke
