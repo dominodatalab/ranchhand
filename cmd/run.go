@@ -21,15 +21,18 @@ const runExamples = `
 `
 
 var (
-	nodeIPs       []string
-	sshUser       string
-	sshPort       uint
-	sshKeyPath    string
-	sshTimeout    uint
-	timeout       uint
-	certIPs       []string
-	certDNSNames  []string
-	adminPassword string
+	nodeIPs           []string
+	sshUser           string
+	sshPort           uint
+	sshKeyPath        string
+	sshTimeout        uint
+	timeout           uint
+	certIPs           []string
+	certDNSNames      []string
+	adminPassword     string
+	upgradeRancher    bool
+	upgradeKubernetes bool
+	upgradeAll        bool
 
 	runCmd = &cobra.Command{
 		Use:     "run",
@@ -43,11 +46,18 @@ var (
 					KeyPath:           sshKeyPath,
 					ConnectionTimeout: sshTimeout,
 				},
-				Nodes:         ranchhand.BuildNodes(nodeIPs),
-				Timeout:       time.Duration(timeout) * time.Second,
-				CertIPs:       certIPs,
-				CertDNSNames:  certDNSNames,
-				AdminPassword: adminPassword,
+				Nodes:             ranchhand.BuildNodes(nodeIPs),
+				Timeout:           time.Duration(timeout) * time.Second,
+				CertIPs:           certIPs,
+				CertDNSNames:      certDNSNames,
+				AdminPassword:     adminPassword,
+				UpgradeRancher:    upgradeRancher,
+				UpgradeKubernetes: upgradeKubernetes,
+			}
+
+			if upgradeAll {
+				cfg.UpgradeRancher = true
+				cfg.UpgradeKubernetes = true
 			}
 
 			if err := ranchhand.Run(&cfg); err != nil {
@@ -69,6 +79,9 @@ func init() {
 	runCmd.Flags().StringSliceVarP(&certDNSNames, "cert-dns-names", "d", []string{"rancher.example.org"}, "list of dns names in ca cert (comma-delimited, first is CN)")
 	runCmd.Flags().StringVarP(&adminPassword, "admin-password", "r", "", "change default admin password")
 	runCmd.Flags().UintVarP(&timeout, "timeout", "t", 300, "total time to wait (in secs) for host processing to complete")
+	runCmd.Flags().BoolVar(&upgradeRancher, "upgrade-rancher", false, "Upgrade Rancher version via Helm")
+	runCmd.Flags().BoolVar(&upgradeKubernetes, "upgrade-k8s", false, "Upgrade Kubernetes state via RKE")
+	runCmd.Flags().BoolVar(&upgradeAll, "upgrade", false, "Upgrade both Rancher and Kubernetes")
 
 	runCmd.MarkFlagRequired("node-ips")
 	runCmd.MarkFlagRequired("ssh-key-path")

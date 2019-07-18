@@ -29,17 +29,21 @@ var (
 		{
 			"stable/cert-manager",
 			helm.ReleaseInfo{
-				Name:      "cert-manager",
-				Namespace: "kube-system",
-				Version:   "v0.5.2",
+				Name:        "cert-manager",
+				Namespace:   "kube-system",
+				Version:     "v0.5.2",
+				Description: "Installed by Ranchhand",
+				Wait:        true,
 			},
 		},
 		{
 			"rancher-stable/rancher",
 			helm.ReleaseInfo{
-				Name:      "rancher",
-				Namespace: rancherNamespace,
-				Version:   "2.2.4",
+				Name:        "rancher",
+				Namespace:   rancherNamespace,
+				Version:     "2.2.5",
+				Description: "Installed by Ranchhand",
+				Wait:        true,
 				SetValues: map[string]string{
 					"tls":            "external",
 					"privateCA":      "true",
@@ -89,7 +93,7 @@ func createRancherSecret(certPEM []byte, kubeConfig string) error {
 	return nil
 }
 
-func installRancher(h helm.Helm, host string) error {
+func installRancher(h helm.Helm, host string, upgrade bool) error {
 	exists, err := h.IsRepo(rancherRepo.Name)
 	if err != nil {
 		return err
@@ -107,13 +111,18 @@ func installRancher(h helm.Helm, host string) error {
 		if err != nil {
 			return err
 		}
-		if !installed {
-			rlsInfo.Description = "Installed by RanchHand"
-			rlsInfo.Wait = true
 
-			if err := h.InstallRelease(rls.Chart, &rlsInfo); err != nil {
-				return err
-			}
+		switch {
+		case !installed:
+			err = h.InstallRelease(rls.Chart, &rlsInfo)
+		case upgrade:
+			err = h.UpgradeRelease(rls.Chart, &rlsInfo)
+		default:
+			log.Infof("%s is installed (upgrade not requested)", rlsInfo.Name)
+		}
+
+		if err != nil {
+			return err
 		}
 	}
 	return rancher.Ping(host)
