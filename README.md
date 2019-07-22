@@ -13,7 +13,7 @@ This tool aims to automate the steps listed in Rancher's official [HA Install][]
 
 ## Usage
 
-1. Download the latest [latest release][] from GitHub.
+1. Download the [latest release][] from GitHub.
 2. Execute `ranchhand run -h` to see all of the available options.
 
 ## Terraform
