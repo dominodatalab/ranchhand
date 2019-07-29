@@ -41,7 +41,7 @@ var (
 			helm.ReleaseInfo{
 				Name:        "rancher",
 				Namespace:   rancherNamespace,
-				Version:     "2.2.5",
+				Version:     "2.2.6",
 				Description: "Installed by Ranchhand",
 				Wait:        true,
 				SetValues: map[string]string{
