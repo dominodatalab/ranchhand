@@ -23,8 +23,8 @@ resource "random_password" "password" {
   count  = "${var.admin_password == "" ? 1 : 0}"
   length = 20
 
-  # The default EXCEPT '-' because it can trigger CLI arguments
-  override_special = "'!@#$%&*()_=+[]{}<>:?"
+  # The default EXCEPT "-" and "'"because it can trigger CLI arguments / mangle quotes
+  override_special = "!@#$%&*()_=+[]{}<>:?"
 }
 
 data "template_file" "launcher" {
