@@ -17,25 +17,15 @@ provider "template" {
 locals {
   script       = "launch_ranchhand.sh"
   ip_addresses = "${join(",", var.node_ips)}"
-  inventory_file = "${file("${path.module}/ansible/hosts")}"
 }
 
-data "template_file" "inventory_template_file" {
-  template = "${file("${path.module}/ansible/hosts.template")}"
-
-  vars {
-    node_ips = "${local.ip_addresses}"
+resource "null_resource" {
+  provisioner "local-exec" {
+    command = "ansible-playbook -i '${local.ip_addresses},' --private-key=${var.ssh_key_path} --remote-user=${var.ssh_username} prod.yml --diff"
   }
 }
 
-resource "local_file" "inventory_file" {
-  content  = "${data.template_file.inventory_template_file.rendered}"
-  filename = "${inventory_file}"
-}
 
-provisioner "local-exec" {
-    command = "ansible-playbook -i '"${inventory_file}"' --private-key=${var.ssh_key_path} --remote-user=${var.ssh_username} prod.yml"
-}
 
 #------------------------------------------------------------------------------
 # DEPRECATE BELOW
