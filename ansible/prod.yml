@@ -1,0 +1,7 @@
+# Master Playbook
+# THE standard playbook for Domino Rancher Deployments
+
+---
+hosts: all
+tasks:
+  - cmd: echo hello world

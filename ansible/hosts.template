@@ -1,0 +1,4 @@
+[nodes]
+{%- for ip in node_ips %}
+{{ ip }}
+{% endfor %}
