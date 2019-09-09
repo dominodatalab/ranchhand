@@ -2,6 +2,120 @@
 # THE standard playbook for Domino Rancher Deployments
 
 ---
-hosts: all
-tasks:
-  - cmd: echo hello world
+- hosts: all
+  vars:
+    k8sCfgDir: /etc/kubernetes
+    recommendedCpus: 4
+    recommendedMemory: 16
+    recommendedNodes: 3
+    tools_dir: "/home/ubuntu/ranchhand-output/tools"
+  tasks:
+    - name: "Ansible | List all known variables and facts"
+      debug: 
+        var: hostvars[inventory_hostname]
+
+    - name: Check Node Count
+      fail: msg="WARNING] {{ansible_play_hosts|length}} < {{ recommendedNodes }} (recommended)"
+      when: ansible_play_hosts|length < recommendedNodes
+      ignore_errors: yes
+
+    - name: Check OS
+      fail: msg="Operation System '{{ ansible_distribution }}' not supported"
+      when: ansible_distribution not in ['Debian', 'Fedora', 'Ubuntu']
+
+    - name: Check cpu Count
+      fail: msg="WARNING] cpu cores '{{ ansible_processor_vcpus }}' < {{ recommendedCpus }} (recommended)"
+      when: ansible_processor_vcpus < recommendedCpus
+      ignore_errors: yes
+
+    - name: Check Memory Size
+      fail: msg="WARNING] Memory '{{ ansible_memtotal_mb/1024 }}' < {{ recommendedMemory }} (recommended)"
+      when: ansible_memtotal_mb/1024 < recommendedMemory
+      ignore_errors: yes
+
+    - name: ensure ranchhand-output directory exists
+      file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - ranchhand-output
+        - "{{ tools_dir }}"
+
+    - name: update apt update
+      become: true
+      apt:
+        update_cache: yes
+        cache_valid_time: 86400 #One day
+
+    - name: install apt packages
+      become: true
+      apt:
+        name:
+          - unzip
+          - tar
+
+    - name: download binary tools
+      get_url:
+        url: "{{ item }}"
+        dest: "{{ tools_dir }}"
+        mode: u=rwx
+      with_items:
+        - https://storage.googleapis.com/kubernetes-release/release/v1.15.2/bin/linux/amd64/kubectl
+        - https://github.com/rancher/rke/releases/download/v0.2.7/rke_linux-amd64
+
+    - name: download packaged tools
+      unarchive:
+        src: https://storage.googleapis.com/kubernetes-helm/helm-v2.14.3-linux-amd64.tar.gz # "{{ tools_dir }}/{{ item }}"
+        dest: "{{ tools_dir }}"
+        remote_src: yes
+        extra_opts: [--strip-components=1]
+        mode: u=rx
+
+    - name: add tools to PATH
+      become: true
+      lineinfile:
+        dest: /etc/environment
+        state: present
+        backrefs: yes
+        regexp: 'PATH=(["]*)((?!.*?{{ tools_dir }}).*?)(["]*)$'
+        line: 'PATH=\1\2:{{ tools_dir }}\3'
+
+    # Install Docker
+    - name: Add Docker GPG apt Key
+      become: true
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker Repository
+      become: true
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+        state: present
+
+    - name: Install Docker Dependencies
+      become: true
+      action: >
+        {{ ansible_pkg_mgr }} name={{ item }} state=present
+      with_items: 
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - gnupg-agent
+        - software-properties-common
+        - containerd.io
+
+    - name: Install docker-ce
+      action: >
+        {{ ansible_pkg_mgr }} name=docker-ce=5:18.09.8~3-0~ubuntu-xenial state=present
+      become: true
+
+    # K8s Installation
+    - name: Create K8s Configuration Directory
+      become: true
+      file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - "{{ k8sCfgDir }}"
+

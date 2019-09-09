@@ -1,8 +1,8 @@
 output "cluster_provisioned" {
-  value = "__FILL_IN__"
+  value = "${null_resource.ansible-playbook.id}"
 }
 
 output "admin_password" {
   description = "Generated Rancher admin user password"
-  value       = "__FILL_IN__"
+  value       = "${var.admin_password == "" ? join("", random_password.password.*.result) : var.admin_password}"
 }

@@ -17,11 +17,26 @@ provider "template" {
 locals {
   script       = "launch_ranchhand.sh"
   ip_addresses = "${join(",", var.node_ips)}"
+  ansbile_ssh_proxy = "${var.ssh_proxy_host == "" ? "" : format("'-o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -W %%h:%%p -q %s@%s\"'", var.ssh_proxy_user, var.ssh_proxy_host)}"
 }
 
-resource "null_resource" {
+resource "random_password" "password" {
+  count  = "${var.admin_password == "" ? 1 : 0}"
+  length = 20
+
+  # The default EXCEPT "-" and "'"because it can trigger CLI arguments / mangle quotes
+  override_special = "!@#$%&*()_=+[]{}<>:?"
+}
+
+resource "null_resource" "ansible-playbook" {
   provisioner "local-exec" {
-    command = "ansible-playbook -i '${local.ip_addresses},' --private-key=${var.ssh_key_path} --remote-user=${var.ssh_username} prod.yml --diff"
+    command = "ansible-playbook -i '${local.ip_addresses},' --private-key=${var.ssh_key_path} --user=${var.ssh_username} --ssh-common-args=${local.ansbile_ssh_proxy} prod.yml --diff"
+    
+    working_dir = "${path.module}/ansible"
+  }
+
+  triggers = {
+    always_run = "${timestamp()}"
   }
 }
 
@@ -30,14 +45,6 @@ resource "null_resource" {
 #------------------------------------------------------------------------------
 # DEPRECATE BELOW
 #------------------------------------------------------------------------------
-
-# resource "random_password" "password" {
-#   count  = "${var.admin_password == "" ? 1 : 0}"
-#   length = 20
-
-#   # The default EXCEPT "-" and "'"because it can trigger CLI arguments / mangle quotes
-#   override_special = "!@#$%&*()_=+[]{}<>:?"
-# }
 
 # data "template_file" "launcher" {
 #   template = "${file("${path.module}/templates/${local.script}")}"
