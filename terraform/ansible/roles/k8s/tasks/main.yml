@@ -1,0 +1,73 @@
+---
+# K8s Installation
+- name: Create K8s Configuration Directory
+  become: true
+  file: path=/etc/kubernetes state=directory
+
+- name: Copy k8s Configurations
+  become: true
+  copy: src="{{ item }}" dest="/etc/kubernetes/{{ item }}" mode=600 owner=root
+  with_items:
+    - admission.yaml
+    - audit.yaml
+    - event.yaml
+
+- name: Create Self Signed OpenSSL Certificate Directory
+  become: true
+  file: path="{{ item }}" state=directory
+  with_items:
+    - /etc/ssl/crt
+    - /etc/ssl/private
+    - /etc/ssl/csr
+
+- name: Install Crypto Pkgs
+  become: true
+  apt:
+    name:
+      - python3-pip
+      - libssl-dev
+
+- name: Install Python Crypto Module
+  become: true
+  pip: name=pyOpenSSL
+
+- name: Generate an OpenSSL Private Key (one host only)
+  become: true
+  openssl_privatekey:
+    path: /etc/ssl/private/dominodatalab.com.pem
+  run_once: true
+
+- name: Generate an OpenSSL Certificate Signing Request (one host only)
+  become: true
+  openssl_csr:
+    path: /etc/ssl/csr/dominodatalab.com.csr
+    privatekey_path: /etc/ssl/private/dominodatalab.com.pem
+    common_name: www.ansible.com
+  run_once: true
+
+- name: Generate a Self Signed OpenSSL Certificate (one host only)
+  become: true
+  openssl_certificate:
+    path: /etc/ssl/crt/dominodatalab.com.crt
+    privatekey_path: /etc/ssl/private/dominodatalab.com.pem
+    csr_path: /etc/ssl/csr/dominodatalab.com.csr
+    provider: selfsigned
+  run_once: true
+
+- name: Download Generated Self Signed OpenSSL Certificate (one host only)
+  become: true
+  fetch:
+    src: "{{ item.remote }}"
+    dest: "{{ item.local }}"
+    flat: yes
+  with_items:
+    - {remote: /etc/ssl/crt/dominodatalab.com.crt, local: /tmp/dominodatalab.com.crt}
+    - {remote: /etc/ssl/private/dominodatalab.com.pem, local: /tmp/dominodatalab.com.pem}
+  run_once: true
+
+- name: Copy Self Signed OpenSSL Certificate
+  become: true
+  copy: src="{{ item.local }}" dest="{{ item.remote }}"
+  with_items:
+    - {remote: /etc/ssl/crt/dominodatalab.com.crt, local: /tmp/dominodatalab.com.crt}
+    - {remote: /etc/ssl/private/dominodatalab.com.pem, local: /tmp/dominodatalab.com.pem}

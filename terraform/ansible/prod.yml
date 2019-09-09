@@ -4,12 +4,11 @@
 ---
 - hosts: all
   vars:
-    k8sCfgDir: /etc/kubernetes
     recommendedCpus: 4
     recommendedMemory: 16
     recommendedNodes: 3
     tools_dir: "/home/ubuntu/ranchhand-output/tools"
-  tasks:
+  pre_tasks:
     - name: "Ansible | List all known variables and facts"
       debug: 
         var: hostvars[inventory_hostname]
@@ -110,12 +109,12 @@
         {{ ansible_pkg_mgr }} name=docker-ce=5:18.09.8~3-0~ubuntu-xenial state=present
       become: true
 
-    # K8s Installation
-    - name: Create K8s Configuration Directory
+    - name: Add user to docker
       become: true
-      file:
-        path: "{{ item }}"
-        state: directory
-      with_items:
-        - "{{ k8sCfgDir }}"
+      user:
+        name: "{{ ansible_user_id }}"
+        group: docker
+
+  roles:
+    - k8s
 
