@@ -79,7 +79,7 @@
   register: rke_config
 
 - name: Save K8s State (on upgrade only)
-  command: "rke etcd snapshot-save --name snapshot-{{ ansible_date_time.iso8601_basic }} --config rancher-cluster.yml"
+  command: "rke etcd snapshot-save --name snapshot-{{ ansible_date_time.iso8601_basic }} --config ./rancher-cluster.yml"
   when: false # TODO: create proper coniditional
 
 - name: Generate Rancher SSH Keypair

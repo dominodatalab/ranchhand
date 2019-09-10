@@ -17,7 +17,7 @@ provider "template" {
 locals {
   script       = "launch_ranchhand.sh"
   ip_addresses = "${join(",", var.node_ips)}"
-  ansbile_ssh_proxy = "${var.ssh_proxy_host == "" ? "" : format("'-o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -W %%h:%%p -q %s@%s\"'", var.ssh_proxy_user, var.ssh_proxy_host)}"
+  ansbile_ssh_proxy = "${var.ssh_proxy_host == "" ? "" : format("-o StrictHostKeyChecking=no -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -W %%h:%%p -q %s@%s\"", var.ssh_proxy_user, var.ssh_proxy_host)}"
 }
 
 resource "random_password" "password" {
@@ -30,7 +30,7 @@ resource "random_password" "password" {
 
 resource "null_resource" "ansible-playbook" {
   provisioner "local-exec" {
-    command = "ansible-playbook -i '${local.ip_addresses},' --private-key=${var.ssh_key_path} --user=${var.ssh_username} --ssh-common-args=${local.ansbile_ssh_proxy} prod.yml --diff"
+    command = "ansible-playbook -i '${local.ip_addresses},' --private-key=${var.ssh_key_path} --user=${var.ssh_username} --ssh-common-args='-o StrictHostKeyChecking=no ${local.ansbile_ssh_proxy}' prod.yml --diff"
     
     working_dir = "${path.module}/ansible"
   }
