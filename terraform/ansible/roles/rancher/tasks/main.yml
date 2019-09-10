@@ -71,3 +71,49 @@
   with_items:
     - {remote: /etc/ssl/crt/dominodatalab.com.crt, local: /tmp/dominodatalab.com.crt}
     - {remote: /etc/ssl/private/dominodatalab.com.pem, local: /tmp/dominodatalab.com.pem}
+
+- name: Copy RKE Template
+  template:
+    src: rancher-cluster.yml
+    dest: rancher-cluster.yml
+  register: rke_config
+
+- name: Save K8s State (on upgrade only)
+  command: "rke etcd snapshot-save --name snapshot-{{ ansible_date_time.iso8601_basic }} --config rancher-cluster.yml"
+  when: false # TODO: create proper coniditional
+
+- name: Generate Rancher SSH Keypair
+  openssh_keypair:
+    path: /home/{{ ansible_user_id }}/.ssh/rancher
+  run_once: true
+
+- name: Download Rancher SSH Keypair
+  fetch:
+      src: "{{ item.remote }}"
+      dest: "{{ item.local }}"
+      flat: yes
+  with_items:
+    - {remote: "/home/{{ ansible_user_id }}/.ssh/rancher", local: /tmp/rancher}
+    - {remote: "/home/{{ ansible_user_id }}/.ssh/rancher.pub", local: /tmp/rancher.pub}
+  run_once: yes
+
+- name: Distribute SSH Keypair
+  copy:
+    src: "{{ item.local }}"
+    dest: "{{ item.remote }}"
+  with_items:
+    - {remote: "/home/{{ ansible_user_id }}/.ssh/rancher", local: /tmp/rancher}
+    - {remote: "/home/{{ ansible_user_id }}/.ssh/rancher.pub", local: /tmp/rancher.pub}
+
+- name: Set Rancher Authorized Key
+  authorized_key:
+    user: "{{ ansible_user_id }}"
+    state: present
+    key: "{{ lookup('file', '/tmp/rancher.pub') }}"
+
+- name: Run RKE/K8s Install/Upgrade (one host only)
+  command: "rke up --config ./rancher-cluster.yml"
+  run_once: true
+  when: rke_config is changed
+
+

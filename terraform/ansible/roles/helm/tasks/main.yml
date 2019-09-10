@@ -1,0 +1,11 @@
+---
+- name: Fetch Helm Version
+  command: helm --home .helm --kubeconfig kube_config_rancher-cluster.yml version --server
+  register: helm_version
+  ignore_errors: yes
+  run_once: true
+
+- name: helm Init tiller
+  command: helm --home .helm --kubeconfig kube_config_rancher-cluster.yml init --wait --service-account tiller
+  when: helm_version is failed
+  run_once: true

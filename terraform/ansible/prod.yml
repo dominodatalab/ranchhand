@@ -70,6 +70,14 @@
         extra_opts: [--strip-components=1]
         mode: u=rx
 
+    - name: Create rke symbolic link
+      become: true
+      file:
+        src: "{{ tools_dir }}/rke_linux-amd64"
+        dest: "{{ tools_dir }}/rke"
+        state: link
+        mode: a+rx,o+rwx
+
     - name: add tools to PATH
       become: true
       lineinfile:
@@ -116,5 +124,6 @@
         group: docker
 
   roles:
-    - k8s
+    - rancher
+    - helm
 
