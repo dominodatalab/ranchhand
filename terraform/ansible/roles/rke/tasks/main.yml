@@ -31,7 +31,7 @@
     src: "{{ tools_dir }}/{{ item.src }}"
     dest: "/bin/{{ item.dest }}"
     state: link
-    mode: a+rx,o+rwx
+    mode: a+rx,u+rwx
   with_items:
     - {src: rke_linux-amd64, dest: rke}
     - {src: helm, dest: helm}
@@ -105,7 +105,7 @@
 
 - name: Copy Self Signed OpenSSL Certificate
   become: true
-  copy: src="{{ item.local }}" dest="{{ item.remote }}"
+  copy: src="{{ item.local }}" dest="{{ item.remote }}" mode=u+rw,g+r
   with_items:
     - {remote: /etc/ssl/crt/dominodatalab.com.crt, local: /tmp/dominodatalab.com.crt}
     - {remote: /etc/ssl/private/dominodatalab.com.pem, local: /tmp/dominodatalab.com.pem}
