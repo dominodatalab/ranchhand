@@ -105,7 +105,7 @@
 
 - name: Copy Self Signed OpenSSL Certificate
   become: true
-  copy: src="{{ item.local }}" dest="{{ item.remote }}" mode=u+rw,g+r
+  copy: src="{{ item.local }}" dest="{{ item.remote }}" mode=u+rw
   with_items:
     - {remote: /etc/ssl/crt/dominodatalab.com.crt, local: /tmp/dominodatalab.com.crt}
     - {remote: /etc/ssl/private/dominodatalab.com.pem, local: /tmp/dominodatalab.com.pem}
