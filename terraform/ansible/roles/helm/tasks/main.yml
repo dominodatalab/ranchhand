@@ -21,9 +21,21 @@
   when: helm_version is failed
   run_once: true
 
-# # Install Rancher
+# # Create Secrets
+- name: Probe tls-ca Secret
+  command: kubectl --namespace cattle-system get secrets tls-ca
+  register: secret
+  changed_when: false
+  ignore_errors: true
+  run_once: true
 
-# helm repo list
+- name: Create tls-ca Secret
+  become: yes
+  command: kubectl --namespace cattle-system create secret generic tls-ca --from-file=cacerts.pem=/etc/ssl/private/dominodatalab.com.pem
+  when: secret is failed 
+  run_once: true
+
+# # Install Rancher
 - name: Probe Helm Repos
   command: helm repo list
   register: repos
@@ -68,11 +80,17 @@
 - name: Disable Resource Validation on cert-manager Namespace
   command: kubectl label namespace cert-manager certmanager.k8s.io/disable-validation=true
   run_once: true
-  when: "'No resources found' in certmanager_ns_label.stdout"
+  when: "'No resources found' in certmanager_ns_label.stderr"
 
 - name: Add Jetstack Repo for cert-manager
   command: helm repo add jetstack https://charts.jetstack.io
   when: "'jetstack' not in repos.stdout"
+  run_once: true
+  register: jetstack_repo
+
+- name: Update Helm Repo
+  command: helm repo update
+  when: jetstack_repo is changed
   run_once: true
 
 - name: Probe cert-manager chart

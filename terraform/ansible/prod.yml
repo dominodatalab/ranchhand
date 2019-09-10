@@ -29,3 +29,6 @@
     - rke
     - helm
 
+  # TODO:
+  # 1) modifyRancherAdminPassword
+
