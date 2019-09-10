@@ -1,6 +1,7 @@
 ---
 - name: Fetch Helm Version
   command: helm version --server
+  changed_when: false
   register: helm_version
   ignore_errors: yes
   run_once: true
@@ -19,3 +20,74 @@
   command: helm init --service-account tiller --wait
   when: helm_version is failed
   run_once: true
+
+# # Install Rancher
+
+# helm repo list
+- name: Probe Helm Repos
+  command: helm repo list
+  register: repos
+  run_once: true
+  changed_when: false
+
+- name: Add Rancher Repo
+  command: helm repo add rancher-stable https://releases.rancher.com/server-charts/stable
+  run_once: true
+  when: "'rancher-stable' not in repos.stdout"
+
+- name: Probe cert-manager Custom Resource Definition
+  command: kubectl get CustomResourceDefinition certificates.certmanager.k8s.io
+  run_once: true
+  ignore_errors: true
+  changed_when: false
+  register: crd
+
+- name: Install Custom Resource Definition
+  command: kubectl apply -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.9/deploy/manifests/00-crds.yaml
+  run_once: true
+  when: crd is failed
+
+- name: Probe cert-manager Namespace
+  command: kubectl get ns cert-manager
+  changed_when: false
+  ignore_errors: yes
+  run_once: yes
+  register: certmanager_ns
+
+- name: Create cert-manager Namespace
+  command: kubectl create namespace cert-manager
+  run_once: true
+  when: certmanager_ns is failed
+
+- name: Probe cert-manager Namespace Label
+  command: kubectl get namespace --selector certmanager.k8s.io/disable-validation=true
+  changed_when: false
+  run_once: true
+  register: certmanager_ns_label
+
+- name: Disable Resource Validation on cert-manager Namespace
+  command: kubectl label namespace cert-manager certmanager.k8s.io/disable-validation=true
+  run_once: true
+  when: "'No resources found' in certmanager_ns_label.stdout"
+
+- name: Add Jetstack Repo for cert-manager
+  command: helm repo add jetstack https://charts.jetstack.io
+  when: "'jetstack' not in repos.stdout"
+  run_once: true
+
+- name: Probe cert-manager chart
+  command: helm list
+  changed_when: false
+  run_once: true
+  register: charts
+
+- name: Install cert-manager
+  command: helm install --name cert-manager --namespace cert-manager --version v0.9.1 jetstack/cert-manager --description='RanchHand Deploy' --wait
+  run_once: true
+  when: "'cert-manager' not in charts.stdout"
+
+- name: Install Rancher
+  command: helm install rancher-stable/rancher --name rancher --namespace cattle-system --version 2.2.8 --set tls=external --set privateCA=true --set addLocal=false --set auditLog.level=1 --description='RanchHand Deploy' --wait
+  run_once: true
+  when: "'rancher' not in charts.stdout"
+
