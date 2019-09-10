@@ -1,11 +1,21 @@
 ---
 - name: Fetch Helm Version
-  command: helm --home .helm --kubeconfig kube_config_rancher-cluster.yml version --server
+  command: helm version --server
   register: helm_version
   ignore_errors: yes
   run_once: true
 
+- name: Create K8s Service Account
+  command: kubectl -n kube-system create serviceaccount tiller
+  when: helm_version is failed
+  run_once: true
+
+- name: Create Cluster Role Binding
+  command: kubectl create clusterrolebinding tiller --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+  when: helm_version is failed
+  run_once: true
+
 - name: helm Init tiller
-  command: helm --home .helm --kubeconfig kube_config_rancher-cluster.yml init --wait --service-account tiller
+  command: helm init --service-account tiller --wait
   when: helm_version is failed
   run_once: true

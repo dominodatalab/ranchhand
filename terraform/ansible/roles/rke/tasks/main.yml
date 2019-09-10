@@ -1,4 +1,42 @@
 ---
+- name: install apt packages
+  become: true
+  apt:
+    name:
+      - unzip
+      - tar
+
+- name: Download Binary Tools
+  get_url:
+    url: "{{ item }}"
+    dest: "{{ tools_dir }}"
+    mode: a+x
+  with_items:
+    - https://storage.googleapis.com/kubernetes-release/release/v1.15.2/bin/linux/amd64/kubectl
+    - https://github.com/rancher/rke/releases/download/v0.2.7/rke_linux-amd64
+
+- name: Download Packaged Binary Tools
+  unarchive:
+    src: https://storage.googleapis.com/kubernetes-helm/helm-v2.14.3-linux-amd64.tar.gz
+    dest: "{{ tools_dir }}"
+    remote_src: yes
+    extra_opts: [--strip-components=1]
+
+- name: Set packaged binary tools as executable
+  file: dest="{{ tools_dir }}/helm" mode=a+x
+
+- name: Create executable symbolic links
+  become: true
+  file:
+    src: "{{ tools_dir }}/{{ item.src }}"
+    dest: "/bin/{{ item.dest }}"
+    state: link
+    mode: a+rx,o+rwx
+  with_items:
+    - {src: rke_linux-amd64, dest: rke}
+    - {src: helm, dest: helm}
+    - {src: kubectl, dest: kubectl}
+
 # K8s Installation
 - name: Create K8s Configuration Directory
   become: true
@@ -76,7 +114,6 @@
   template:
     src: rancher-cluster.yml
     dest: rancher-cluster.yml
-  register: rke_config
 
 - name: Save K8s State (on upgrade only)
   command: "rke etcd snapshot-save --name snapshot-{{ ansible_date_time.iso8601_basic }} --config ./rancher-cluster.yml"
@@ -111,9 +148,19 @@
     state: present
     key: "{{ lookup('file', '/tmp/rancher.pub') }}"
 
-- name: Run RKE/K8s Install/Upgrade (one host only)
-  command: "rke up --config ./rancher-cluster.yml"
+- name: Run rke Install/Upgrade (one host only)
+  command: rke up --config ./rancher-cluster.yml creates=rancher-cluster.rkestate
   run_once: true
-  when: rke_config is changed
+
+- name: Create kubectl Directory
+  file: path="/home/{{ ansible_user_id }}/.kube" state=directory
+  run_once: true
+
+- name: Copy kubectl Configuration
+  copy:
+    src: "/home/{{ ansible_user_id }}/kube_config_rancher-cluster.yml"
+    dest: "/home/{{ ansible_user_id }}/.kube/config"
+    remote_src: true
+  run_once: true
 
 
