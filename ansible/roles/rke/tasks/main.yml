@@ -73,6 +73,8 @@
   become: true
   openssl_privatekey:
     path: /etc/ssl/private/dominodatalab.com.pem
+    mode: u+rw
+    owner: "{{ ansible_user_id }}"
   run_once: true
 
 - name: Generate an OpenSSL Certificate Signing Request (one host only)
@@ -105,7 +107,7 @@
 
 - name: Copy Self Signed OpenSSL Certificate
   become: true
-  copy: src="{{ item.local }}" dest="{{ item.remote }}" mode=u+rw
+  copy: src="{{ item.local }}" dest="{{ item.remote }}" mode=u+rw owner="{{ ansible_user_id }}"
   with_items:
     - {remote: /etc/ssl/crt/dominodatalab.com.crt, local: /tmp/dominodatalab.com.crt}
     - {remote: /etc/ssl/private/dominodatalab.com.pem, local: /tmp/dominodatalab.com.pem}
