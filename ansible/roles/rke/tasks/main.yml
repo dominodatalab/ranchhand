@@ -6,6 +6,14 @@
       - unzip
       - tar
 
+- name: Create RanchHand Directories
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - ranchhand
+    - "{{ tools_dir }}"
+        
 - name: Download Binary Tools
   get_url:
     url: "{{ item }}"
