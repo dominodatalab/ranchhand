@@ -30,7 +30,7 @@ resource "random_password" "password" {
 
 resource "null_resource" "ansible-playbook" {
   provisioner "local-exec" {
-    command = "ansible-playbook -i '${local.ip_addresses},' --private-key=${var.ssh_key_path} --user=${var.ssh_username} --ssh-common-args='-o StrictHostKeyChecking=no ${local.ansbile_ssh_proxy}' prod.yml --diff"
+    command = "ansible-playbook -i '${local.ip_addresses},' --private-key=${var.ssh_key_path} --user=${var.ssh_username} --ssh-common-args='-o StrictHostKeyChecking=no ${local.ansbile_ssh_proxy}' -e cert_dnsnames=${var.cert_dnsnames} prod.yml --diff"
     
     working_dir = "${path.module}/ansible"
     environment = {

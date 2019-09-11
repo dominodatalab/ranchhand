@@ -94,7 +94,7 @@
   openssl_csr:
     path: /etc/ssl/csr/dominodatalab.com.csr
     privatekey_path: /etc/ssl/private/dominodatalab.com.pem
-    common_name: www.ansible.com
+    common_name: "{{ cert_dnsnames|default('domino.rancher') }}"
   run_once: true
 
 - name: Generate a Self Signed OpenSSL Certificate (one host only)
