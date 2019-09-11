@@ -37,10 +37,6 @@ resource "null_resource" "ansible-playbook" {
       RANCHER_PASSWORD = "${var.admin_password == "" ? join("", random_password.password.*.result) : var.admin_password}"
     }
   }
-
-  triggers = {
-    always_run = "${timestamp()}"
-  }
 }
 
 
