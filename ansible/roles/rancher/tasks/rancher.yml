@@ -20,6 +20,7 @@
     status_code: 201
   register: login
   ignore_errors: yes
+  when: rancherPassword != ''
 
 - name: Update Rancher Admin Password
   uri:
@@ -30,8 +31,8 @@
     body_format: json
     body:
       currentPassword: admin
-      newPassword: "{{ lookup('env','RANCHER_PASSWORD') }}"
+      newPassword: "{{ rancherPassword }}"
     validate_certs: no
     return_content: yes
-  when: login is success
+  when: rancherPassword != '' and login is success
 

@@ -1,0 +1,2 @@
+---
+rancherPassword: "{{ lookup('env','RANCHER_PASSWORD') }}"
