@@ -30,6 +30,3 @@
     - helm
     - rancher
 
-  # TODO:
-  # 1) modifyRancherAdminPassword
-
