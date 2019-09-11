@@ -18,6 +18,9 @@ locals {
   script       = "launch_ranchhand.sh"
   ip_addresses = "${join(",", var.node_ips)}"
   ansbile_ssh_proxy = "${var.ssh_proxy_host == "" ? "" : format("-o StrictHostKeyChecking=no -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -W %%h:%%p -q %s@%s\"", var.ssh_proxy_user, var.ssh_proxy_host)}"
+  cert_dnsnames = "${format("DNS:%s", join(",DNS:", var.cert_dnsnames))}"
+  cert_ipaddresses = "${length(var.cert_ipaddresses) == 0 ? "" : format(",IP:%s", join(",IP:", var.cert_ipaddresses))}"
+  cert_names = "${format("%s%s", local.cert_dnsnames, local.cert_ipaddresses)}"
 }
 
 resource "random_password" "password" {
@@ -30,7 +33,7 @@ resource "random_password" "password" {
 
 resource "null_resource" "ansible-playbook" {
   provisioner "local-exec" {
-    command = "ansible-playbook -i '${local.ip_addresses},' --private-key=${var.ssh_key_path} --user=${var.ssh_username} --ssh-common-args='-o StrictHostKeyChecking=no ${local.ansbile_ssh_proxy}' -e cert_dnsnames=${var.cert_dnsnames} prod.yml --diff"
+    command = "ansible-playbook -i '${local.ip_addresses},' --private-key=${var.ssh_key_path} --user=${var.ssh_username} --ssh-common-args='-o StrictHostKeyChecking=no ${local.ansbile_ssh_proxy}' -e 'cert_names=${local.cert_names}' prod.yml --diff"
     
     working_dir = "${path.module}/ansible"
     environment = {

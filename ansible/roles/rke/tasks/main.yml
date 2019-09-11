@@ -1,4 +1,7 @@
 ---
+- import_tasks: ssl-certificates.yml
+  run_once: true
+
 - name: install apt packages
   become: true
   apt:
@@ -33,9 +36,6 @@
     - https://storage.googleapis.com/kubernetes-helm/helm-v2.14.3-linux-amd64.tar.gz
     - https://github.com/rancher/cli/releases/download/v2.2.0/rancher-linux-amd64-v2.2.0.tar.gz
 
-- name: Set packaged binary tools as executable
-  file: dest="{{ tools_dir }}/helm" mode=a+x
-
 - name: Create executable symbolic links
   become: true
   file:
@@ -49,7 +49,6 @@
     - {src: helm, dest: helm}
     - {src: kubectl, dest: kubectl}
 
-# K8s Installation
 - name: Create K8s Configuration Directory
   become: true
   file: path=/etc/kubernetes state=directory
@@ -62,51 +61,7 @@
     - audit.yaml
     - event.yaml
 
-- name: Create Self Signed OpenSSL Certificate Directory
-  become: true
-  file: path="{{ item }}" state=directory
-  with_items:
-    - /etc/ssl/crt
-    - /etc/ssl/private
-    - /etc/ssl/csr
-
-- name: Install Crypto Pkgs
-  become: true
-  apt:
-    name:
-      - python3-pip
-      - libssl-dev
-
-- name: Install Python Crypto Module
-  become: true
-  pip: name=pyOpenSSL
-
-- name: Generate an OpenSSL Private Key (one host only)
-  become: true
-  openssl_privatekey:
-    path: /etc/ssl/private/dominodatalab.com.pem
-    mode: u+rw
-    owner: "{{ ansible_user_id }}"
-  run_once: true
-
-- name: Generate an OpenSSL Certificate Signing Request (one host only)
-  become: true
-  openssl_csr:
-    path: /etc/ssl/csr/dominodatalab.com.csr
-    privatekey_path: /etc/ssl/private/dominodatalab.com.pem
-    common_name: "{{ cert_dnsnames|default('domino.rancher') }}"
-  run_once: true
-
-- name: Generate a Self Signed OpenSSL Certificate (one host only)
-  become: true
-  openssl_certificate:
-    path: /etc/ssl/crt/dominodatalab.com.crt
-    privatekey_path: /etc/ssl/private/dominodatalab.com.pem
-    csr_path: /etc/ssl/csr/dominodatalab.com.csr
-    provider: selfsigned
-  run_once: true
-
-- name: Copy RKE Template
+- name: Copy rke Template
   template:
     src: rancher-cluster.yml
     dest: rancher-cluster.yml
@@ -115,19 +70,19 @@
   command: "rke etcd snapshot-save --name snapshot-{{ ansible_date_time.iso8601_basic }} --config ./rancher-cluster.yml"
   when: false # TODO: create proper coniditional
 
-- name: Generate Rancher SSH Keypair
+- name: Generate SSH Keypair
   openssh_keypair:
-    path: /home/{{ ansible_user_id }}/.ssh/rancher
+    path: /home/{{ ansible_user_id }}/.ssh/rke
   run_once: true
 
-- name: Download Rancher SSH Keypair
+- name: Download SSH Keypair
   fetch:
       src: "{{ item.remote }}"
       dest: "{{ item.local }}"
       flat: yes
   with_items:
-    - {remote: "/home/{{ ansible_user_id }}/.ssh/rancher", local: /tmp/rancher}
-    - {remote: "/home/{{ ansible_user_id }}/.ssh/rancher.pub", local: /tmp/rancher.pub}
+    - {remote: "/home/{{ ansible_user_id }}/.ssh/rke", local: /tmp/rke}
+    - {remote: "/home/{{ ansible_user_id }}/.ssh/rke.pub", local: /tmp/rke.pub}
   run_once: yes
 
 - name: Distribute SSH Keypair
@@ -135,14 +90,14 @@
     src: "{{ item.local }}"
     dest: "{{ item.remote }}"
   with_items:
-    - {remote: "/home/{{ ansible_user_id }}/.ssh/rancher", local: /tmp/rancher}
-    - {remote: "/home/{{ ansible_user_id }}/.ssh/rancher.pub", local: /tmp/rancher.pub}
+    - {remote: "/home/{{ ansible_user_id }}/.ssh/rke", local: /tmp/rke}
+    - {remote: "/home/{{ ansible_user_id }}/.ssh/rke.pub", local: /tmp/rke.pub}
 
 - name: Set Rancher Authorized Key
   authorized_key:
     user: "{{ ansible_user_id }}"
     state: present
-    key: "{{ lookup('file', '/tmp/rancher.pub') }}"
+    key: "{{ lookup('file', '/tmp/rke.pub') }}"
     comment: rancher-k8s-cluster-key
 
 - name: Run rke Install/Upgrade (one host only)
