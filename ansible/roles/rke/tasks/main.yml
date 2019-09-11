@@ -17,10 +17,13 @@
 
 - name: Download Packaged Binary Tools
   unarchive:
-    src: https://storage.googleapis.com/kubernetes-helm/helm-v2.14.3-linux-amd64.tar.gz
+    src: "{{ item }}"
     dest: "{{ tools_dir }}"
     remote_src: yes
     extra_opts: [--strip-components=1]
+  with_items:
+    - https://storage.googleapis.com/kubernetes-helm/helm-v2.14.3-linux-amd64.tar.gz
+    - https://github.com/rancher/cli/releases/download/v2.2.0/rancher-linux-amd64-v2.2.0.tar.gz
 
 - name: Set packaged binary tools as executable
   file: dest="{{ tools_dir }}/helm" mode=a+x
@@ -34,6 +37,7 @@
     mode: a+rx,u+rwx
   with_items:
     - {src: rke_linux-amd64, dest: rke}
+    - {src: rancher-v2.2.0/rancher, dest: rancher}
     - {src: helm, dest: helm}
     - {src: kubectl, dest: kubectl}
 

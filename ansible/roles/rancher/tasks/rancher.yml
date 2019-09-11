@@ -6,3 +6,32 @@
 - name: Install Rancher
   command: helm install rancher-stable/rancher --name rancher --namespace cattle-system --version 2.2.8 --set tls=external --set privateCA=true --set addLocal=false --set auditLog.level=1 --description='RanchHand Deploy' --wait
   when: "'rancher' not in charts.stdout"
+  
+- name: Check if Rancher Admin Password is set to Default
+  uri:
+    url: https://localhost/v3-public/localProviders/local?action=login
+    method: POST
+    body_format: json
+    body:
+      username: admin
+      password: admin
+    validate_certs: no
+    return_content: yes
+    status_code: 201
+  register: login
+  ignore_errors: yes
+
+- name: Update Rancher Admin Password
+  uri:
+    url: https://localhost/v3/users?action=changepassword
+    method: POST
+    headers:
+      Authorization: "Bearer {{ login.json.token }}"
+    body_format: json
+    body:
+      currentPassword: admin
+      newPassword: "{{ lookup('env','RANCHER_PASSWORD') }}"
+    validate_certs: no
+    return_content: yes
+  when: login is success
+

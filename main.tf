@@ -33,6 +33,9 @@ resource "null_resource" "ansible-playbook" {
     command = "ansible-playbook -i '${local.ip_addresses},' --private-key=${var.ssh_key_path} --user=${var.ssh_username} --ssh-common-args='-o StrictHostKeyChecking=no ${local.ansbile_ssh_proxy}' prod.yml --diff"
     
     working_dir = "${path.module}/ansible"
+    environment = {
+      RANCHER_PASSWORD = "${var.admin_password == "" ? join("", random_password.password.*.result) : var.admin_password}"
+    }
   }
 
   triggers = {
