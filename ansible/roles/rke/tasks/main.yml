@@ -143,6 +143,7 @@
     user: "{{ ansible_user_id }}"
     state: present
     key: "{{ lookup('file', '/tmp/rancher.pub') }}"
+    comment: rancher-k8s-cluster-key
 
 - name: Run rke Install/Upgrade (one host only)
   command: rke up --config ./rancher-cluster.yml creates=rancher-cluster.rkestate
