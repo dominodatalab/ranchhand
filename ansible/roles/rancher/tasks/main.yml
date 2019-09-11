@@ -19,3 +19,7 @@
 
 - import_tasks: rancher.yml
   run_once: true
+
+- import_tasks: password.yml
+  run_once: true
+  when: rancherPassword != ''
