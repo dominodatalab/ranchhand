@@ -13,7 +13,7 @@
   with_items:
     - ranchhand
     - "{{ tools_dir }}"
-        
+
 - name: Download Binary Tools
   get_url:
     url: "{{ item }}"
@@ -105,24 +105,6 @@
     csr_path: /etc/ssl/csr/dominodatalab.com.csr
     provider: selfsigned
   run_once: true
-
-- name: Download Generated Self Signed OpenSSL Certificate (one host only)
-  become: true
-  fetch:
-    src: "{{ item.remote }}"
-    dest: "{{ item.local }}"
-    flat: yes
-  with_items:
-    - {remote: /etc/ssl/crt/dominodatalab.com.crt, local: /tmp/dominodatalab.com.crt}
-    - {remote: /etc/ssl/private/dominodatalab.com.pem, local: /tmp/dominodatalab.com.pem}
-  run_once: true
-
-- name: Copy Self Signed OpenSSL Certificate
-  become: true
-  copy: src="{{ item.local }}" dest="{{ item.remote }}" mode=u+rw owner="{{ ansible_user_id }}"
-  with_items:
-    - {remote: /etc/ssl/crt/dominodatalab.com.crt, local: /tmp/dominodatalab.com.crt}
-    - {remote: /etc/ssl/private/dominodatalab.com.pem, local: /tmp/dominodatalab.com.pem}
 
 - name: Copy RKE Template
   template:
