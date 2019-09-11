@@ -3,8 +3,6 @@
 
 ---
 - hosts: all
-  vars:
-    tools_dir: "/home/ubuntu/ranchhand/tools"
 
   pre_tasks:
     - name: update apt update
