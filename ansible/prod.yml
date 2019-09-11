@@ -4,10 +4,6 @@
 ---
 - hosts: all
   vars:
-    adminPassword: ''  # Set on CLI: -e adminPassword=<xxx>
-    recommendedCpus: 4
-    recommendedMemory: 16
-    recommendedNodes: 3
     tools_dir: "/home/ubuntu/ranchhand/tools"
   pre_tasks:
 
