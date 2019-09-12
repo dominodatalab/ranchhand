@@ -12,10 +12,10 @@ jobs:
       - run: 
           name: Install Ansible & Dependencies
           command: |
-          apt-get update
-          apt-get install -y software-properties-common python-apt
-          apt-add-repository --yes --update ppa:ansible/ansible
-          apt-get install -y ansible
+            apt-get update
+            apt-get install -y software-properties-common python-apt
+            apt-add-repository --yes --update ppa:ansible/ansible
+            apt-get install -y ansible
       - run: 
           name: Check Ansible Syntax
           command: ansible-playbook -i '127.0.0.1,' ansible/prod.yml --syntax-check
