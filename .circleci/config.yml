@@ -5,8 +5,8 @@ executors:
     docker:
     - image: ubuntu:16.04
 
-commands:
-  launch_e2e:
+jobs:
+  build:
     description: "Check Ansible Syntax"
     steps:
     - run: |
