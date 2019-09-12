@@ -8,6 +8,7 @@ executors:
 jobs:
   build:
     description: "Check Ansible Syntax"
+    executor: default
     steps:
       - run: 
           name: Install Ansible & Dependencies
