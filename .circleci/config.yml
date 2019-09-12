@@ -3,120 +3,18 @@ version: 2.1
 executors:
   default:
     docker:
-    - image: circleci/golang:1.12
-    environment:
-      GORELEASER_VERSION: v0.108.0
-      AWSCLI_VERSION: 1.16.122
+    - image: ubuntu:16.04
 
 commands:
   launch_e2e:
-    description: "Launch an e2e test using an AWS Lightsail VPS"
-    parameters:
-      blueprint_id:
-        type: string
-      ssh_user:
-        type: string
+    description: "Check Ansible Syntax"
     steps:
-    - run: '[[ $CIRCLE_BRANCH != "master" && -z $CIRCLE_PULL_REQUEST ]] && circleci step halt || true'
-    - checkout
-    - attach_workspace:
-        at: .
-    - add_ssh_keys:
-        fingerprints:
-          - "5a:19:ae:e7:ef:98:4f:2f:68:c3:be:72:62:f9:1d:35"
-    - run:
-        name: Install system requirements
-        command: |
-          sudo apt-get install -y python3-pip
-          pip3 install awscli==$AWSCLI_VERSION --upgrade --user
-          echo 'export PATH="$HOME/.local/bin:$PATH"' >> $BASH_ENV
-    - run:
-        name: Configure test env name
-        command: echo 'export INSTANCE_NAME="ranchhand-$CIRCLE_WORKFLOW_JOB_ID-$CIRCLE_BUILD_NUM"' >> $BASH_ENV
-    - run:
-        name: Create test env
-        command: |
-          INSTANCE_BLUEPRINT_ID=<< parameters.blueprint_id >> \
-          INSTANCE_TAGS="key=Repo,value=$CIRCLE_REPOSITORY_URL key=Branch,value=$CIRCLE_BRANCH key=Commit,value=$CIRCLE_SHA1 key=BuildUrl,value=$CIRCLE_BUILD_URL" \
-          test/e2e/run.sh setup
-    - run:
-        name: Execute ranchhand
-        command: |
-          ./ranchhand run \
-            --node-ips $(cat instance-ip) \
-            --ssh-user << parameters.ssh_user >> \
-            --ssh-key-path ~/.ssh/id_rsa_5a19aee7ef984f2f68c3be7262f91d35 \
-            --ssh-connect-timeout 180 \
-            --admin-password "$3cr3t$auc3"
-    - run:
-        name: Teardown test env
-        when: always
-        command: test/e2e/run.sh teardown
-
-jobs:
-  build:
-    executor: default
-    steps:
-    - checkout
-    - restore_cache:
-        keys:
-        - v1-gomod-cache-{{ checksum "go.sum" }}
-    - run:
-        name: Build project
-        command: make build
-    - save_cache:
-        key: v1-gomod-cache-{{ checksum "go.sum" }}
-        paths:
-        - /go/pkg/mod
-    - persist_to_workspace:
-        root: .
-        paths:
-        - ranchhand
-  unittest:
-    executor: default
-    steps:
-    - checkout
-    - restore_cache:
-        keys:
-        - v1-gomod-cache-{{ checksum "go.sum" }}
-    - run: make test
-  e2e_ubuntu:
-    executor: default
-    steps:
-    - launch_e2e:
-        ssh_user: ubuntu
-        blueprint_id: ubuntu_16_04_2
-  e2e_centos:
-    executor: default
-    steps:
-    - launch_e2e:
-        ssh_user: centos
-        blueprint_id: centos_7_1901_01
-  release:
-    executor: default
-    steps:
-    - checkout
-    - run: curl -sL https://git.io/goreleaser | VERSION=${GORELEASER_VERSION} bash
-
-workflows:
-  version: 2
-  build_and_test:
-    jobs:
-    - build
-    - unittest:
-        requires:
-        - build
-    - e2e_ubuntu:
-        requires:
-        - unittest
-    - e2e_centos:
-        requires:
-        - unittest
-  release:
-    jobs:
-    - release:
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /v[0-9]+(\.[0-9]+)*(-.*)*/
+    - run: |
+        apt-get update
+        apt-get install -y software-properties-common python-apt
+        apt-add-repository --yes --update ppa:ansible/ansible
+        apt-get install -y ansible
+    - run: ansible-playbook -i '127.0.0.1,' ansible/prod.yml --syntax-check
+# It would be nice to run the following command, but requires some work to make
+# --check actually run successfully (i.e. ensure apt repos are actually installed)
+# - run: ansible-playbook -i '127.0.0.1,' ansible/prod.yml --connection=local -e 'cert_names=DNS:test.domino.com' --check
