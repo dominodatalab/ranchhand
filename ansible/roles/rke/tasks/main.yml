@@ -111,11 +111,17 @@
   file: path="/home/{{ ansible_user_id }}/.kube" state=directory
   run_once: true
 
+- name: Download kubectl Configuration
+  fetch:
+      src: "/home/{{ ansible_user_id }}/kube_config_rancher-cluster.yml"
+      dest: /tmp/kube_config_rancher-cluster.yml
+      flat: yes
+  run_once: yes
+
 - name: Copy kubectl Configuration
   copy:
-    src: "/home/{{ ansible_user_id }}/kube_config_rancher-cluster.yml"
+    src: "/tmp/kube_config_rancher-cluster.yml"
     dest: "/home/{{ ansible_user_id }}/.kube/config"
-    remote_src: true
   run_once: true
 
 
