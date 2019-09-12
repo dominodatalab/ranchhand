@@ -1,0 +1,23 @@
+---
+- name: Add Docker Repository
+  yum_repository:
+    name: docker-ce
+    baseurl: https://download.docker.com/linux/centos/docker-ce.repo
+
+- name: Install Docker & Dependencies
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - yum-utils
+      - device-mapper-persistent-data
+      - lvm2
+      - docker-ce-18.09.6-3.el7
+      - docker-ce-cli-18.09.6-3.el7
+      - containerd.io
+
+- name: Enable and Start Docker
+  systemd:
+    state: started
+    name: docker
+    enabled: yes
