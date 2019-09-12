@@ -70,6 +70,9 @@
   command: "rke etcd snapshot-save --name snapshot-{{ ansible_date_time.iso8601_basic }} --config ./rancher-cluster.yml"
   when: false # TODO: create proper coniditional
 
+- name: Ensure ssh directory exists
+  file: path="/home/{{ ansible_user_id }}/.ssh" state=directory
+
 - name: Generate SSH Keypair
   openssh_keypair:
     path: /home/{{ ansible_user_id }}/.ssh/rke
