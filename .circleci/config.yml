@@ -9,12 +9,16 @@ jobs:
   build:
     description: "Check Ansible Syntax"
     steps:
-      - run: |
+      - run: 
+          name: Install Ansible & Dependencies
+          command: |
           apt-get update
           apt-get install -y software-properties-common python-apt
           apt-add-repository --yes --update ppa:ansible/ansible
           apt-get install -y ansible
-      - run: ansible-playbook -i '127.0.0.1,' ansible/prod.yml --syntax-check
+      - run: 
+          name: Check Ansible Syntax
+          command: ansible-playbook -i '127.0.0.1,' ansible/prod.yml --syntax-check
 # It would be nice to run the following command, but requires some work to make
 # --check actually run successfully (i.e. ensure apt repos are actually installed)
 # - run: ansible-playbook -i '127.0.0.1,' ansible/prod.yml --connection=local -e 'cert_names=DNS:test.domino.com' --check
