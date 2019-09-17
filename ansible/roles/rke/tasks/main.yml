@@ -84,8 +84,8 @@
       dest: "{{ item.local }}"
       flat: yes
   with_items:
-    - {remote: "/home/{{ ansible_user_id }}/.ssh/rke", local: /tmp/rke}
-    - {remote: "/home/{{ ansible_user_id }}/.ssh/rke.pub", local: /tmp/rke.pub}
+    - {remote: "/home/{{ ansible_user_id }}/.ssh/rke", local: "{{ local_output_dir }}/rke"}
+    - {remote: "/home/{{ ansible_user_id }}/.ssh/rke.pub", local: "{{ local_output_dir }}/rke.pub"}
   run_once: yes
 
 - name: Distribute SSH Keypair
@@ -93,14 +93,14 @@
     src: "{{ item.local }}"
     dest: "{{ item.remote }}"
   with_items:
-    - {remote: "/home/{{ ansible_user_id }}/.ssh/rke", local: /tmp/rke}
-    - {remote: "/home/{{ ansible_user_id }}/.ssh/rke.pub", local: /tmp/rke.pub}
+    - {remote: "/home/{{ ansible_user_id }}/.ssh/rke", local: "{{ local_output_dir }}/rke"}
+    - {remote: "/home/{{ ansible_user_id }}/.ssh/rke.pub", local: "{{ local_output_dir }}/rke.pub"}
 
 - name: Set Rancher Authorized Key
   authorized_key:
     user: "{{ ansible_user_id }}"
     state: present
-    key: "{{ lookup('file', '/tmp/rke.pub') }}"
+    key: "{{ lookup('file', '{{ local_output_dir }}/rke.pub') }}"
     comment: rancher-k8s-cluster-key
 
 - name: Run rke Install/Upgrade (one host only)
@@ -111,16 +111,19 @@
   file: path="/home/{{ ansible_user_id }}/.kube" state=directory
   run_once: true
 
-- name: Download kubectl Configuration
+- name: Download rke Generated Configs
   fetch:
-      src: "/home/{{ ansible_user_id }}/kube_config_rancher-cluster.yml"
-      dest: /tmp/kube_config_rancher-cluster.yml
+      src: "/home/{{ ansible_user_id }}/{{ item }}"
+      dest: "{{ local_output_dir }}/{{ item }}"
       flat: yes
+  with_items:
+    - kube_config_rancher-cluster.yml
+    - rancher-cluster.rkestate
   run_once: yes
 
 - name: Copy kubectl Configuration
   copy:
-    src: "/tmp/kube_config_rancher-cluster.yml"
+    src: "{{ local_output_dir }}/kube_config_rancher-cluster.yml"
     dest: "/home/{{ ansible_user_id }}/.kube/config"
   run_once: true
 

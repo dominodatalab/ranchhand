@@ -1,2 +1,3 @@
 ---
-tools_dir: "/home/ubuntu/ranchhand/tools"
+tools_dir: "/home/{{ ansible_user_id }}/ranchhand/tools"
+local_output_dir: "/tmp"

@@ -60,8 +60,8 @@ addons: |
     namespace: ingress-nginx
   type: kubernetes.io/tls
   data:
-    tls.crt: {{ lookup('file', '/tmp/dominodatalab.com.crt') | b64encode }}
-    tls.key: {{ lookup('file', '/tmp/dominodatalab.com.pem') | b64encode }}
+    tls.crt: {{ lookup('file', '{{ local_output_dir }}/dominodatalab.com.crt') | b64encode }}
+    tls.key: {{ lookup('file', '{{ local_output_dir }}/dominodatalab.com.pem') | b64encode }}
   ---
   apiVersion: rbac.authorization.k8s.io/v1
   kind: Role

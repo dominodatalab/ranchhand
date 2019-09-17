@@ -33,56 +33,11 @@ resource "random_password" "password" {
 
 resource "null_resource" "ansible-playbook" {
   provisioner "local-exec" {
-    command = "ansible-playbook -i '${local.ip_addresses},' --private-key=${var.ssh_key_path} --user=${var.ssh_username} --ssh-common-args='-o StrictHostKeyChecking=no ${local.ansbile_ssh_proxy}' -e 'cert_names=${local.cert_names}' prod.yml --diff"
+    command = "ansible-playbook -i '${local.ip_addresses},' --private-key=${var.ssh_key_path} --user=${var.ssh_username} --ssh-common-args='-o StrictHostKeyChecking=no ${local.ansbile_ssh_proxy}' -e 'cert_names=${local.cert_names}' -e 'local_output_dir=${var.working_dir}' ansible/prod.yml --diff"
     
-    working_dir = "${path.module}/ansible"
+    working_dir = "${path.module}"
     environment = {
       RANCHER_PASSWORD = "${var.admin_password == "" ? join("", random_password.password.*.result) : var.admin_password}"
     }
   }
 }
-
-
-
-#------------------------------------------------------------------------------
-# DEPRECATE BELOW
-#------------------------------------------------------------------------------
-
-# data "template_file" "launcher" {
-#   template = "${file("${path.module}/templates/${local.script}")}"
-
-#   vars {
-#     distro   = "${var.distro}"
-#     release  = "${var.release}"
-#     node_ips = "${local.ip_addresses}"
-
-#     cert_ips       = "${join(",", var.cert_ipaddresses)}"
-#     cert_dns_names = "${join(",", var.cert_dnsnames)}"
-
-#     ssh_user       = "${var.ssh_username}"
-#     ssh_key_path   = "${var.ssh_key_path}"
-#     ssh_proxy_user = "${var.ssh_proxy_user}"
-#     ssh_proxy_host = "${var.ssh_proxy_host}"
-#   }
-# }
-
-# resource "local_file" "launcher" {
-#   content  = "${data.template_file.launcher.rendered}"
-#   filename = "${var.working_dir == "" ? local.script : "${var.working_dir}/${local.script}"}"
-# }
-
-# resource "null_resource" "provisioner" {
-#   triggers {
-#     instance_ids = "${local.ip_addresses}"
-#   }
-
-#   provisioner "local-exec" {
-#     command     = "${data.template_file.launcher.rendered}"
-#     interpreter = ["/bin/bash", "-c"]
-#     working_dir = "${var.working_dir}"
-
-#     environment = {
-#       RANCHER_PASSWORD = "${var.admin_password == "" ? join("", random_password.password.*.result) : var.admin_password}"
-#     }
-#   }
-# }

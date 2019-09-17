@@ -47,7 +47,7 @@
   become: true
   fetch:
       src: "/etc/ssl/{{ item }}"
-      dest: "/tmp/"
+      dest: "{{ local_output_dir }}/"
       flat: yes
   with_items:
     - crt/dominodatalab.com.crt
