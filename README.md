@@ -17,6 +17,8 @@ This tool aims to automate the steps listed in Rancher's official [HA Install][]
 1. [Install Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) (version >=2.8) locally
 1.  (optional) To update the Rancher default password, set the `RANCHER_PASSWORD` environment variable: 
      `export RANCHER_PASSWORD=<new password>`
+    1.    (required) Configure ansible for proper output:
+            `export ANSIBLE_COW_SELECTION=random`
 1. Execute `ansible-playbook -i '1.2.4.5,...,10.20.30.40,' --private-key=~/.ssh/id_rsa --user=ubuntu ansible/prod.yml --diff --check` to perform a dry run of all the changes.
 
 ### Example
