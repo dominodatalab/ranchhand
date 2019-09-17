@@ -118,6 +118,7 @@
       flat: yes
   with_items:
     - kube_config_rancher-cluster.yml
+    - rancher-cluster.yml
     - rancher-cluster.rkestate
   run_once: yes
 
