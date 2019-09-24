@@ -30,7 +30,7 @@ resource "random_password" "password" {
 data "template_file" "launcher" {
   template = "${file("${path.module}/templates/${local.script}")}"
 
-  vars {
+  vars = {
     distro   = "${var.distro}"
     release  = "${var.release}"
     node_ips = "${local.ip_addresses}"
@@ -51,7 +51,7 @@ resource "local_file" "launcher" {
 }
 
 resource "null_resource" "provisioner" {
-  triggers {
+  triggers = {
     instance_ids = "${local.ip_addresses}"
   }
 
