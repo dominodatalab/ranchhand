@@ -3,7 +3,7 @@
 #------------------------------------------------------------------------------
 variable "node_ips" {
   description = ""
-  type        = "list"
+  type        = list(string)
 }
 
 #------------------------------------------------------------------------------
@@ -58,3 +58,4 @@ variable "admin_password" {
   description = "Password override for the initial admin user"
   default     = ""
 }
+
