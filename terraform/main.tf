@@ -1,19 +1,3 @@
-provider "local" {
-  version = "~> 1.2"
-}
-
-provider "null" {
-  version = "~> 2.1"
-}
-
-provider "random" {
-  version = "~> 2.1"
-}
-
-provider "template" {
-  version = "~> 2.1"
-}
-
 locals {
   script       = "launch_ranchhand.sh"
   ip_addresses = join(",", var.node_ips)
