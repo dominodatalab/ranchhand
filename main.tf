@@ -21,6 +21,9 @@ locals {
   cert_dnsnames = "${format("DNS:%s", join(",DNS:", var.cert_dnsnames))}"
   cert_ipaddresses = "${length(var.cert_ipaddresses) == 0 ? "" : format(",IP:%s", join(",IP:", var.cert_ipaddresses))}"
   cert_names = "${format("%s%s", local.cert_dnsnames, local.cert_ipaddresses)}"
+
+  # TODO: Upgrade to Terraform 1.12 & use "${format("YYYYMMDDhhmmss", timestamp())}"
+  working_dir = "${format("%s/ansible.%s", var.working_dir, timestamp())}"
 }
 
 resource "random_password" "password" {
@@ -31,13 +34,19 @@ resource "random_password" "password" {
   override_special = "!@#$%&*()_=+[]{}<>:?"
 }
 
+resource "local_file" "create_directory" {
+    content  = ""
+    filename = "${local.working_dir}/.ansible"
+}
+
 resource "null_resource" "ansible-playbook" {
   provisioner "local-exec" {
-    command = "ansible-playbook -i '${local.ip_addresses},' --private-key=${var.ssh_key_path} --user=${var.ssh_username} --ssh-common-args='-o StrictHostKeyChecking=no ${local.ansbile_ssh_proxy}' -e 'cert_names=${local.cert_names}' -e 'local_output_dir=${var.working_dir}' ansible/prod.yml --diff"
+    command = "ansible-playbook -i '${local.ip_addresses},' --private-key=${var.ssh_key_path} --user=${var.ssh_username} --ssh-common-args='-o StrictHostKeyChecking=no ${local.ansbile_ssh_proxy}' -e 'cert_names=${local.cert_names}' -e 'local_output_dir=${local.working_dir}' ansible/prod.yml --diff"
     
     working_dir = "${path.module}"
     environment = {
       RANCHER_PASSWORD = "${var.admin_password == "" ? join("", random_password.password.*.result) : var.admin_password}"
     }
   }
+  depends_on = ["local_file.create_directory"]
 }

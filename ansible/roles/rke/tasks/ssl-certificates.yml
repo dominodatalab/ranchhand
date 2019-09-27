@@ -1,54 +1,25 @@
 ---
-- name: Create Self Signed OpenSSL Certificate Directory
-  become: true
-  file: path="{{ item }}" state=directory
-  with_items:
-    - /etc/ssl/crt
-    - /etc/ssl/private
-    - /etc/ssl/csr
+# These Modules all Run Locally (local_action) to Generate TLS certs
 
-- name: Install Crypto Pkgs
-  become: true
-  apt:
-    name:
-      - python3-pip
-      - libssl-dev
-
-- name: Install Python Crypto Module
-  become: true
-  pip: name=pyOpenSSL
-
-- name: Generate an OpenSSL Private Key (one host only)
-  become: true
-  openssl_privatekey:
-    path: /etc/ssl/private/dominodatalab.com.pem
-    mode: u+rw
-    owner: "{{ ansible_user_id }}"
+- name: Generate an OpenSSL Private Key
+  local_action:
+    module: openssl_privatekey
+    path: "{{ local_output_dir }}/dominodatalab.com.pem"
   
-- name: Generate an OpenSSL Certificate Signing Request (one host only)
-  become: true
-  openssl_csr:
-    path: /etc/ssl/csr/dominodatalab.com.csr
-    privatekey_path: /etc/ssl/private/dominodatalab.com.pem
+- name: Generate an OpenSSL Certificate Signing Request
+  local_action:
+    module: openssl_csr
+    path: "{{ local_output_dir }}/dominodatalab.com.csr"
+    privatekey_path: "{{ local_output_dir }}/dominodatalab.com.pem"
     common_name: "{{ cert_names.split(',')[0] | regex_replace('DNS:') }}"
     subject_alt_name: "{{ cert_names }}"
     organization_name: Domino Data Lab, Inc.
-    organizational_unit_name: Platform Team RanchHand
+    organizational_unit_name: Platform Engineering
   
-- name: Generate a Self Signed OpenSSL Certificate (one host only)
-  become: true
-  openssl_certificate:
-    path: /etc/ssl/crt/dominodatalab.com.crt
-    privatekey_path: /etc/ssl/private/dominodatalab.com.pem
-    csr_path: /etc/ssl/csr/dominodatalab.com.csr
+- name: Generate a Self Signed OpenSSL Certificate
+  local_action:
+    module: openssl_certificate
+    path: "{{ local_output_dir }}/dominodatalab.com.crt"
+    privatekey_path: "{{ local_output_dir }}/dominodatalab.com.pem"
+    csr_path: "{{ local_output_dir }}/dominodatalab.com.csr"
     provider: selfsigned
-  
-- name: Download Self Signed OpenSSL Certificate for RKE Template
-  become: true
-  fetch:
-      src: "/etc/ssl/{{ item }}"
-      dest: "{{ local_output_dir }}/"
-      flat: yes
-  with_items:
-    - crt/dominodatalab.com.crt
-    - private/dominodatalab.com.pem
