@@ -39,7 +39,7 @@ function setup_instance() {
     --instance-name $INSTANCE_NAME
 
   local ipaddr=$(aws lightsail get-instance --instance-name $INSTANCE_NAME \
-    | jq '.instance | .publicIpAddress')
+    | jq --raw-output '.instance | .publicIpAddress')
   echo $ipaddr > instance-ip
 }
 
