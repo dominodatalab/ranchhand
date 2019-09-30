@@ -62,7 +62,7 @@ commands:
         command: test/e2e/run.sh teardown
 
 jobs:
-  build:
+  lint:
     description: "Check Ansible Syntax"
     executor: default
     steps:
@@ -81,3 +81,12 @@ jobs:
 # It would be nice to run the following command, but requires some work to make
 # --check actually run successfully (i.e. ensure apt repos are actually installed)
 # - run: ansible-playbook -i '127.0.0.1,' ansible/prod.yml --connection=local -e 'cert_names=DNS:test.domino.com' --check
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+    - lint
+    - e2e_ubuntu:
+        requires:
+        - lint
