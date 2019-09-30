@@ -53,6 +53,7 @@ commands:
     - run:
         name: Execute Ansible Ranchhand
         command: |
+          cat instance-ip
           ansible-playbook \
           -i "$(cat instance-ip)," \
           --user << parameters.ssh_user >> \
