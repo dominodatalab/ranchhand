@@ -56,7 +56,7 @@ commands:
           ansible-playbook \
           -i "$(cat instance-ip)," \
           --user << parameters.ssh_user >> \
-          -e 'cert_names=DNS:test.dominodatalab.com'
+          -e 'cert_names=DNS:test.dominodatalab.com' \
           --private-key ~/.ssh/id_rsa_5a19aee7ef984f2f68c3be7262f91d35 \
           ansible/prod.yml --diff
     - run:
