@@ -50,7 +50,7 @@ commands:
         command: test/e2e/run.sh teardown
 
 jobs:
-  lint:
+  build:
     description: "Check Ansible Syntax"
     executor: default
     steps:
