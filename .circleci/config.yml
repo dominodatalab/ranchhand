@@ -3,9 +3,21 @@ version: 2.1
 executors:
   default:
     docker:
-      - image: ubuntu:18.04
+      - image: ubuntu:16.04
 
 commands:
+  install_ansible:
+    description: "Install Ansible"
+    steps:
+      - run: 
+          name: Install Ansible & Dependencies
+          command: |
+            apt-get update
+            apt-get install -y software-properties-common python-apt python3-pip libssl-dev
+            update-alternatives --install /usr/bin/python python /usr/bin/python3.5 2
+            update-alternatives  --set python /usr/bin/python3.5
+            pip3 install ansible
+
   launch_e2e:
     description: "Launch an e2e test using an AWS Lightsail VPS"
     parameters:
@@ -54,14 +66,7 @@ jobs:
     description: "Check Ansible Syntax"
     executor: default
     steps:
-      - run: 
-          name: Install Ansible & Dependencies
-          command: |
-            apt-get update
-            apt-get install -y software-properties-common python-apt python3-pip libssl-dev
-            update-alternatives --install /usr/bin/python python /usr/bin/python3.5 2
-            update-alternatives  --set python /usr/bin/python3.5
-            pip3 install ansible
+      - install_ansible
       - checkout
       - run: 
           name: Check Ansible Syntax
@@ -69,6 +74,7 @@ jobs:
   e2e_ubuntu:
     executor: default
     steps:
+    - install_ansible
     - launch_e2e:
         ssh_user: ubuntu
         blueprint_id: ubuntu_16_04_2
