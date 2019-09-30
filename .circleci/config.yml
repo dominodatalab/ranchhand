@@ -4,6 +4,8 @@ executors:
   default:
     docker:
       - image: ubuntu:16.04
+    environment:
+      AWSCLI_VERSION: 1.16.122
 
 commands:
   install_ansible:
