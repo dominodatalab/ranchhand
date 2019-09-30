@@ -3,6 +3,7 @@ set -e
 
 INSTANCE_NAME="${INSTANCE_NAME:-"ranchhand-local-$USER"}"
 INSTANCE_BLUEPRINT_ID="${INSTANCE_BLUEPRINT_ID:-ubuntu_16_04_2}"
+SSH_KEY_FILE="${SSH_KEY_FILE:-~/.ssh/id_rsa_5a19aee7ef984f2f68c3be7262f91d35}"
 
 function setup_instance() {
   if [[ -n $INSTANCE_TAGS ]]; then
@@ -41,6 +42,11 @@ function setup_instance() {
   local ipaddr=$(aws lightsail get-instance --instance-name $INSTANCE_NAME \
     | jq --raw-output '.instance | .publicIpAddress')
   echo $ipaddr > instance-ip
+
+  for i in {1..10}; do
+    ssh -i SSH_KEY_FILE ${USER}@${ipaddr} exit && break || echo "${ipaddress} ssh connection timeout. Sleeping for 10 seconds..."
+    sleep 10
+  done
 }
 
 function teardown_instance() {
