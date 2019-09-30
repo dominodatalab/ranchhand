@@ -89,6 +89,6 @@ workflows:
   ansible_integrations:
     jobs:
     - lint
-    - e2e_ubuntu:
+    - e2e_ubuntu
         # requires:
         # - lint
