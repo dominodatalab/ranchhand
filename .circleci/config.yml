@@ -53,6 +53,7 @@ commands:
     - run:
         name: Execute Ansible Ranchhand
         command: |
+          ssh --help
           ls -la ~/.ssh/id_rsa_5a19aee7ef984f2f68c3be7262f91d35
           ls -la ~/.ssh
           ansible-playbook \
