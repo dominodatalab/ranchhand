@@ -38,7 +38,7 @@ commands:
     - run:
         name: Install system requirements
         command: |
-          apt-get install -y jq
+          apt-get install -y jq openssh-server
           pip3 install awscli==$AWSCLI_VERSION --upgrade --user
           echo 'export PATH="$HOME/.local/bin:$PATH"' >> $BASH_ENV
     - run:
