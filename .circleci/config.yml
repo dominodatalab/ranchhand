@@ -15,7 +15,7 @@ commands:
           name: Install Ansible & Dependencies
           command: |
             apt-get update
-            apt-get install -y software-properties-common python-apt python3-pip libssl-dev
+            apt-get install -y software-properties-common python-apt python3-pip libssl-dev openssh-server
             update-alternatives --install /usr/bin/python python /usr/bin/python3.6 2
             update-alternatives  --set python /usr/bin/python3.6
             pip3 install ansible
@@ -38,7 +38,7 @@ commands:
     - run:
         name: Install system requirements
         command: |
-          apt-get install -y jq openssh-server
+          apt-get install -y jq
           pip3 install awscli==$AWSCLI_VERSION --upgrade --user
           echo 'export PATH="$HOME/.local/bin:$PATH"' >> $BASH_ENV
     - run:
