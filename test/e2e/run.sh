@@ -49,7 +49,7 @@ function setup_instance() {
   echo $private_ipaddr > private-instance-ip
 
   for i in {1..10}; do
-    ssh -i ${SSH_KEY_FILE} ${SSH_USER}@${ipaddr} exit && break || echo "${ipaddr} ssh connection timeout. Sleeping for 10 seconds..."
+    ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_FILE} ${SSH_USER}@${ipaddr} exit && break || echo "${ipaddr} ssh connection timeout. Sleeping for 10 seconds..."
     sleep 10
   done
 }
