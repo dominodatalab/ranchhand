@@ -44,8 +44,8 @@ commands:
     - run:
         name: Create test env
         command: |
-          INSTANCE_NAME="ranchhand-$CIRCLE_WORKFLOW_JOB_ID-$CIRCLE_BUILD_NUM"
-          SSH_USER=<< parameters.ssh_user >>
+          INSTANCE_NAME="ranchhand-$CIRCLE_WORKFLOW_JOB_ID-$CIRCLE_BUILD_NUM" \
+          SSH_USER=<< parameters.ssh_user >> \
           INSTANCE_BLUEPRINT_ID=<< parameters.blueprint_id >> \
           INSTANCE_TAGS="key=Repo,value=$CIRCLE_REPOSITORY_URL key=Branch,value=$CIRCLE_BRANCH key=Commit,value=$CIRCLE_SHA1 key=BuildUrl,value=$CIRCLE_BUILD_URL" \
           test/e2e/run.sh setup
