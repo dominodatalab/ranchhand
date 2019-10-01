@@ -37,7 +37,7 @@ function setup_instance() {
     --instance-name $INSTANCE_NAME
   aws lightsail open-instance-public-ports \
     --port-info fromPort=6443,toPort=6443,protocol=tcp \
-    --instance-name $INSTANCE_NAME 2379
+    --instance-name $INSTANCE_NAME
   aws lightsail open-instance-public-ports \
     --port-info fromPort=2379,toPort=2379,protocol=tcp \
     --instance-name $INSTANCE_NAME
