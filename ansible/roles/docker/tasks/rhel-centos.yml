@@ -1,11 +1,13 @@
 ---
 - name: Add Docker Repository
+  become: yes
   yum_repository:
     name: docker-ce
     description: Docker CE repo
     baseurl: https://download.docker.com/linux/centos/docker-ce.repo
 
 - name: Install Docker & Dependencies
+  become: yes
   yum:
     name: "{{ packages }}"
   vars:
@@ -18,6 +20,7 @@
       - containerd.io
 
 - name: Enable and Start Docker
+  become: yes
   systemd:
     state: started
     name: docker
