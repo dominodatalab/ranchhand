@@ -1,3 +1,5 @@
 ---
-tools_dir: "/home/{{ ansible_user_id }}/ranchhand/tools"
+kubectl_version: v1.15.2
 local_output_dir: "/tmp"
+rke_cli_version: v0.2.7
+tools_dir: "/home/{{ ansible_user_id }}/ranchhand/tools"

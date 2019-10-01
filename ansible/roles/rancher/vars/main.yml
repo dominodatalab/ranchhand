@@ -1,2 +1,4 @@
 ---
-rancherPassword: "{{ lookup('env','RANCHER_PASSWORD') }}"
+cert_manager_version: v0.9.1
+rancher_password: "{{ lookup('env','RANCHER_PASSWORD') }}"
+rancher_version: 2.2.8

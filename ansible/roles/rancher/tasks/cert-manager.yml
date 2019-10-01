@@ -45,6 +45,6 @@
   when: jetstack_repo is changed
 
 - name: Install cert-manager
-  command: helm install --name cert-manager --namespace cert-manager --version v0.9.1 jetstack/cert-manager --description='RanchHand Deploy' --wait
+  command: "helm install --name cert-manager --namespace cert-manager --version {{ cert_manager_version }} jetstack/cert-manager --description='RanchHand Deploy' --wait"
   when: "'cert-manager' not in charts.stdout"
   

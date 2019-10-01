@@ -22,4 +22,4 @@
 
 - import_tasks: password.yml
   run_once: true
-  when: rancherPassword != ''
+  when: rancher_password != ''

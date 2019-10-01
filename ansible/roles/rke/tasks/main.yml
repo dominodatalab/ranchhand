@@ -24,8 +24,8 @@
     dest: "{{ tools_dir }}"
     mode: a+x
   with_items:
-    - https://storage.googleapis.com/kubernetes-release/release/v1.15.2/bin/linux/amd64/kubectl
-    - https://github.com/rancher/rke/releases/download/v0.2.7/rke_linux-amd64
+    - "https://storage.googleapis.com/kubernetes-release/release/{{ kubectl_version }}/bin/linux/amd64/kubectl"
+    - "https://github.com/rancher/rke/releases/download/{{ rke_cli_version }}/rke_linux-amd64"
 
 - name: Download Packaged Binary Tools
   unarchive:
