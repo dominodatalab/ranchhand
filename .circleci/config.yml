@@ -41,7 +41,7 @@ commands:
           apt-get install -y jq
           pip3 install awscli==$AWSCLI_VERSION --upgrade --user
           echo 'export PATH="$HOME/.local/bin:$PATH"' >> $BASH_ENV
-     - run:
+    - run:
         name: Configure test env name
         command: echo 'export INSTANCE_NAME="ranchhand-$CIRCLE_WORKFLOW_JOB_ID-$CIRCLE_BUILD_NUM"' >> $BASH_ENV
     - run:
