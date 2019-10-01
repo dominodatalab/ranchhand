@@ -35,6 +35,14 @@ function setup_instance() {
 
   if [ "$retries" -eq "${max_retries}" ]; then echo "$INSTANCE_NAME is not ready!"; exit 5; fi
 
+  local ipaddr=$(aws lightsail get-instance --instance-name $INSTANCE_NAME \
+    | jq --raw-output '.instance | .publicIpAddress')
+  echo $ipaddr > instance-ip
+
+  local private_ipaddr=$(aws lightsail get-instance --instance-name $INSTANCE_NAME \
+    | jq --raw-output '.instance | .privateIpAddress')
+  echo $private_ipaddr > private-instance-ip
+
   for retries in $(seq 0 ${max_retries}); do
     sleep 10
 
@@ -50,14 +58,6 @@ function setup_instance() {
   aws lightsail open-instance-public-ports \
     --port-info fromPort=6443,toPort=6443,protocol=tcp \
     --instance-name $INSTANCE_NAME
-
-  local ipaddr=$(aws lightsail get-instance --instance-name $INSTANCE_NAME \
-    | jq --raw-output '.instance | .publicIpAddress')
-  echo $ipaddr > instance-ip
-
-  local private_ipaddr=$(aws lightsail get-instance --instance-name $INSTANCE_NAME \
-    | jq --raw-output '.instance | .privateIpAddress')
-  echo $private_ipaddr > private-instance-ip
 }
 
 function teardown_instance() {
