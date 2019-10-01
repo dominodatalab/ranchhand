@@ -6,7 +6,7 @@
 
 - name: Check OS
   fail: msg="Operating System '{{ ansible_distribution }}' not supported"
-  when: ansible_distribution not in ['Debian', 'Fedora', 'Ubuntu']
+  when: ansible_distribution not in ['CentOS', 'Ubuntu']
 
 - name: Check cpu Count
   fail: msg="WARNING] cpu cores '{{ ansible_processor_vcpus }}' < {{ recommendedCpus }} (recommended)"
