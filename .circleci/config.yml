@@ -88,5 +88,5 @@ workflows:
     jobs:
     - lint
     - e2e_ubuntu
-        # requires:
-        # - lint
+        requires:
+        - lint
