@@ -38,14 +38,14 @@ function setup_instance() {
   aws lightsail open-instance-public-ports \
     --port-info fromPort=6443,toPort=6443,protocol=tcp \
     --instance-name $INSTANCE_NAME
-  aws lightsail open-instance-public-ports \
-    --port-info fromPort=2379,toPort=2379,protocol=tcp \
-    --instance-name $INSTANCE_NAME
-
 
   local ipaddr=$(aws lightsail get-instance --instance-name $INSTANCE_NAME \
     | jq --raw-output '.instance | .publicIpAddress')
   echo $ipaddr > instance-ip
+
+  local private_ipaddr=$(aws lightsail get-instance --instance-name $INSTANCE_NAME \
+    | jq --raw-output '.instance | .privateIpAddress')
+  echo $private_ipaddr > private-instance-ip
 
   for i in {1..10}; do
     ssh -i ${SSH_KEY_FILE} ${USER}@${ipaddr} exit && break || echo "${ipaddr} ssh connection timeout. Sleeping for 10 seconds..."

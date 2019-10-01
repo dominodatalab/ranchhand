@@ -53,14 +53,12 @@ commands:
     - run:
         name: Execute Ansible Ranchhand
         command: |
-          echo ${HOME}
-          echo ~
           ansible-playbook \
-          -i "$(cat instance-ip)," \
+          -i "$(cat private-instance-ip)," \
           --user << parameters.ssh_user >> \
           -e 'cert_names=DNS:test.dominodatalab.com' \
           --private-key=~/.ssh/id_rsa_5a19aee7ef984f2f68c3be7262f91d35 \
-          --ssh-common-args='-o StrictHostKeyChecking=no' \
+          --ssh-common-args="-o StrictHostKeyChecking=no -o StrictHostKeyChecking=no -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -W %h:%p -q << parameters.ssh_user >>@$(cat instance-ip)\"" \
           ansible/prod.yml --diff
     - run:
         name: Teardown test env
