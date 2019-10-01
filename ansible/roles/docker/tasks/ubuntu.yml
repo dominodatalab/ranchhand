@@ -30,7 +30,7 @@
   apt:
     name:
       - containerd.io
-      - docker-ce=5:18.09.8~3-0~ubuntu-xenial
+      - "docker-ce={{ docker_ce_ubuntu_version }}"
     state: present
 
 - name: Add user to docker
