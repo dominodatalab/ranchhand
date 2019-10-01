@@ -20,9 +20,9 @@ function setup_instance() {
     --bundle-id medium_2_0 \
     --tags ${tags[@]}
 
-  local max_retries = 20
+  local max_retries=20
 
-  for retries in $(seq ${max_retries}); do
+  for retries in $(seq 0 ${max_retries}); do
     sleep 10
 
     local state=$(aws lightsail get-instance-state --instance-name $INSTANCE_NAME | jq -r '.state.name')
@@ -35,7 +35,7 @@ function setup_instance() {
 
   if [ "$retries" -eq "${max_retries}" ]; then echo "$INSTANCE_NAME is not ready!"; exit 5; fi
 
-  for retries in $(seq ${max_retries}); do
+  for retries in $(seq 0 ${max_retries}); do
     sleep 10
 
     ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_FILE} ${SSH_USER}@${ipaddr} exit && break || true
