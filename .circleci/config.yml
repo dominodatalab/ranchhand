@@ -30,8 +30,7 @@ commands:
     steps:
     - run: '[[ $CIRCLE_BRANCH != "master" && -z $CIRCLE_PULL_REQUEST ]] && circleci step halt || true'
     - checkout
-    - attach_workspace:
-        at: .
+    - install_ansible
     - add_ssh_keys:
         fingerprints:
           - "5a:19:ae:e7:ef:98:4f:2f:68:c3:be:72:62:f9:1d:35"
@@ -79,13 +78,9 @@ jobs:
   e2e_ubuntu:
     executor: default
     steps:
-    - install_ansible
     - launch_e2e:
         ssh_user: ubuntu
         blueprint_id: ubuntu_16_04_2
-# It would be nice to run the following command, but requires some work to make
-# --check actually run successfully (i.e. ensure apt repos are actually installed)
-# - run: ansible-playbook -i '127.0.0.1,' ansible/prod.yml --connection=local -e 'cert_names=DNS:test.domino.com' --check
 
 workflows:
   version: 2
