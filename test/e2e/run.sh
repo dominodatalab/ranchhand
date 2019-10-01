@@ -20,18 +20,29 @@ function setup_instance() {
     --bundle-id medium_2_0 \
     --tags ${tags[@]}
 
-  local counter=0
-  while [[ $counter -lt 12 ]]; do
+  local max_retries = 20
+
+  for retries in $(seq ${max_retries}); do
     sleep 10
 
     local state=$(aws lightsail get-instance-state --instance-name $INSTANCE_NAME | jq -r '.state.name')
     if [[ $state == "running" ]]; then
       break
     fi
-    let counter+=1
 
     echo "$INSTANCE_NAME is not ready (state: $state), trying again in 10 secs"
   done
+
+  if [ "$retries" -eq "${max_retries}" ]; then echo "$INSTANCE_NAME is not ready!"; exit 5; fi
+
+  for retries in $(seq ${max_retries}); do
+    sleep 10
+
+    ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_FILE} ${SSH_USER}@${ipaddr} exit && break || true
+    echo "${ipaddr} ssh connection timeout. Sleeping for 10 seconds..."
+  done
+
+  if [ "$retries" -eq "${max_retries}" ]; then echo "$INSTANCE_NAME not SSH ready!"; exit 5; fi
 
   aws lightsail open-instance-public-ports \
     --port-info fromPort=443,toPort=443,protocol=tcp \
@@ -47,11 +58,6 @@ function setup_instance() {
   local private_ipaddr=$(aws lightsail get-instance --instance-name $INSTANCE_NAME \
     | jq --raw-output '.instance | .privateIpAddress')
   echo $private_ipaddr > private-instance-ip
-
-  for i in {1..10}; do
-    ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_FILE} ${SSH_USER}@${ipaddr} exit && break || echo "${ipaddr} ssh connection timeout. Sleeping for 10 seconds..."
-    sleep 10
-  done
 }
 
 function teardown_instance() {
