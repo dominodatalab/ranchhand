@@ -48,7 +48,7 @@ function setup_instance() {
   echo $ipaddr > instance-ip
 
   for i in {1..10}; do
-    ssh -i ${SSH_KEY_FILE} ${USER}@${ipaddr} exit && break || echo "${ipaddress} ssh connection timeout. Sleeping for 10 seconds..."
+    ssh -i ${SSH_KEY_FILE} ${USER}@${ipaddr} exit && break || echo "${ipaddr} ssh connection timeout. Sleeping for 10 seconds..."
     sleep 10
   done
 }
