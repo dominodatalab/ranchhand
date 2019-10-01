@@ -75,18 +75,27 @@ jobs:
       - run: 
           name: Check Ansible Syntax
           command: ansible-playbook -i '127.0.0.1,' ansible/prod.yml --syntax-check
+  e2e_centos:
+    executor: default
+    steps:
+    - launch_e2e:
+        ssh_user: centos
+        blueprint_id: ubuntu_16_04_2
   e2e_ubuntu:
     executor: default
     steps:
     - launch_e2e:
         ssh_user: ubuntu
-        blueprint_id: ubuntu_16_04_2
+        blueprint_id: centos_7_1901_01
 
 workflows:
   version: 2
   ansible_integrations:
     jobs:
     - lint
+    - e2e_centos:
+        requires:
+        - lint
     - e2e_ubuntu:
         requires:
         - lint
