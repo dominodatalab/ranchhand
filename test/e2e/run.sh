@@ -4,6 +4,7 @@ set -ex
 INSTANCE_NAME="${INSTANCE_NAME:-"ranchhand-local-$USER"}"
 INSTANCE_BLUEPRINT_ID="${INSTANCE_BLUEPRINT_ID:-ubuntu_16_04_2}"
 SSH_KEY_FILE="${SSH_KEY_FILE:-${HOME}/.ssh/id_rsa_5a19aee7ef984f2f68c3be7262f91d35}"
+SSH_USER="${SSH_USER:-ubuntu}"
 
 function setup_instance() {
   if [[ -n $INSTANCE_TAGS ]]; then
@@ -48,7 +49,7 @@ function setup_instance() {
   echo $private_ipaddr > private-instance-ip
 
   for i in {1..10}; do
-    ssh -i ${SSH_KEY_FILE} ${USER}@${ipaddr} exit && break || echo "${ipaddr} ssh connection timeout. Sleeping for 10 seconds..."
+    ssh -i ${SSH_KEY_FILE} ${SSH_USER}@${ipaddr} exit && break || echo "${ipaddr} ssh connection timeout. Sleeping for 10 seconds..."
     sleep 10
   done
 }
