@@ -80,13 +80,13 @@ jobs:
     steps:
     - launch_e2e:
         ssh_user: centos
-        blueprint_id: ubuntu_16_04_2
+        blueprint_id: centos_7_1901_01
   e2e_ubuntu:
     executor: default
     steps:
     - launch_e2e:
         ssh_user: ubuntu
-        blueprint_id: centos_7_1901_01
+        blueprint_id: ubuntu_16_04_2
 
 workflows:
   version: 2
