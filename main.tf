@@ -5,7 +5,7 @@ locals {
   cert_dnsnames = format("DNS:%s", join(",DNS:", var.cert_dnsnames))
   cert_ipaddresses = length(var.cert_ipaddresses) == 0 ? "" : format(",IP:%s", join(",IP:", var.cert_ipaddresses))
   cert_names = format("%s%s", local.cert_dnsnames, local.cert_ipaddresses)
-  working_dir = format("YYYYMMDDhhmmss", timestamp())
+  working_dir = format("%s/ansible.%s", var.working_dir, formatdate("YYYYMMDDhhmmss", timestamp()))
 }
 
 resource "random_password" "password" {
