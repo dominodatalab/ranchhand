@@ -1,5 +1,5 @@
 output "cluster_provisioned" {
-  value = null_resource.ansible-playbook.id
+  value = null_resource.ansible_playbook.id
 }
 
 output "admin_password" {

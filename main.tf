@@ -5,7 +5,7 @@ locals {
   cert_dnsnames = format("DNS:%s", join(",DNS:", var.cert_dnsnames))
   cert_ipaddresses = length(var.cert_ipaddresses) == 0 ? "" : format(",IP:%s", join(",IP:", var.cert_ipaddresses))
   cert_names = format("%s%s", local.cert_dnsnames, local.cert_ipaddresses)
-  working_dir = format("%s/ansible.%s", var.working_dir, formatdate("YYYYMMDDhhmmss", timestamp()))
+  working_dir = format("%s/ranchhand-ansible.%s", var.working_dir, formatdate("YYYYMMDDhhmmss", timestamp()))
 }
 
 resource "random_password" "password" {
@@ -16,12 +16,17 @@ resource "random_password" "password" {
   override_special = "!@#$%&*()_=+[]{}<>:?"
 }
 
-resource "local_file" "create_directory" {
-    content  = ""
+resource "local_file" "current_work_directory" {
     filename = "${local.working_dir}/.ansible"
 }
 
-resource "null_resource" "ansible-playbook" {
+resource "local_file" "copy_kubeconfig" {
+    content = file("${local.working_dir}/kube_config_rancher-cluster.yml")
+    filename = "${var.working_dir}/kube_config_rancher-cluster.yml"
+    depends_on = ["null_resource.ansible_playbook"]
+}
+
+resource "null_resource" "ansible_playbook" {
   provisioner "local-exec" {
     command = "ansible-playbook -i '${local.ip_addresses},' --private-key=${var.ssh_key_path} --user=${var.ssh_username} --ssh-common-args='-o StrictHostKeyChecking=no ${local.ansbile_ssh_proxy}' -e 'cert_names=${local.cert_names}' -e 'local_output_dir=${local.working_dir}' ansible/prod.yml --diff"
     
@@ -30,5 +35,5 @@ resource "null_resource" "ansible-playbook" {
       RANCHER_PASSWORD = var.admin_password == "" ? join("", random_password.password.*.result) : var.admin_password
     }
   }
-  depends_on = ["local_file.create_directory"]
+  depends_on = ["local_file.current_work_directory"]
 }
