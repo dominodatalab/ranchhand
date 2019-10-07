@@ -27,16 +27,16 @@ resource "local_file" "copy_kubeconfig" {
 
 resource "null_resource" "ansible_playbook" {
   provisioner "local-exec" {
-    command = <<EOF
-    ansible-playbook 
-    -i '${local.ip_addresses},' 
-    --private-key=${var.ssh_key_path} 
-    --user=${var.ssh_username} 
-    --ssh-common-args='-o StrictHostKeyChecking=no ${local.ansbile_ssh_proxy}' 
-    -e 'cert_names=${local.cert_names}' 
-    -e 'local_output_dir=${local.working_dir}' 
-    ansible/prod.yml --diff
-    EOF
+    command = join(" ", [
+      "ansible-playbook",
+      "-i '${local.ip_addresses},'",
+      "--private-key=${var.ssh_key_path}",
+      "--user=${var.ssh_username}",
+      "--ssh-common-args='-o StrictHostKeyChecking=no ${local.ansbile_ssh_proxy}'",
+      "-e 'cert_names=${local.cert_names}'",
+      "-e 'local_output_dir=${local.working_dir}'",
+      "ansible/prod.yml --diff"
+    ])
     
     working_dir = "${path.module}"
     environment = {
