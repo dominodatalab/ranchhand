@@ -1,5 +1,4 @@
 locals {
-  script       = "launch_ranchhand.sh"
   ip_addresses = join(",", var.node_ips)
   ansbile_ssh_proxy = var.ssh_proxy_host == "" ? "" : format("-o StrictHostKeyChecking=no -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -W %%h:%%p -q %s@%s\"", var.ssh_proxy_user, var.ssh_proxy_host)
   cert_dnsnames = format("DNS:%s", join(",DNS:", var.cert_dnsnames))
@@ -28,7 +27,16 @@ resource "local_file" "copy_kubeconfig" {
 
 resource "null_resource" "ansible_playbook" {
   provisioner "local-exec" {
-    command = "ansible-playbook -i '${local.ip_addresses},' --private-key=${var.ssh_key_path} --user=${var.ssh_username} --ssh-common-args='-o StrictHostKeyChecking=no ${local.ansbile_ssh_proxy}' -e 'cert_names=${local.cert_names}' -e 'local_output_dir=${local.working_dir}' ansible/prod.yml --diff"
+    command = <<EOF
+    ansible-playbook 
+    -i '${local.ip_addresses},' 
+    --private-key=${var.ssh_key_path} 
+    --user=${var.ssh_username} 
+    --ssh-common-args='-o StrictHostKeyChecking=no ${local.ansbile_ssh_proxy}' 
+    -e 'cert_names=${local.cert_names}' 
+    -e 'local_output_dir=${local.working_dir}' 
+    ansible/prod.yml --diff
+    EOF
     
     working_dir = "${path.module}"
     environment = {
