@@ -1,7 +1,7 @@
 locals {
   ip_addresses = join(",", var.node_ips)
   ansbile_ssh_proxy = var.ssh_proxy_host == "" ? "" : format("-o StrictHostKeyChecking=no -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -W %%h:%%p -q %s@%s\"", var.ssh_proxy_user, var.ssh_proxy_host)
-  cert_dnsnames = length(var.cert_dnsnames) == 0 ? "" : format("DNS:%s", join(",DNS:", var.cert_dnsnames))
+  cert_dnsnames = format("DNS:%s", join(",DNS:", var.cert_dnsnames))
   cert_ipaddresses = length(var.cert_ipaddresses) == 0 ? "" : format(",IP:%s", join(",IP:", var.cert_ipaddresses))
   cert_names = format("%s%s", local.cert_dnsnames, local.cert_ipaddresses)
   working_dir = format("%s/ranchhand-ansible.%s", var.working_dir, formatdate("YYYYMMDDhhmmss", timestamp()))
