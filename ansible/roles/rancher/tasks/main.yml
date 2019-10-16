@@ -1,0 +1,25 @@
+---
+- name: Probe Helm Repos
+  command: helm repo list
+  changed_when: false
+  run_once: true
+  register: repos
+
+- name: Probe Helm Charts
+  command: helm list
+  changed_when: false
+  run_once: true
+  register: charts
+
+- import_tasks: secrets.yml
+  run_once: true
+
+- import_tasks: cert-manager.yml
+  run_once: true
+
+- import_tasks: rancher.yml
+  run_once: true
+
+- import_tasks: password.yml
+  run_once: true
+  when: rancher_password != ''

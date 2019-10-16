@@ -1,0 +1,132 @@
+---
+- import_tasks: ssl-certificates.yml
+  run_once: true
+
+- name: install apt packages
+  become: true
+  apt:
+    name:
+      - unzip
+      - tar
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Create RanchHand Directories
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - ranchhand
+    - "{{ tools_dir }}"
+
+- name: Download Binary Tools
+  get_url:
+    url: "{{ item }}"
+    dest: "{{ tools_dir }}"
+    mode: a+x
+  with_items:
+    - "https://storage.googleapis.com/kubernetes-release/release/{{ kubectl_version }}/bin/linux/amd64/kubectl"
+    - "https://github.com/rancher/rke/releases/download/{{ rke_cli_version }}/rke_linux-amd64"
+
+- name: Download Packaged Binary Tools
+  unarchive:
+    src: "{{ item }}"
+    dest: "{{ tools_dir }}"
+    remote_src: yes
+    extra_opts: [--strip-components=1]
+  with_items:
+    - https://storage.googleapis.com/kubernetes-helm/helm-v2.14.3-linux-amd64.tar.gz
+    - https://github.com/rancher/cli/releases/download/v2.2.0/rancher-linux-amd64-v2.2.0.tar.gz
+
+- name: Create executable symbolic links
+  become: true
+  file:
+    src: "{{ tools_dir }}/{{ item.src }}"
+    dest: "/bin/{{ item.dest }}"
+    state: link
+    mode: a+rx,u+rwx
+  with_items:
+    - {src: rke_linux-amd64, dest: rke}
+    - {src: rancher-v2.2.0/rancher, dest: rancher}
+    - {src: helm, dest: helm}
+    - {src: kubectl, dest: kubectl}
+
+- name: Create K8s Configuration Directory
+  become: true
+  file: path=/etc/kubernetes state=directory
+
+- name: Copy k8s Configurations
+  become: true
+  copy: src="{{ item }}" dest="/etc/kubernetes/{{ item }}" mode=600 owner=root
+  with_items:
+    - admission.yaml
+    - audit.yaml
+    - event.yaml
+
+- name: Copy rke Template
+  template:
+    src: rancher-cluster.yml
+    dest: rancher-cluster.yml
+
+- name: Save K8s State (on upgrade only)
+  command: "rke etcd snapshot-save --name snapshot-{{ ansible_date_time.iso8601_basic }} --config ./rancher-cluster.yml"
+  when: false # TODO: create proper coniditional
+
+- name: Ensure ssh directory exists
+  file: path="/home/{{ ansible_user_id }}/.ssh" state=directory
+
+- name: Generate SSH Keypair
+  openssh_keypair:
+    path: /home/{{ ansible_user_id }}/.ssh/rke
+  run_once: true
+
+- name: Download SSH Keypair
+  fetch:
+      src: "{{ item.remote }}"
+      dest: "{{ item.local }}"
+      flat: yes
+  with_items:
+    - {remote: "/home/{{ ansible_user_id }}/.ssh/rke", local: "{{ local_output_dir }}/rke"}
+    - {remote: "/home/{{ ansible_user_id }}/.ssh/rke.pub", local: "{{ local_output_dir }}/rke.pub"}
+  run_once: yes
+
+- name: Distribute SSH Keypair
+  copy:
+    src: "{{ item.local }}"
+    dest: "{{ item.remote }}"
+  with_items:
+    - {remote: "/home/{{ ansible_user_id }}/.ssh/rke", local: "{{ local_output_dir }}/rke"}
+    - {remote: "/home/{{ ansible_user_id }}/.ssh/rke.pub", local: "{{ local_output_dir }}/rke.pub"}
+
+- name: Set Rancher Authorized Key
+  authorized_key:
+    user: "{{ ansible_user_id }}"
+    state: present
+    key: "{{ lookup('file', '{{ local_output_dir }}/rke.pub') }}"
+    comment: rancher-k8s-cluster-key
+
+- name: Run rke Install/Upgrade (one host only)
+  command: rke up --config ./rancher-cluster.yml creates=rancher-cluster.rkestate
+  run_once: true
+
+- name: Create kubectl Directory
+  file: path="/home/{{ ansible_user_id }}/.kube" state=directory
+  run_once: true
+
+- name: Download rke Generated Configs
+  fetch:
+      src: "/home/{{ ansible_user_id }}/{{ item }}"
+      dest: "{{ local_output_dir }}/{{ item }}"
+      flat: yes
+  with_items:
+    - kube_config_rancher-cluster.yml
+    - rancher-cluster.yml
+    - rancher-cluster.rkestate
+  run_once: yes
+
+- name: Copy kubectl Configuration
+  copy:
+    src: "{{ local_output_dir }}/kube_config_rancher-cluster.yml"
+    dest: "/home/{{ ansible_user_id }}/.kube/config"
+  run_once: true
+
+

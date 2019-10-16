@@ -14,7 +14,21 @@ This tool aims to automate the steps listed in Rancher's official [HA Install][]
 ## Usage
 
 1. Download the [latest release][] from GitHub.
-2. Execute `ranchhand run -h` to see all of the available options.
+1. [Install Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) (version >=2.8) locally
+1.  (optional) To update the Rancher default password, set the `RANCHER_PASSWORD` environment variable: 
+     `export RANCHER_PASSWORD=<new password>`
+    1.    (required) Configure ansible for proper output:
+            `export ANSIBLE_COW_SELECTION=random`
+1. Execute `ansible-playbook -i '1.2.4.5,...,10.20.30.40,' --private-key=~/.ssh/id_rsa --user=ubuntu ansible/prod.yml --diff --check` to perform a dry run of all the changes.
+
+### Example
+This example shows a manual run of the production playbook (prod.yml) from a local machine imaging a cluster behind a bastion/proxy server.
+
+```
+ansible-playbook -i '10.0.1.6,10.0.1.51,10.0.1.94,' --private-key=/Users/myhost/.ssh/id_rsa --user=ubuntu --ssh-common-args='-o StrictHostKeyChecking=no -o StrictHostKeyChecking=no -o ProxyCommand="ssh -o StrictHostKeyChecking=no -W %h:%p -q ubuntu@54.190.1.95"' ansible/prod.yml --diff
+```
+
+In the example above, only the bastion server, 54.190.1.95, is publicly accessible. However, including the Terraform module should be sufficient for most users.
 
 ## Terraform
 
@@ -22,7 +36,7 @@ Using the Terraform module, you can leverage Ranchhand to create a Rancher clust
 
 ```hcl
 module "ranchhand" {
-  source = "github.com/dominodatalab/ranchhand/terraform"
+  source = "github.com/dominodatalab/ranchhand"
 
   node_ips         = ["..."]
   distro           = "darwin"
@@ -55,7 +69,19 @@ Please submit any feature enhancements, bug fixes, or ideas via pull requests or
 
 1. Use `go` to launch a Ranchhand run against your VM(s) and verify your changes.
 
-    `go run main.go run -u vagrant -i ~/.ssh/id_rsa -n 192.168.50.10,...`
+    `ansible-playbook -i '192.168.50.10,...,' --private-key=~/.ssh/id_rsa --user=ubuntu ansible/prod.yml --diff --check `
+    
+    _Note the trailing comma (",") in the host/ip list._
+    
+### Ansible References
+Here are some helpful Ansible references for getting started with Ansible.
+
+1. [Ansible Overview](https://docs.ansible.com/ansible/latest/index.html)
+1. [Installation Guide](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)
+1. [Project Directory Layout](https://docs.ansible.com/ansible/latest/user_guide/playbooks_best_practices.html#content-organization)
+1. [Roles](https://docs.ansible.com/ansible/latest/user_guide/playbooks_reuse_roles.html)
+1. [Best Practices](https://docs.ansible.com/ansible/latest/user_guide/playbooks_best_practices.html#best-practices)
+
 
 ## Contribute
 

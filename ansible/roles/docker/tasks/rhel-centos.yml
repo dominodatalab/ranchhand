@@ -1,0 +1,26 @@
+---
+- name: Add Docker Repository
+  become: yes
+  command: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+  args:
+    creates: /etc/yum.repos.d/docker-ce.repo
+
+- name: Install Docker & Dependencies
+  become: yes
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - yum-utils
+      - device-mapper-persistent-data
+      - lvm2
+      - "docker-ce-{{ docker_ce_yum_version }}"
+      - "docker-ce-cli-{{ docker_ce_yum_version }}"
+      - containerd.io
+
+- name: Enable and Start Docker
+  become: yes
+  systemd:
+    state: started
+    name: docker
+    enabled: yes

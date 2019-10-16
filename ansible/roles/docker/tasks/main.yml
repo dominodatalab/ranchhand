@@ -1,0 +1,12 @@
+---
+- import_tasks: ubuntu.yml
+  when: ansible_distribution == 'Ubuntu'
+
+- import_tasks: rhel-centos.yml
+  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux']
+
+- name: Add user to docker group
+  become: yes
+  user:
+    name: "{{ ansible_user_id }}"
+    group: docker

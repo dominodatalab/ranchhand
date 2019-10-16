@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
-set -e
+set -ex
 
 INSTANCE_NAME="${INSTANCE_NAME:-"ranchhand-local-$USER"}"
 INSTANCE_BLUEPRINT_ID="${INSTANCE_BLUEPRINT_ID:-ubuntu_16_04_2}"
+SSH_KEY_FILE="${SSH_KEY_FILE:-${HOME}/.ssh/id_rsa_5a19aee7ef984f2f68c3be7262f91d35}"
+SSH_USER="${SSH_USER:-ubuntu}"
 
 function setup_instance() {
   if [[ -n $INSTANCE_TAGS ]]; then
@@ -18,18 +20,37 @@ function setup_instance() {
     --bundle-id medium_2_0 \
     --tags ${tags[@]}
 
-  local counter=0
-  while [[ $counter -lt 12 ]]; do
+  local max_retries=20
+
+  for retries in $(seq 0 ${max_retries}); do
     sleep 10
 
     local state=$(aws lightsail get-instance-state --instance-name $INSTANCE_NAME | jq -r '.state.name')
     if [[ $state == "running" ]]; then
       break
     fi
-    let counter+=1
 
     echo "$INSTANCE_NAME is not ready (state: $state), trying again in 10 secs"
   done
+
+  if [ "$retries" -eq "${max_retries}" ]; then echo "$INSTANCE_NAME is not ready!"; exit 5; fi
+
+  local ipaddr=$(aws lightsail get-instance --instance-name $INSTANCE_NAME \
+    | jq --raw-output '.instance | .publicIpAddress')
+  echo $ipaddr > instance-ip
+
+  local private_ipaddr=$(aws lightsail get-instance --instance-name $INSTANCE_NAME \
+    | jq --raw-output '.instance | .privateIpAddress')
+  echo $private_ipaddr > private-instance-ip
+
+  for retries in $(seq 0 ${max_retries}); do
+    sleep 10
+
+    ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_FILE} ${SSH_USER}@${ipaddr} exit && break || true
+    echo "${ipaddr} ssh connection timeout. Sleeping for 10 seconds..."
+  done
+
+  if [ "$retries" -eq "${max_retries}" ]; then echo "$INSTANCE_NAME not SSH ready!"; exit 5; fi
 
   aws lightsail open-instance-public-ports \
     --port-info fromPort=443,toPort=443,protocol=tcp \
@@ -37,10 +58,6 @@ function setup_instance() {
   aws lightsail open-instance-public-ports \
     --port-info fromPort=6443,toPort=6443,protocol=tcp \
     --instance-name $INSTANCE_NAME
-
-  local ipaddr=$(aws lightsail get-instance --instance-name $INSTANCE_NAME \
-    | jq '.instance | .publicIpAddress + ":" + .privateIpAddress')
-  echo $ipaddr > instance-ip
 }
 
 function teardown_instance() {

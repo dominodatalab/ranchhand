@@ -1,0 +1,17 @@
+# Master Playbook
+# THE standard playbook for Domino Rancher Deployments
+
+---
+- hosts: all
+
+  vars_prompt:
+    - name: cert_names
+      prompt: CA 'comma separated string' of values prefixed by their options. (i.e., email, URI, DNS, RID, IP, dirName, otherName and the ones specific to your CA)
+      private: no
+
+  roles:
+    - system-checks
+    - docker
+    - rke
+    - helm
+    - rancher
