@@ -54,7 +54,7 @@ var (
 		"rhel": {
 			"sudo yum install -y yum-utils device-mapper-persistent-data lvm2",
 			"export REPO_ROOT=\"https://mirrors.domino.tech/artifacts/docker\"",
-			"yum install -y $REPO_ROOT/docker-ce-18.09.6-3.el7.x86_64.rpm $REPO_ROOT/docker-ce-cli-18.09.6-3.el7.x86_64.rpm $REPO_ROOT/containerd.io-1.2.10-3.2.el7.x86_64.rpm $REPO_ROOT/container-selinux-2.107-3.el7.noarch.rpm",
+			"sudo yum install -y $REPO_ROOT/docker-ce-18.09.6-3.el7.x86_64.rpm $REPO_ROOT/docker-ce-cli-18.09.6-3.el7.x86_64.rpm $REPO_ROOT/containerd.io-1.2.10-3.2.el7.x86_64.rpm $REPO_ROOT/container-selinux-2.107-3.el7.noarch.rpm",
 			"sudo systemctl enable docker",
 			"sudo systemctl start docker",
 		},
