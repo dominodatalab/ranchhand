@@ -5,9 +5,21 @@
   ignore_errors: true
   changed_when: false
   register: crd
-  
+
+- name: Copy cert-manager Custom Resoure Definintion
+  become: true
+  copy: 
+    src: "cert-manager-crds-{{ cert_manager_version }}.yaml"
+    dest: "/etc/kubernetes/cert-manager-crds-{{ cert_manager_version }}.yaml" 
+    mode: '0600'
+    owner: root
+    group: root
+  run_once: true
+  when: crd is failed
+
 - name: Install cert-manager Custom Resource Definition
-  command: kubectl apply -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.9/deploy/manifests/00-crds.yaml
+  # file downloaded from https://raw.githubusercontent.com/jetstack/cert-manager/release-0.9/deploy/manifests/00-crds.yaml
+  command: "kubectl apply -f /etc/kubernetes/cert-manager-crds-{{ cert_manager_version }}.yaml"
   run_once: true
   when: crd is failed
 
