@@ -27,6 +27,7 @@ commands:
       - run:
           name: Install Terraform
           command: |
+            apt-get update
             apt-get install -y wget zip
             wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
             unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip
