@@ -6,6 +6,7 @@ executors:
       - image: ubuntu:18.04
     environment:
       AWSCLI_VERSION: 1.16.122
+      TERRAFORM_VERSION: 0.12.12
 
 commands:
   install_ansible:
@@ -19,6 +20,17 @@ commands:
             update-alternatives --install /usr/bin/python python /usr/bin/python3.6 2
             update-alternatives  --set python /usr/bin/python3.6
             pip3 install ansible
+
+  install_terraform:
+    description: Install Terraform
+    steps:
+      - run:
+          name: Install Terraform
+          command: |
+            apt-get install -y wget zip
+            wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+            unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+            unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/local/bin
 
   launch_e2e:
     description: "Launch an e2e test using an AWS Lightsail VPS"
@@ -70,8 +82,12 @@ jobs:
     description: "Check Ansible Syntax"
     executor: default
     steps:
-      - install_ansible
+      - install_terraform
       - checkout
+      - run:
+          name: Terraform fmt
+          command: terraform fmt -check
+      - install_ansible
       - run: 
           name: Check Ansible Syntax
           command: ansible-playbook -i '127.0.0.1,' ansible/prod.yml --syntax-check
