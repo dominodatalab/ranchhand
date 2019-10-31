@@ -28,7 +28,12 @@ commands:
       ssh_user:
         type: string
     steps:
-    - run: '[[ ${CIRCLE_BRANCH} != "master" && -n ${CIRCLE_PULL_REQUEST} ]] && circleci step halt || true'
+    - run:
+      name: Branch and PR filter
+      command: |
+        if [[ $CIRCLE_BRANCH != "master" && -z $CIRCLE_PULL_REQUEST ]]
+          then circleci step halt || true
+        fi
     - checkout
     - install_ansible
     - add_ssh_keys:
