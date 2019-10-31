@@ -83,8 +83,8 @@ jobs:
     description: "Check Ansible Syntax"
     executor: default
     steps:
-      - install_terraform
       - checkout
+      - install_terraform
       - run:
           name: Terraform fmt
           command: terraform fmt -check
