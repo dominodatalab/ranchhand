@@ -9,6 +9,13 @@
       prompt: CA 'comma separated string' of values prefixed by their options. (i.e., email, URI, DNS, RID, IP, dirName, otherName and the ones specific to your CA)
       private: no
 
+  pre_tasks:
+    - name: Create local output directory
+      local_action:
+        module: file
+        path: "{{ local_output_dir | default('/tmp') }}"
+        state: directory 
+
   roles:
     - system-checks
     - docker
