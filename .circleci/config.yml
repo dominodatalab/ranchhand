@@ -30,7 +30,6 @@ commands:
             apt-get update
             apt-get install -y wget zip
             wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-            unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip
             unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/local/bin
 
   launch_e2e:
