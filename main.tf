@@ -38,5 +38,4 @@ resource "null_resource" "ansible_playbook" {
       RANCHER_PASSWORD = var.admin_password == "" ? join("", random_password.password.*.result) : var.admin_password
     }
   }
-  depends_on = ["local_file.current_work_directory"]
 }
