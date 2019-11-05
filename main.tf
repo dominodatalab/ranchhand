@@ -34,7 +34,7 @@ resource "null_resource" "ansible_playbook" {
   }
 
   provisioner "local-exec" {
-    command = "cp ansible.${self.id}/kube_config_rancher-cluster.yml kube_config_rancher-cluster.yml"
+    command     = "cp ansible.${self.id}/kube_config_rancher-cluster.yml kube_config_rancher-cluster.yml"
     working_dir = "${var.working_dir}"
   }
 }

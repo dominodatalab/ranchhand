@@ -2,8 +2,6 @@
 
 [![Release](https://img.shields.io/github/release/dominodatalab/ranchhand.svg)](https://github.com/dominodatalab/ranchhand/releases/latest)
 [![CircleCI](https://img.shields.io/circleci/project/github/dominodatalab/ranchhand/master.svg)](https://circleci.com/gh/dominodatalab/ranchhand)
-[![Go Report Card](https://goreportcard.com/badge/github.com/dominodatalab/ranchhand)](https://goreportcard.com/report/github.com/dominodatalab/ranchhand)
-[![GoDoc](https://godoc.org/github.com/dominodatalab/ranchhand?status.svg)](https://godoc.org/github.com/dominodatalab/ranchhand)
 
 Deploy Rancher in HA mode onto existing hardware.
 
@@ -15,13 +13,14 @@ This tool aims to automate the steps listed in Rancher's official [HA Install][]
 
 1. Download the [latest release][] from GitHub.
 1. [Install Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) (version >=2.8) locally
-1.  (optional) To update the Rancher default password, set the `RANCHER_PASSWORD` environment variable: 
+1.  (optional) To update the Rancher default password, set the `RANCHER_PASSWORD` environment variable:
      `export RANCHER_PASSWORD=<new password>`
     1.    (required) Configure ansible for proper output:
             `export ANSIBLE_COW_SELECTION=random`
 1. Execute `ansible-playbook -i '1.2.4.5,...,10.20.30.40,' --private-key=~/.ssh/id_rsa --user=ubuntu ansible/prod.yml --diff --check` to perform a dry run of all the changes.
 
 ### Example
+
 This example shows a manual run of the production playbook (prod.yml) from a local machine imaging a cluster behind a bastion/proxy server.
 
 ```
@@ -39,8 +38,6 @@ module "ranchhand" {
   source = "github.com/dominodatalab/ranchhand"
 
   node_ips         = ["..."]
-  distro           = "darwin"
-  release          = "latest"
   working_dir      = "..."
   cert_dnsnames    = ["..."]
   cert_ipaddresses = ["..."]
@@ -67,13 +64,22 @@ Please submit any feature enhancements, bug fixes, or ideas via pull requests or
     NODE_COUNT=N NODE_DISTRO="ubuntu_xenial|ubuntu_bionic|centos|rhel" vagrant up
     ```
 
-1. Use `go` to launch a Ranchhand run against your VM(s) and verify your changes.
+1. Use `ansible` to launch a Ranchhand run against your VM(s) and verify your changes.
 
-    `ansible-playbook -i '192.168.50.10,...,' --private-key=~/.ssh/id_rsa --user=ubuntu ansible/prod.yml --diff --check `
-    
+    ```
+    ansible-playbook -i '192.168.50.10,' \
+      --private-key=~/.ssh/id_rsa \
+      --ssh-common-args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' \
+      --user=vagrant \
+      -e "cert_names=DNS:localhost" \
+      ansible/prod.yml \
+      --diff
+    ```
+
     _Note the trailing comma (",") in the host/ip list._
-    
+
 ### Ansible References
+
 Here are some helpful Ansible references for getting started with Ansible.
 
 1. [Ansible Overview](https://docs.ansible.com/ansible/latest/index.html)
@@ -81,7 +87,6 @@ Here are some helpful Ansible references for getting started with Ansible.
 1. [Project Directory Layout](https://docs.ansible.com/ansible/latest/user_guide/playbooks_best_practices.html#content-organization)
 1. [Roles](https://docs.ansible.com/ansible/latest/user_guide/playbooks_reuse_roles.html)
 1. [Best Practices](https://docs.ansible.com/ansible/latest/user_guide/playbooks_best_practices.html#best-practices)
-
 
 ## Contribute
 

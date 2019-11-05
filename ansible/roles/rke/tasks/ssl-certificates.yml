@@ -5,7 +5,7 @@
   local_action:
     module: openssl_privatekey
     path: "{{ local_output_dir }}/dominodatalab.com.pem"
-  
+
 - name: Generate an OpenSSL Certificate Signing Request
   local_action:
     module: openssl_csr
@@ -15,7 +15,7 @@
     subject_alt_name: "{{ cert_names }}"
     organization_name: Domino Data Lab, Inc.
     organizational_unit_name: Platform Engineering
-  
+
 - name: Generate a Self Signed OpenSSL Certificate
   local_action:
     module: openssl_certificate

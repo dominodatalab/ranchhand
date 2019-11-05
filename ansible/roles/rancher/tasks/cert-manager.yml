@@ -8,7 +8,7 @@
 
 - name: Copy cert-manager Custom Resoure Definintion
   become: true
-  copy: 
+  copy:
     src: "cert-manager-crds-{{ cert_manager_version }}.yaml"
     dest: "/etc/kubernetes/"
     mode: '0644'
@@ -17,8 +17,8 @@
   run_once: true
   when: crd is failed
 
-  # file downloaded from https://raw.githubusercontent.com/jetstack/cert-manager/release-0.9/deploy/manifests/00-crds.yaml
-- name: Install cert-manager Custom Resource Definition  
+# file downloaded from https://raw.githubusercontent.com/jetstack/cert-manager/release-0.9/deploy/manifests/00-crds.yaml
+- name: Install cert-manager Custom Resource Definition
   command: "kubectl apply -f /etc/kubernetes/cert-manager-crds-{{ cert_manager_version }}.yaml"
   run_once: true
   when: crd is failed
@@ -59,4 +59,3 @@
 - name: Install cert-manager
   command: "helm install --name cert-manager --namespace cert-manager --version {{ cert_manager_version }} jetstack/cert-manager --description='RanchHand Deploy' --wait"
   when: "'cert-manager' not in charts.stdout"
-  
