@@ -14,28 +14,27 @@ resource "random_password" "password" {
   override_special = "!@#$%&*()_=+[]{}<>:?"
 }
 
-resource "local_file" "copy_kubeconfig" {
-  content    = file("${var.working_dir}/ansible.${null_resource.ansible_playbook.id}/kube_config_rancher-cluster.yml")
-  filename   = "${var.working_dir}/kube_config_rancher-cluster.yml"
-  depends_on = ["null_resource.ansible_playbook"]
-}
-
 resource "null_resource" "ansible_playbook" {
   provisioner "local-exec" {
-    command = join(" ", [
-      "ansible-playbook",
-      "-i '${local.ip_addresses},'",
-      "--private-key=${var.ssh_key_path}",
-      "--user=${var.ssh_username}",
-      "--ssh-common-args='-o StrictHostKeyChecking=no ${local.ansible_ssh_proxy}'",
-      "-e 'cert_names=${local.cert_names}'",
-      "-e 'local_output_dir=${var.working_dir}/ansible.${self.id}'",
-      "ansible/prod.yml --diff"
-    ])
+    command = <<-EOF
+      ansible-playbook \
+        -i '${local.ip_addresses},' \
+        --private-key=${var.ssh_key_path} \
+        --user=${var.ssh_username} \
+        --ssh-common-args='-o StrictHostKeyChecking=no ${local.ansible_ssh_proxy}' \
+        -e 'cert_names=${local.cert_names}' \
+        -e 'local_output_dir=${var.working_dir}/ansible.${self.id}' \
+        ansible/prod.yml --diff
+    EOF
 
     working_dir = "${path.module}"
     environment = {
       RANCHER_PASSWORD = var.admin_password == "" ? join("", random_password.password.*.result) : var.admin_password
     }
+  }
+
+  provisioner "local-exec" {
+    command     = "cp ansible.${self.id}/kube_config_rancher-cluster.yml kube_config_rancher-cluster.yml"
+    working_dir = "${var.working_dir}"
   }
 }

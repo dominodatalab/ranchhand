@@ -1,0 +1,18 @@
+---
+- name: Install Docker & Dependencies
+  become: yes
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - "{{ docker_ce_repo_root }}/docker-ce-{{ docker_ce_yum_version }}.x86_64.rpm"
+      - "{{ docker_ce_repo_root }}/docker-ce-cli-{{ docker_ce_yum_version }}.x86_64.rpm"
+      - "{{ docker_ce_repo_root }}/containerd.io-{{ containerd_yum_version }}.x86_64.rpm"
+      - "{{ docker_ce_repo_root }}/container-selinux-{{ container_selinux_yum_version }}.noarch.rpm"
+
+- name: Enable and Start Docker
+  become: yes
+  systemd:
+    state: started
+    name: docker
+    enabled: yes

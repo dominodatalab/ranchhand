@@ -9,16 +9,6 @@ variable "node_ips" {
 #------------------------------------------------------------------------------
 # OPTIONAL
 #------------------------------------------------------------------------------
-variable "distro" {
-  description = "Specify linux or darwin. Platform where RanchHand binary will be executed."
-  default     = "linux"
-}
-
-variable "release" {
-  description = "Specify the RanchHand release version to use. Check https://github.com/dominodatalab/ranchhand/releases for a list of available releases."
-  default     = "latest"
-}
-
 variable "working_dir" {
   description = "Directory where ranchhand should be executed. Defaults to the current working directory."
   default     = ""
@@ -58,4 +48,3 @@ variable "admin_password" {
   description = "Password override for the initial admin user"
   default     = ""
 }
-
