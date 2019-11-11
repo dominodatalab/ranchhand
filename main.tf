@@ -29,7 +29,9 @@ resource "null_resource" "ansible_playbook" {
 
     working_dir = "${path.module}"
     environment = {
-      RANCHER_PASSWORD = var.admin_password == "" ? join("", random_password.password.*.result) : var.admin_password
+      ANSIBLE_SSH_RETRIES = var.ansible_ssh_retries
+      ANSIBLE_TIMEOUT     = var.ansible_ssh_timeout
+      RANCHER_PASSWORD    = var.admin_password == "" ? join("", random_password.password.*.result) : var.admin_password
     }
   }
 
