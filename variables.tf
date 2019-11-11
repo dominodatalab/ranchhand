@@ -9,6 +9,14 @@ variable "node_ips" {
 #------------------------------------------------------------------------------
 # OPTIONAL
 #------------------------------------------------------------------------------
+variable "ansible_ssh_retries" {
+  default = 5
+}
+
+variable "ansible_ssh_timeout" {
+  default = 30
+}
+
 variable "working_dir" {
   description = "Directory where ranchhand should be executed. Defaults to the current working directory."
   default     = ""
