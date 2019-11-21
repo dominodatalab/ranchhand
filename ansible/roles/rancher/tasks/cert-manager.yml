@@ -6,7 +6,7 @@
   changed_when: false
   register: crd
 
-- name: Copy cert-manager Custom Resoure Definintion
+- name: Copy cert-manager Custom Resoure Definition
   become: true
   copy:
     src: "cert-manager-crds-{{ cert_manager_version }}.yaml"
