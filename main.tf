@@ -27,7 +27,7 @@ resource "null_resource" "ansible_playbook" {
         ansible/prod.yml --diff
     EOF
 
-    working_dir = "${path.module}"
+    working_dir = path.module
     environment = {
       RANCHER_PASSWORD = var.admin_password == "" ? join("", random_password.password.*.result) : var.admin_password
     }
@@ -35,6 +35,6 @@ resource "null_resource" "ansible_playbook" {
 
   provisioner "local-exec" {
     command     = "cp ansible.${self.id}/kube_config_rancher-cluster.yml kube_config_rancher-cluster.yml"
-    working_dir = "${var.working_dir}"
+    working_dir = var.working_dir
   }
 }
