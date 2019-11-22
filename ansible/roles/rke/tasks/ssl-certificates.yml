@@ -15,6 +15,11 @@
     subject_alt_name: "{{ cert_names }}"
     organization_name: Domino Data Lab, Inc.
     organizational_unit_name: Platform Engineering
+    key_usage: ["Digital Signature", "Certificate Sign"]
+    key_usage_critical: yes
+    extended_key_usage: ["TLS Web Server Authentication", "TLS Web Client Authentication"]
+    basic_constraints: "CA:TRUE"
+    basic_constraints_critical: yes
 
 - name: Generate a Self Signed OpenSSL Certificate
   local_action:
