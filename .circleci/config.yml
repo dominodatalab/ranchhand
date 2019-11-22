@@ -85,13 +85,13 @@ jobs:
       - checkout
       - install_terraform
       - run:
+          name: Terraform fmt
+          command: terraform fmt -check
+      - run:
           name: Terraform validate
           command: |
             terraform init
             terraform validate
-      - run:
-          name: Terraform fmt
-          command: terraform fmt -check
       - install_ansible
       - run:
           name: Check Ansible Syntax
