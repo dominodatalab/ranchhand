@@ -87,6 +87,11 @@ jobs:
       - run:
           name: Terraform fmt
           command: terraform fmt -check
+      - run:
+          name: Terraform validate
+          command: |
+            terraform init
+            terraform validate
       - install_ansible
       - run:
           name: Check Ansible Syntax

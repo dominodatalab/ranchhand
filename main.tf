@@ -27,7 +27,7 @@ resource "null_resource" "ansible_playbook" {
         ansible/prod.yml --diff
     EOF
 
-    working_dir = "${path.module}"
+    working_dir = path.module
     environment = {
       ANSIBLE_SSH_RETRIES = var.ansible_ssh_retries
       ANSIBLE_TIMEOUT     = var.ansible_ssh_timeout
@@ -37,6 +37,6 @@ resource "null_resource" "ansible_playbook" {
 
   provisioner "local-exec" {
     command     = "cp ansible.${self.id}/kube_config_rancher-cluster.yml kube_config_rancher-cluster.yml"
-    working_dir = "${var.working_dir}"
+    working_dir = var.working_dir
   }
 }
