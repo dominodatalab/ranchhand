@@ -1,0 +1,3 @@
+antiAffinity: required
+
+replicas: ${ip_addr_count}
