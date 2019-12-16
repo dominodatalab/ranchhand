@@ -23,7 +23,7 @@ resource "null_resource" "ansible_playbook" {
         --user=${var.ssh_username} \
         --ssh-common-args='-o StrictHostKeyChecking=no ${local.ansible_ssh_proxy}' \
         -e 'cert_names=${local.cert_names}' \
-        -e ip_addr_count=length('${local.ip_addresses}')
+        -e ip_addr_count=${length(var.node_ips)}
         -e 'local_output_dir=${var.working_dir}/ansible.${self.id}' \
         ansible/prod.yml --diff
     EOF
