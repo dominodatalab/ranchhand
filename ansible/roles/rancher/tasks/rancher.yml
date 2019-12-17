@@ -5,16 +5,16 @@
 
 - name: Install Rancher
   command: >
-  "helm install rancher-stable/rancher
-  --name rancher
-  --namespace cattle-system
-  --version {{ rancher_version }}
-  --set replicas=${ip_addr_count}
-  --set antiAffinity=required
-  --set tls=external
-  --set privateCA=true
-  --set addLocal=false
-  --set auditLog.level=1
-  --description='RanchHand Deploy'
-  --wait"
+    helm install rancher-stable/rancher
+      --name rancher
+      --namespace cattle-system
+      --version {{ rancher_version }}
+      --set replicas={{ ip_addr_count }}
+      --set antiAffinity=required
+      --set tls=external
+      --set privateCA=true
+      --set addLocal=false
+      --set auditLog.level=1
+      --description='RanchHand Deploy'
+      --wait
   when: "'rancher' not in charts.stdout"
