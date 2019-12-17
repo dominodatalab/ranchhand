@@ -9,7 +9,7 @@
       --name rancher
       --namespace cattle-system
       --version {{ rancher_version }}
-      --set replicas={{ ip_addr_count }}
+      --set replicas={{ node_count }}
       --set antiAffinity=required
       --set tls=external
       --set privateCA=true
