@@ -21,4 +21,4 @@
 
 - name: Wait for Rancher to be available
   wait_for:
-    timeout: 80
+    timeout: 300
