@@ -19,6 +19,6 @@
       --wait
   when: "'rancher' not in charts.stdout"
 
-- name: Wait for Rancher to be available.
+- name: Wait for Rancher to be available
   wait_for:
     timeout: 80
