@@ -20,5 +20,5 @@
   when: "'rancher' not in charts.stdout"
 
 - name: Wait for Rancher to be available
-  wait_for:
-    timeout: 300
+  command: kubectl rollout status --watch deployment rancher --namespace=cattle-system
+  run_once: true
