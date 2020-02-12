@@ -18,3 +18,7 @@
       --description='RanchHand Deploy'
       --wait
   when: "'rancher' not in charts.stdout"
+
+- name: Wait for Rancher to be available
+  command: kubectl rollout status --watch deployment rancher --namespace=cattle-system
+  run_once: true

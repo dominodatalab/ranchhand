@@ -20,4 +20,3 @@
   command: helm init --service-account tiller --wait
   when: helm_version is failed
   run_once: true
-
