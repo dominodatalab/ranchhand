@@ -20,7 +20,3 @@
   command: helm init --service-account tiller --wait
   when: helm_version is failed
   run_once: true
-
-- name: Wait for Tiller to become responsive
-  command: kubectl rollout status --watch deployment tiller-deploy --namespace=kube-system
-  run_once: true
