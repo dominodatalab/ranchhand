@@ -4,3 +4,9 @@ docker_ce_yum_version: 18.09.6-3.el7
 containerd_yum_version: 1.2.10-3.2.el7
 container_selinux_yum_version: 2.107-3.el7
 docker_ce_repo_root: https://mirrors.domino.tech/artifacts/docker
+docker_daemon_json: |
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "1g",
+    "max-file": "3"
+  }
