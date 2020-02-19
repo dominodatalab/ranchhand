@@ -32,6 +32,16 @@ variable "cert_ipaddresses" {
   default     = []
 }
 
+variable "rancher_version" {
+  description = "Rancher version to install into the cluster."
+  default     = ""
+}
+
+variable "rke_version" {
+  description = "RKE version to use to create the underlying Kubernetes cluster."
+  default     = ""
+}
+
 variable "ssh_username" {
   description = "SSH username on the nodes"
   default     = "admin"

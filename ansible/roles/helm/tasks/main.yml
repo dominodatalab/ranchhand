@@ -17,6 +17,6 @@
   run_once: true
 
 - name: helm Init tiller
-  command: helm init --service-account tiller --wait
+  command: helm init --service-account tiller --wait --upgrade
   when: helm_version is failed
   run_once: true

@@ -24,6 +24,8 @@ resource "null_resource" "ansible_playbook" {
         --ssh-common-args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${local.ansible_ssh_proxy}' \
         -e 'cert_names=${local.cert_names}' \
         -e 'node_count=${length(var.node_ips)}' \
+        -e 'rancher_version=${var.rancher_version}' \
+        -e 'rke_version=${var.rke_version}' \
         -e 'local_output_dir=${var.working_dir}/ansible.${self.id}' \
         ansible/prod.yml --diff
     EOF
