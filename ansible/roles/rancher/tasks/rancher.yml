@@ -8,7 +8,7 @@
     helm install rancher-stable/rancher
       --name rancher
       --namespace cattle-system
-      --version {{ rancher__rancher_version }}
+      --version {{ rancher_version | default('2.3.5') }}
       --set replicas={{ node_count }}
       --set antiAffinity=required
       --set tls=external
