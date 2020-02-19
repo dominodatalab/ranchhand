@@ -72,6 +72,7 @@ Please submit any feature enhancements, bug fixes, or ideas via pull requests or
       --ssh-common-args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' \
       --user=vagrant \
       -e "cert_names=DNS:localhost" \
+      -e "node_count=1" \
       ansible/prod.yml \
       --diff
     ```

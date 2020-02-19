@@ -32,9 +32,3 @@
       - containerd.io
       - "docker-ce={{ docker_ce_ubuntu_version }}"
     state: present
-
-- name: Add user to docker
-  become: true
-  user:
-    name: "{{ ansible_user_id }}"
-    group: docker

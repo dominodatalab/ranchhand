@@ -14,7 +14,7 @@
       local_action:
         module: file
         path: "{{ local_output_dir | default('/tmp') }}"
-        state: directory 
+        state: directory
 
   roles:
     - system-checks
