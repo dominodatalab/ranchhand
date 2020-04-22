@@ -48,7 +48,7 @@
 
 - name: Add Jetstack Repo for cert-manager
   command: helm repo add jetstack https://charts.jetstack.io
-  when: "'jetstack' not in repos.stdout"
+  when: not (repos.json | json_query("[?name == \"jetstack\"]"))
   run_once: true
   register: jetstack_repo
 
@@ -57,5 +57,11 @@
   when: jetstack_repo is changed
 
 - name: Install cert-manager
-  command: "helm install --name cert-manager --namespace cert-manager --version {{ cert_manager_version }} jetstack/cert-manager --description='RanchHand Deploy' --wait"
-  when: "'cert-manager' not in charts.stdout"
+  command: >
+    helm install jetstack/cert-manager
+      --name cert-manager
+      --namespace cert-manager
+      --version {{ cert_manager_version }}
+      --description='RanchHand Deploy'
+      --wait
+  when: not (charts.json | json_query("[?name == \"cert-manager\"]"))

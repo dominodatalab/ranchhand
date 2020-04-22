@@ -1,12 +1,13 @@
 ---
 - name: Probe Helm Repos
-  command: helm repo list
+  command: helm repo list --output json
   changed_when: false
   run_once: true
+  ignore_errors: true
   register: repos
 
 - name: Probe Helm Charts
-  command: helm list
+  command: helm list --output json
   changed_when: false
   run_once: true
   register: charts
