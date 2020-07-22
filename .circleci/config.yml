@@ -109,6 +109,12 @@ jobs:
     - launch_e2e:
         ssh_user: ubuntu
         blueprint_id: ubuntu_16_04_2
+  e2e_ubuntu18:
+    executor: default
+    steps:
+    - launch_e2e:
+        ssh_user: ubuntu
+        blueprint_id: ubuntu_18
 
 workflows:
   version: 2

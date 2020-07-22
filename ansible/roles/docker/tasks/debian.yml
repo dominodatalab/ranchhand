@@ -30,5 +30,5 @@
   apt:
     name:
       - containerd.io
-      - "docker-ce={{ docker_ce_ubuntu_version }}"
+      - "docker-ce={{ vars.docker_version[ansible_distribution_release] }}"
     state: present
