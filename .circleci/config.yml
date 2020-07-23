@@ -3,10 +3,11 @@ version: 2.1
 executors:
   default:
     docker:
-      - image: ubuntu:18.04
+      - image: circleci/python:3.8-buster
     environment:
       AWSCLI_VERSION: 1.18.103
       TERRAFORM_VERSION: 0.12.28
+      ANSIBLE_VERSION: 2.9.11
 
 commands:
   install_ansible:
@@ -14,10 +15,7 @@ commands:
     steps:
       - run:
           name: Install Ansible & Dependencies
-          command: |
-            apt-get update
-            apt-get install -y software-properties-common python-apt python3-pip libssl-dev openssh-server
-            pip3 install ansible
+          command: pip3 install ansible==$ANSIBLE_VERSION
 
   install_terraform:
     description: Install Terraform
