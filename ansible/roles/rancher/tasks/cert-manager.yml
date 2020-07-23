@@ -64,4 +64,4 @@
       --version {{ cert_manager_version }}
       --description='RanchHand Deploy'
       --wait
-  when: not (charts.json | json_query("[?name == \"cert-manager\"]"))
+  when: (charts.json | from_json)['name'] is not "cert-manager"

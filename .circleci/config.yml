@@ -6,7 +6,7 @@ executors:
       - image: circleci/python:3.8-buster
     environment:
       AWSCLI_VERSION: 1.18.103
-      TERRAFORM_VERSION: 0.12.28
+      TERRAFORM_VERSION: 0.12.29
       ANSIBLE_VERSION: 2.9.11
 
 commands:
@@ -24,7 +24,7 @@ commands:
           name: Install Terraform
           command: |
             wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-            unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/local/bin
+            sudo unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/local/bin
 
   launch_e2e:
     description: "Launch an e2e test using an AWS Lightsail VPS"
