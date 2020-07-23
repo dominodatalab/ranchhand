@@ -3,7 +3,7 @@ set -ex
 
 INSTANCE_NAME="${INSTANCE_NAME:-"ranchhand-local-$USER"}"
 INSTANCE_BLUEPRINT_ID="${INSTANCE_BLUEPRINT_ID:-ubuntu_16_04_2}"
-SSH_KEY_FILE="${SSH_KEY_FILE:-${HOME}/.ssh/id_rsa_5a19aee7ef984f2f68c3be7262f91d35}"
+SSH_KEY_FILE="${SSH_KEY_FILE:-${HOME}/.ssh/id_rsa_a4d238e594137d6a2ec652c68f7f0e6b}"
 SSH_USER="${SSH_USER:-ubuntu}"
 
 function setup_instance() {

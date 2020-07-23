@@ -62,7 +62,7 @@ commands:
             --user << parameters.ssh_user >> \
             -e 'cert_names=DNS:test.dominodatalab.com' \
             -e 'node_count=1' \
-            --private-key=~/.ssh/id_rsa_5a19aee7ef984f2f68c3be7262f91d35 \
+            --private-key=~/.ssh/id_rsa_a4d238e594137d6a2ec652c68f7f0e6b \
             --ssh-common-args="-o StrictHostKeyChecking=no -o StrictHostKeyChecking=no -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -W %h:%p -q << parameters.ssh_user >>@$(cat instance-ip)\"" \
             ansible/prod.yml --diff
     - run:
