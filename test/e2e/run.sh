@@ -25,7 +25,7 @@ function setup_instance() {
   for retries in $(seq 0 ${max_retries}); do
     sleep 10
 
-    local state=$(aws lightsail get-instance-state --instance-name $INSTANCE_NAME | jq -r '.state.name')
+    local state=$(aws lightsail get-instance-state --instance-name $INSTANCE_NAME --query 'state.name' --output text)
     if [[ $state == "running" ]]; then
       break
     fi
@@ -35,12 +35,10 @@ function setup_instance() {
 
   if [ "$retries" -eq "${max_retries}" ]; then echo "$INSTANCE_NAME is not ready!"; exit 5; fi
 
-  local ipaddr=$(aws lightsail get-instance --instance-name $INSTANCE_NAME \
-    | jq --raw-output '.instance | .publicIpAddress')
+  local ipaddr=$(aws lightsail get-instance --instance-name $INSTANCE_NAME --query 'instance.publicIpAddress' --output text)
   echo $ipaddr > instance-ip
 
-  local private_ipaddr=$(aws lightsail get-instance --instance-name $INSTANCE_NAME \
-    | jq --raw-output '.instance | .privateIpAddress')
+  local private_ipaddr=$(aws lightsail get-instance --instance-name $INSTANCE_NAME --query 'instance.privateIpAddress' --output text)
   echo $private_ipaddr > private-instance-ip
 
   for retries in $(seq 0 ${max_retries}); do
