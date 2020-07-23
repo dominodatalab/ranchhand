@@ -3,6 +3,7 @@
   command: helm repo list --output json
   changed_when: false
   run_once: true
+  # Ignore errors since an empty repo list returns exit code = 1
   ignore_errors: true
   register: repos
 

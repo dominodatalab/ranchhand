@@ -48,7 +48,7 @@
 
 - name: Add Jetstack Repo for cert-manager
   command: helm repo add jetstack https://charts.jetstack.io
-  when: not (repos.json | json_query("[?name == \"jetstack\"]"))
+  when: (repos.json | from_json)['name'] is not "jetstack"
   run_once: true
   register: jetstack_repo
 

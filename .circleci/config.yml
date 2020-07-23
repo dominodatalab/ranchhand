@@ -5,8 +5,8 @@ executors:
     docker:
       - image: ubuntu:18.04
     environment:
-      AWSCLI_VERSION: 1.16.122
-      TERRAFORM_VERSION: 0.12.12
+      AWSCLI_VERSION: 1.18.103
+      TERRAFORM_VERSION: 0.12.28
 
 commands:
   install_ansible:
@@ -17,8 +17,6 @@ commands:
           command: |
             apt-get update
             apt-get install -y software-properties-common python-apt python3-pip libssl-dev openssh-server
-            update-alternatives --install /usr/bin/python python /usr/bin/python3.6 2
-            update-alternatives  --set python /usr/bin/python3.6
             pip3 install ansible
 
   install_terraform:
