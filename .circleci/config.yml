@@ -106,7 +106,7 @@ jobs:
     steps:
     - launch_e2e:
         ssh_user: ubuntu
-        blueprint_id: ubuntu_18
+        blueprint_id: ubuntu_18_04
 
 workflows:
   version: 2
