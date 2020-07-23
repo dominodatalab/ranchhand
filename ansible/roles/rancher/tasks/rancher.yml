@@ -1,7 +1,7 @@
 ---
 - name: Add Rancher Repo
   command: helm repo add rancher-stable https://releases.rancher.com/server-charts/stable
-  when: (repos.json | from_json)['name'] is not "rancher-stable"
+  when: not (repos.json | json_query("[?name == \"rancher-stable\"]"))
 
 - name: Install Rancher
   command: >
@@ -17,7 +17,7 @@
       --set auditLog.level=1
       --description='RanchHand Deploy'
       --wait
-  when: (charts.json | from_json)['name'] is not "rancher"
+  when: not (charts.json | json_query("[?name == \"rancher\"]"))
 
 - name: Wait for Rancher to be available
   command: kubectl rollout status --watch deployment rancher --namespace=cattle-system
