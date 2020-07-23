@@ -8,6 +8,7 @@ executors:
       AWSCLI_VERSION: 1.18.103
       TERRAFORM_VERSION: 0.12.29
       ANSIBLE_VERSION: 2.9.11
+      RANCHER_PASSWORD: thisisanewadminpassword
 
 commands:
   install_ansible:
