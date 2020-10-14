@@ -58,8 +58,7 @@
 
 - name: Install cert-manager
   command: >
-    helm install jetstack/cert-manager
-      --name cert-manager
+    helm install cert-manager jetstack/cert-manager
       --namespace cert-manager
       --version {{ cert_manager_version }}
       --description='RanchHand Deploy'
