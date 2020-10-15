@@ -8,7 +8,7 @@
   register: repos
 
 - name: Probe Helm Charts
-  command: helm list --output json
+  command: helm list --all-namespaces --output json
   changed_when: false
   run_once: true
   register: charts

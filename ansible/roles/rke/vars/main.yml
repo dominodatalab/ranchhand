@@ -1,7 +1,7 @@
 ---
-kubectl_version: v1.15.2
-helm_version: v2.16.1
-rancher_cli_version: v2.2.0
+kubectl_version: v1.19.3
+helm_version: v3.3.4
+rancher_cli_version: v2.3.2
 local_output_dir: "/tmp"
-rke_cli_version: "v{{ rke_version | default('1.0.4', true) }}"
+rke_cli_version: "v{{ rke_version | default('1.2.0', true) }}"
 tools_dir: "/home/{{ ansible_user_id }}/ranchhand/tools"

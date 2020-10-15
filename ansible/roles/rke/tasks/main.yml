@@ -45,22 +45,14 @@
     state: link
     mode: a+rx,u+rwx
   with_items:
-    - {src: rke_linux-amd64, dest: rke}
-    - {src: rancher-v2.2.0/rancher, dest: rancher}
-    - {src: helm, dest: helm}
-    - {src: kubectl, dest: kubectl}
-
-- name: Create K8s Configuration Directory
-  become: true
-  file: path=/etc/kubernetes state=directory
-
-- name: Copy k8s Configurations
-  become: true
-  copy: src="{{ item }}" dest="/etc/kubernetes/{{ item }}" mode=600 owner=root
-  with_items:
-    - admission.yaml
-    - audit.yaml
-    - event.yaml
+    - src: rke_linux-amd64
+      dest: rke
+    - src: "rancher-{{ rancher_cli_version }}/rancher"
+      dest: rancher
+    - src: helm
+      dest: helm
+    - src: kubectl
+      dest: kubectl
 
 - name: Copy rke Template
   template:

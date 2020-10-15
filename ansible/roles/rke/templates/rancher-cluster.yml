@@ -3,7 +3,7 @@ ssh_key_path: /home/{{ ansible_user_id }}/.ssh/rke
 ignore_docker_version: false
 
 nodes:
-{% for node in groups['all'] %}
+{% for node in groups["all"] %}
   - address: {{ node }}
     user: {{ ansible_user_id }}
     port: 22
@@ -16,32 +16,33 @@ services:
     creation: 6h
     retention: 24h
   kube-api:
+    always_pull_images: false
+    audit_log:
+      enabled: true
+    event_rate_limit:
+      enabled: true
     pod_security_policy: true
-    extra_args:
-      anonymous-auth: "false"
-      profiling: "false"
-      service-account-lookup: "true"
-      enable-admission-plugins: "ServiceAccount,NamespaceLifecycle,LimitRanger,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota,DefaultTolerationSeconds,AlwaysPullImages,DenyEscalatingExec,NodeRestriction,EventRateLimit,PodSecurityPolicy"
-      admission-control-config-file: "/etc/kubernetes/admission.yaml"
-      audit-log-path: "/var/log/kube-audit/audit-log.json"
-      audit-log-maxage: "30"
-      audit-log-maxbackup: "10"
-      audit-log-maxsize: "100"
-      audit-log-format: "json"
-      audit-policy-file: "/etc/kubernetes/audit.yaml"
-    extra_binds:
-    - "/var/log/kube-audit:/var/log/kube-audit"
+    secrets_encryption_config:
+      enabled: true
+    service_node_port_range: 30000-32767
   kube-controller:
     extra_args:
       profiling: "false"
       address: "127.0.0.1"
       terminated-pod-gc-threshold: "1000"
+      feature-gates: RotateKubeletServerCertificate=true
   kubelet:
     extra_args:
-      streaming-connection-idle-timeout: "30m"
-      protect-kernel-defaults: "false"
-      make-iptables-util-chains: "true"
+      anonymous-auth: "false"
       event-qps: "0"
+      feature-gates: RotateKubeletServerCertificate=true
+      make-iptables-util-chains: "true"
+      protect-kernel-defaults: "false"
+      streaming-connection-idle-timeout: 1800s
+      tls-cipher-suites: >-
+        TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_GCM_SHA256
+    fail_swap_on: false
+    generate_serving_certificate: true
   scheduler:
     extra_args:
       profiling: "false"
@@ -60,8 +61,8 @@ addons: |
     namespace: ingress-nginx
   type: kubernetes.io/tls
   data:
-    tls.crt: {{ lookup('file', '{{ local_output_dir }}/dominodatalab.com.crt') | b64encode }}
-    tls.key: {{ lookup('file', '{{ local_output_dir }}/dominodatalab.com.pem') | b64encode }}
+    tls.crt: {{ lookup("file", "{{ local_output_dir }}/dominodatalab.com.crt") | b64encode }}
+    tls.key: {{ lookup("file", "{{ local_output_dir }}/dominodatalab.com.pem") | b64encode }}
   ---
   apiVersion: rbac.authorization.k8s.io/v1
   kind: Role

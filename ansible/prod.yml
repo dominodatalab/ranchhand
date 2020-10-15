@@ -20,5 +20,4 @@
     - system-checks
     - docker
     - rke
-    - helm
     - rancher
