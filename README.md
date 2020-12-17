@@ -17,6 +17,7 @@ This tool aims to automate the steps listed in Rancher's official [HA Install][]
      `export RANCHER_PASSWORD=<new password>`
     1.    (required) Configure ansible for proper output:
             `export ANSIBLE_COW_SELECTION=random`
+1. Execute `ansible-galaxy install -r ansible/requirements.yml` to install dependencies
 1. Execute `ansible-playbook -i '1.2.4.5,...,10.20.30.40,' --private-key=~/.ssh/id_rsa --user=ubuntu ansible/prod.yml --diff --check` to perform a dry run of all the changes.
 
 ### Example
@@ -67,6 +68,7 @@ Please submit any feature enhancements, bug fixes, or ideas via pull requests or
 1. Use `ansible` to launch a Ranchhand run against your VM(s) and verify your changes.
 
     ```
+    ansible-galaxy install -r ansible/requirements.yml
     ansible-playbook -i '192.168.50.10,' \
       --private-key=~/.ssh/id_rsa \
       --ssh-common-args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' \
