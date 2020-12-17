@@ -44,7 +44,7 @@ Vagrant.configure("2") do |config|
 
       c.vm.provider :virtualbox do |vb|
         vb.cpus = 2
-        vb.memory = "4096"
+        vb.memory = "8192"
 
         # NOTE: VirtualBox v6.x is SLOW with the following setting
         # vb.customize ["modifyvm", :id, "--uartmode1", "disconnected"]

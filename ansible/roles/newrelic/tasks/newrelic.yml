@@ -1,0 +1,75 @@
+- name: Create charts directory
+  file: path="{{ local_chart_path }}" state=directory
+  run_once: true
+
+- name: Login to GCR repo
+  shell: echo {{ helm_registry_password }} | base64 -d | helm registry login {{ helm_registry_host }} --username {{ helm_registry_username }} --password-stdin
+  run_once: yes
+  no_log: True
+  environment:
+    HELM_EXPERIMENTAL_OCI: 1
+
+- name: Pull nri-bundle charts
+  command: helm chart pull gcr.io/domino-eng-service-artifacts/nri-bundle:{{ nribundle_chart_version }}
+  run_once: yes
+  environment:
+    HELM_EXPERIMENTAL_OCI: 1
+
+- name: Export nri-bundle charts to local
+  command: helm chart export gcr.io/domino-eng-service-artifacts/nri-bundle:{{ nribundle_chart_version }} -d {{ local_chart_path }}
+  run_once: yes
+  environment:
+    HELM_EXPERIMENTAL_OCI: 1
+
+- name: Probe Newrelic Namespace
+  command: kubectl get ns monitoring
+  changed_when: false
+  ignore_errors: yes
+  run_once: yes
+  register: rancher_monitoring
+
+- name: Create Newrelic namespace
+  command: kubectl create namespace monitoring
+  run_once: yes
+  when: rancher_monitoring is failed
+
+- name: Install Newrelic Services
+  command: >
+    helm install nri-bundle {{ local_chart_path }}/nri-bundle
+      --namespace {{ newrelic_namespace }}
+      --version {{ nribundle_chart_version }}
+      --set global.licenseKey="{{ newrelic_licensekey }}"
+      --set global.cluster="rancher"
+      --set newrelic-infrastructure.enabled=true
+      --set newrelic-infrastructure.rbac.pspEnabled=true
+      --set newrelic-infrastructure.networkPolicy.create=true
+      --set newrelic-infrastructure.resources.limits.memory=128Mi
+      --set newrelic-infrastructure.resources.requests.cpu=100m
+      --set newrelic-infrastructure.resources.requests.memory=30Mi
+      --set kubeEvents.enabled=true
+      --set nri-kube-events.networkPolicy.create=true
+      --set nri-kube-events.kubeEvents.resources.limits.memory=128Mi
+      --set nri-kube-events.kubeEvents.resources.requests.cpu=100m
+      --set nri-kube-events.kubeEvents.resources.requests.memory=128Mi
+      --set nri-kube-events.infraAgent.resources.limits.memory=128Mi
+      --set nri-kube-events.infraAgent.resources.requests.cpu=100m
+      --set nri-kube-events.infraAgent.resources.requests.memory=128Mi
+      --set logging.enabled=true
+      --set newrelic-logging.rbac.pspEnabled=true
+      --set newrelic-logging.networkPolicy.enabled=true
+      --set newrelic-logging.resources.limits.memory=256Mi
+      --set newrelic-logging.resources.requests.cpu=100m
+      --set newrelic-logging.resources.requests.memory=30Mi
+      --set prometheus.enabled=true
+      --set nri-prometheus.resources.limits.cpu=1
+      --set nri-prometheus.resources.limits.memory=1Gi
+      --set nri-prometheus.resources.requests.cpu=100m
+      --set nri-prometheus.resources.requests.memory=30Mi
+      --set webhook.enabled=false
+      --set ksm.enabled=false
+      --description='Newrelic Deploy'
+      --set newrelic-infrastructure.customAttributes="'{\"clusterName\":\"$(CLUSTER_NAME)\"}'"
+      --wait
+      --timeout 600s
+  when: not (charts.json | json_query("[?name == \"nri-bundle\"]"))
+
