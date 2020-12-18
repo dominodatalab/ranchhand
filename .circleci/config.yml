@@ -17,6 +17,9 @@ commands:
       - run:
           name: Install Ansible & Dependencies
           command: pip install ansible-base==$ANSIBLE_VERSION
+      - run:
+          name: Install Ansible Packages
+          command: ansible-galaxy install -r ansible/requirements.yml
 
   install_terraform:
     description: Install Terraform
@@ -58,7 +61,6 @@ commands:
     - run:
         name: Execute Ansible Ranchhand
         command: |
-          ansible-galaxy install -r ansible/requirements.yml
           ansible-playbook \
             -i "$(cat private-instance-ip)," \
             --user << parameters.ssh_user >> \
