@@ -6,6 +6,7 @@
 
   collections:
     - community.crypto
+    - ansible.posix
 
   vars_prompt:
     - name: cert_names
