@@ -16,7 +16,7 @@ commands:
     steps:
       - run:
           name: Install Ansible & Dependencies
-          command: pip install ansible==$ANSIBLE_VERSION
+          command: pip install ansible-base==$ANSIBLE_VERSION
 
   install_terraform:
     description: Install Terraform
