@@ -5,8 +5,9 @@
 - hosts: all
 
   collections:
-    - community.crypto
     - ansible.posix
+    - community.crypto
+    - community.general
 
   vars_prompt:
     - name: cert_names
