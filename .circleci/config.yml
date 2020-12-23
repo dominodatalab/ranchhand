@@ -27,6 +27,7 @@ commands:
     - run:
         name: Install system requirements
         command: |
+          sudo apt-get update
           sudo apt-get install -y python3-pip
           pip3 install awscli==$AWSCLI_VERSION --upgrade --user
           echo 'export PATH="$HOME/.local/bin:$PATH"' >> $BASH_ENV
