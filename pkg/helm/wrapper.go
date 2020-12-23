@@ -63,7 +63,7 @@ func (w *wrapper) Init() error {
 			return err
 		}
 
-		buffer, err := w.helmCommand("init", "--wait", "--skip-repos", "--service-account", TillerServiceAccount).CombinedOutput()
+		buffer, err := w.helmCommand("init", "--wait", "--service-account", TillerServiceAccount).CombinedOutput()
 		if err != nil {
 			output := string(buffer)
 			return errors.Wrapf(err, "helm init failed: %s", output)
