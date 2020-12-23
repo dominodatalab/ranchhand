@@ -15,7 +15,7 @@ import (
 var (
 	PlatformToolVersions = map[string]string{
 		"kubectl": "v1.15.2",
-		"helm":    "v2.14.3",
+		"helm":    "v2.17.0",
 		"rke":     "v0.2.7",
 	}
 
