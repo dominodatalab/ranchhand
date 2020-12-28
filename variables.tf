@@ -68,7 +68,7 @@ variable "admin_password" {
 }
 
 variable "helm_v3_registry_host" {
-  default = ""
+  default = "gcr.io"
 }
 
 variable "helm_v3_registry_user" {
