@@ -3,7 +3,7 @@
   run_once: true
 
 - name: Login to GCR repo
-  shell: echo {{ helm_registry_password }} | base64 -d | helm registry login {{ helm_registry_host }} --username {{ helm_registry_username }} --password-stdin
+  shell: echo {{ helm_v3_registry_password }} | base64 -d | helm registry login {{ helm_v3_registry_host }} --username {{ helm_v3_registry_user }} --password-stdin
   run_once: yes
   environment:
     HELM_EXPERIMENTAL_OCI: 1
