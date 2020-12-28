@@ -66,3 +66,15 @@ variable "admin_password" {
   description = "Password override for the initial admin user"
   default     = ""
 }
+
+variable "helm_v3_registry_host" {
+  default = ""
+}
+
+variable "helm_v3_registry_user" {
+  default = ""
+}
+
+variable "helm_v3_registry_password" {
+  default = ""
+}

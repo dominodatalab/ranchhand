@@ -5,7 +5,6 @@
 - name: Login to GCR repo
   shell: echo {{ helm_registry_password }} | base64 -d | helm registry login {{ helm_registry_host }} --username {{ helm_registry_username }} --password-stdin
   run_once: yes
-  no_log: True
   environment:
     HELM_EXPERIMENTAL_OCI: 1
 
@@ -72,4 +71,3 @@
       --wait
       --timeout 600s
   when: not (charts.json | json_query("[?name == \"nri-bundle\"]"))
-

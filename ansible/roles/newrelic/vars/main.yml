@@ -1,8 +1,8 @@
 ---
 
-helm_registry_host: "gcr.io"
-helm_registry_username: "FILLMEIN"
-helm_registry_password: "{{ lookup('env', 'HELM_REGISTRY_PASSWORD') }}"
+helm_v3_registry_host: "{{ lookup('env', 'HELM_V3_REGISTRY_HOST') }}"
+helm_v3_registry_user: "{{ lookup('env', 'HELM_V3_REGISTRY_USER') }}"
+helm_v3_registry_password: "{{ lookup('env', 'HELM_V3_REGISTRY_PASSWORD') }}"
 local_chart_path: "$HOME/charts"
 newrelic_namespace: "monitoring"
 nribundle_chart_version: "1.11.3-0.1.0-sk-plat-963-add-nri-bundle"
