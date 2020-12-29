@@ -78,3 +78,7 @@ variable "helm_v3_registry_user" {
 variable "helm_v3_registry_password" {
   default = ""
 }
+
+variable "newrelic_licensekey" {
+  default = ""
+}

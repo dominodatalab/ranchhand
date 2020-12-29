@@ -38,6 +38,7 @@ resource "null_resource" "ansible_playbook" {
       HELM_V3_REGISTRY_HOST     = var.helm_v3_registry_host
       HELM_V3_REGISTRY_USER     = var.helm_v3_registry_user
       HELM_V3_REGISTRY_PASSWORD = var.helm_v3_registry_password
+      NEWRELIC_LICENSEKEY       = var.newrelic_licensekey
     }
   }
 
