@@ -20,6 +20,10 @@
   environment:
     HELM_EXPERIMENTAL_OCI: 1
 
+- name: Probe bitnami repo
+  command: helm repo add bitnami https://charts.bitnami.com/bitnami
+  when: not (repos.json | json_query("[?name == \"bitnami\"]"))
+
 - name: Probe Newrelic Namespace
   command: kubectl get ns monitoring
   changed_when: false
@@ -31,6 +35,15 @@
   command: kubectl create namespace monitoring
   run_once: yes
   when: rancher_monitoring is failed
+
+- name: Install Kube State Metrics
+  command: >
+    helm install kube-state-metrics bitnami/kube-state-metrics
+      --namespace {{ newrelic_namespace }}
+      --set securityContext.enabled=true
+      --set securityContext.runAsUser=65534
+      --set securityContext.fsGroup=65534
+  when: not (charts.json | json_query("[?name == \"kube-state-metrics\"]"))
 
 - name: Install Newrelic Services
   command: >
