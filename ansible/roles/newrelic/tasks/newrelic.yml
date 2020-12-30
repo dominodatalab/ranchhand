@@ -7,6 +7,7 @@
   run_once: yes
   environment:
     HELM_EXPERIMENTAL_OCI: 1
+  no_log: true
 
 - name: Pull nri-bundle charts
   command: helm chart pull gcr.io/domino-eng-service-artifacts/nri-bundle:{{ nribundle_chart_version }}
@@ -59,13 +60,13 @@
       --set newrelic-infrastructure.resources.requests.cpu=100m
       --set newrelic-infrastructure.resources.requests.memory=30Mi
       --set kubeEvents.enabled=true
-      --set nri-kube-events.networkPolicy.create=true
-      --set nri-kube-events.kubeEvents.resources.limits.memory=128Mi
-      --set nri-kube-events.kubeEvents.resources.requests.cpu=100m
-      --set nri-kube-events.kubeEvents.resources.requests.memory=128Mi
-      --set nri-kube-events.infraAgent.resources.limits.memory=128Mi
-      --set nri-kube-events.infraAgent.resources.requests.cpu=100m
-      --set nri-kube-events.infraAgent.resources.requests.memory=128Mi
+      --set newrelic-events.networkPolicy.create=true
+      --set newrelic-events.kubeEvents.resources.limits.memory=128Mi
+      --set newrelic-events.kubeEvents.resources.requests.cpu=100m
+      --set newrelic-events.kubeEvents.resources.requests.memory=128Mi
+      --set newrelic-events.infraAgent.resources.limits.memory=128Mi
+      --set newrelic-events.infraAgent.resources.requests.cpu=100m
+      --set newrelic-events.infraAgent.resources.requests.memory=128Mi
       --set logging.enabled=true
       --set newrelic-logging.rbac.pspEnabled=true
       --set newrelic-logging.networkPolicy.enabled=true
@@ -73,13 +74,11 @@
       --set newrelic-logging.resources.requests.cpu=100m
       --set newrelic-logging.resources.requests.memory=30Mi
       --set prometheus.enabled=true
-      --set nri-prometheus.resources.limits.cpu=1
-      --set nri-prometheus.resources.limits.memory=1Gi
-      --set nri-prometheus.resources.requests.cpu=100m
-      --set nri-prometheus.resources.requests.memory=30Mi
-      --set webhook.enabled=false
-      --set ksm.enabled=false
-      --description='Newrelic Deploy'
+      --set newrelic-open-metrics.resources.limits.cpu=1
+      --set newrelic-open-metrics.resources.limits.memory=1Gi
+      --set newrelic-open-metrics.resources.requests.cpu=100m
+      --set newrelic-open-metrics.resources.requests.memory=30Mi
+      --description='Deploy Newrelic services'
       --set newrelic-infrastructure.customAttributes="'{\"clusterName\":\"$(CLUSTER_NAME)\"}'"
       --wait
       --timeout 600s
