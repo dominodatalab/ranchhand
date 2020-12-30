@@ -61,12 +61,9 @@
       --set newrelic-infrastructure.resources.requests.memory=30Mi
       --set kubeEvents.enabled=true
       --set newrelic-events.networkPolicy.create=true
-      --set newrelic-events.kubeEvents.resources.limits.memory=128Mi
-      --set newrelic-events.kubeEvents.resources.requests.cpu=100m
-      --set newrelic-events.kubeEvents.resources.requests.memory=128Mi
-      --set newrelic-events.infraAgent.resources.limits.memory=128Mi
-      --set newrelic-events.infraAgent.resources.requests.cpu=100m
-      --set newrelic-events.infraAgent.resources.requests.memory=128Mi
+      --set newrelic-events.resources.limits.memory=128Mi
+      --set newrelic-events.resources.requests.cpu=100m
+      --set newrelic-events.resources.requests.memory=128Mi
       --set logging.enabled=true
       --set newrelic-logging.rbac.pspEnabled=true
       --set newrelic-logging.networkPolicy.enabled=true
