@@ -1,22 +1,24 @@
 - name: Create charts directory
-  file: path="{{ local_chart_path }}" state=directory
+  file:
+    path: "{{ local_output_dir }}/charts"
+    state: directory
   run_once: true
 
 - name: Login to GCR repo
-  shell: echo {{ helm_v3_registry_password }} | base64 -d | helm registry login {{ helm_v3_registry_host }} --username {{ helm_v3_registry_user }} --password-stdin
+  shell: echo {{ helm['password'] }} | base64 -d | helm registry login {{ helm['host'] }} --username {{ helm['user'] }} --password-stdin
   run_once: yes
   environment:
     HELM_EXPERIMENTAL_OCI: 1
   no_log: true
 
 - name: Pull nri-bundle charts
-  command: helm chart pull gcr.io/domino-eng-service-artifacts/nri-bundle:{{ nribundle_chart_version }}
+  command: helm chart pull {{ helm['host'] }}/{{ helm['namespace'] }}/{{ newrelic['service_name'] }}:{{ newrelic['service_version'] }}
   run_once: yes
   environment:
     HELM_EXPERIMENTAL_OCI: 1
 
 - name: Export nri-bundle charts to local
-  command: helm chart export gcr.io/domino-eng-service-artifacts/nri-bundle:{{ nribundle_chart_version }} -d {{ local_chart_path }}
+  command: helm chart export {{ helm['host'] }}/{{ helm['namespace'] }}/{{ newrelic['service_name'] }}:{{ newrelic['service_version'] }} -d {{ local_output_dir }}/charts
   run_once: yes
   environment:
     HELM_EXPERIMENTAL_OCI: 1
@@ -26,21 +28,21 @@
   when: not (repos.json | json_query("[?name == \"bitnami\"]"))
 
 - name: Probe Newrelic Namespace
-  command: kubectl get ns monitoring
+  command: kubectl get ns {{ newrelic['namespace'] }}
   changed_when: false
   ignore_errors: yes
   run_once: yes
   register: rancher_monitoring
 
 - name: Create Newrelic namespace
-  command: kubectl create namespace monitoring
+  command: kubectl create namespace {{ newrelic['namespace'] }}
   run_once: yes
   when: rancher_monitoring is failed
 
 - name: Install Kube State Metrics
   command: >
     helm install kube-state-metrics bitnami/kube-state-metrics
-      --namespace {{ newrelic_namespace }}
+      --namespace {{ newrelic['namespace'] }}
       --set securityContext.enabled=true
       --set securityContext.runAsUser=65534
       --set securityContext.fsGroup=65534
@@ -48,10 +50,10 @@
 
 - name: Install Newrelic Services
   command: >
-    helm install nri-bundle {{ local_chart_path }}/nri-bundle
-      --namespace {{ newrelic_namespace }}
-      --version {{ nribundle_chart_version }}
-      --set global.licenseKey="{{ newrelic_licensekey }}"
+    helm install nri-bundle {{ local_output_dir }}/charts/nri-bundle
+      --namespace {{ newrelic['namespace'] }}
+      --version {{ newrelic['service_version'] }}
+      --set global.licenseKey="{{ newrelic['licensekey'] }}"
       --set global.cluster="rancher"
       --set newrelic-infrastructure.enabled=true
       --set newrelic-infrastructure.rbac.pspEnabled=true
@@ -76,7 +78,7 @@
       --set newrelic-open-metrics.resources.requests.cpu=100m
       --set newrelic-open-metrics.resources.requests.memory=30Mi
       --description='Deploy Newrelic services'
-      --set newrelic-infrastructure.customAttributes="'{\"clusterName\":\"$(CLUSTER_NAME)\"}'"
+      --set newrelic-infrastructure.customAttributes="'{\"clusterName\":\"$(CLUSTER_NAME)\",\"role\":\"rancher\"}'"
       --wait
       --timeout 600s
   when: not (charts.json | json_query("[?name == \"nri-bundle\"]"))

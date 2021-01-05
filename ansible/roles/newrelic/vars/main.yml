@@ -1,9 +1,12 @@
 ---
 
-helm_v3_registry_host: "{{ lookup('env', 'HELM_V3_REGISTRY_HOST') }}"
-helm_v3_registry_user: "{{ lookup('env', 'HELM_V3_REGISTRY_USER') }}"
-helm_v3_registry_password: "{{ lookup('env', 'HELM_V3_REGISTRY_PASSWORD') }}"
-newrelic_licensekey: "{{ lookup('env', 'NEWRELIC_LICENSEKEY') }}"
-newrelic_namespace: "monitoring"
-nribundle_chart_version: "1.11.3-0.1.0"
-local_chart_path: "$HOME/charts"
+helm:
+  host: "{{ lookup('env', 'HELM_V3_REGISTRY_HOST') }}"
+  user: "{{ lookup('env', 'HELM_V3_REGISTRY_USER') }}"
+  password: "{{ lookup('env', 'HELM_V3_REGISTRY_PASSWORD') }}"
+  namespace: "domino-eng-service-artifacts"
+newrelic:
+  licensekey: "{{ lookup('env', 'NEWRELIC_LICENSEKEY') }}"
+  namespace: "monitoring"
+  service_name: nri-bundle
+  service_version: "1.11.3-0.1.0"
