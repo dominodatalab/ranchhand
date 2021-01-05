@@ -1,6 +1,6 @@
 - name: Create charts directory
   file:
-    path: "{{ local_output_dir }}/charts"
+    path: "{{ tools_dir }}/charts"
     state: directory
   run_once: true
 
@@ -18,7 +18,7 @@
     HELM_EXPERIMENTAL_OCI: 1
 
 - name: Export nri-bundle charts to local
-  command: helm chart export {{ helm['host'] }}/{{ helm['namespace'] }}/{{ newrelic['service_name'] }}:{{ newrelic['service_version'] }} -d {{ local_output_dir }}/charts
+  command: helm chart export {{ helm['host'] }}/{{ helm['namespace'] }}/{{ newrelic['service_name'] }}:{{ newrelic['service_version'] }} -d {{ tools_dir }}/charts
   run_once: yes
   environment:
     HELM_EXPERIMENTAL_OCI: 1
@@ -50,7 +50,7 @@
 
 - name: Install Newrelic Services
   command: >
-    helm install nri-bundle {{ local_output_dir }}/charts/nri-bundle
+    helm install nri-bundle {{ tools_dir }}/charts/nri-bundle
       --namespace {{ newrelic['namespace'] }}
       --version {{ newrelic['service_version'] }}
       --set global.licenseKey="{{ newrelic['licensekey'] }}"
