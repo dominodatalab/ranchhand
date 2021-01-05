@@ -78,7 +78,7 @@
       --set newrelic-open-metrics.resources.requests.cpu=100m
       --set newrelic-open-metrics.resources.requests.memory=30Mi
       --description='Deploy Newrelic services'
-      --set newrelic-infrastructure.customAttributes="'{\"clusterName\":\"$(CLUSTER_NAME)\",\"role\":\"rancher\"}'"
+      --set newrelic-infrastructure.customAttributes="'{\"clusterName\":\"$(CLUSTER_NAME)\"\,\"role\":\"rancher\"}'"
       --wait
       --timeout 600s
   when: not (charts.json | json_query("[?name == \"nri-bundle\"]"))
