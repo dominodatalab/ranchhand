@@ -46,6 +46,8 @@
       --set securityContext.enabled=true
       --set securityContext.runAsUser=65534
       --set securityContext.fsGroup=65534
+      --set service.labels.k8s-app=kube-state-metrics
+      --set-string  service.annotations."prometheus\.io/scrape"=true
   when: not (charts.json | json_query("[?name == \"kube-state-metrics\"]"))
 
 - name: Install Newrelic Services
