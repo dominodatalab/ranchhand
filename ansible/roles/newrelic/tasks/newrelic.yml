@@ -1,0 +1,86 @@
+- name: Create charts directory
+  file:
+    path: "{{ tools_dir }}/charts"
+    state: directory
+  run_once: true
+
+- name: Login to GCR repo
+  shell: echo {{ helm['password'] }} | base64 -d | helm registry login {{ helm['host'] }} --username {{ helm['user'] }} --password-stdin
+  run_once: yes
+  environment:
+    HELM_EXPERIMENTAL_OCI: 1
+  no_log: true
+
+- name: Pull nri-bundle charts
+  command: helm chart pull {{ helm['host'] }}/{{ helm['namespace'] }}/{{ newrelic['service_name'] }}:{{ newrelic['service_version'] }}
+  run_once: yes
+  environment:
+    HELM_EXPERIMENTAL_OCI: 1
+
+- name: Export nri-bundle charts to local
+  command: helm chart export {{ helm['host'] }}/{{ helm['namespace'] }}/{{ newrelic['service_name'] }}:{{ newrelic['service_version'] }} -d {{ tools_dir }}/charts
+  run_once: yes
+  environment:
+    HELM_EXPERIMENTAL_OCI: 1
+
+- name: Probe bitnami repo
+  command: helm repo add bitnami https://charts.bitnami.com/bitnami
+  when: not (repos.json | json_query("[?name == \"bitnami\"]"))
+
+- name: Probe Newrelic Namespace
+  command: kubectl get ns {{ newrelic['namespace'] }}
+  changed_when: false
+  ignore_errors: yes
+  run_once: yes
+  register: rancher_monitoring
+
+- name: Create Newrelic namespace
+  command: kubectl create namespace {{ newrelic['namespace'] }}
+  run_once: yes
+  when: rancher_monitoring is failed
+
+- name: Install Kube State Metrics
+  command: >
+    helm install kube-state-metrics bitnami/kube-state-metrics
+      --namespace {{ newrelic['namespace'] }}
+      --set securityContext.enabled=true
+      --set securityContext.runAsUser=65534
+      --set securityContext.fsGroup=65534
+      --set service.labels.k8s-app=kube-state-metrics
+      --set-string  service.annotations."prometheus\.io/scrape"=true
+  when: not (charts.json | json_query("[?name == \"kube-state-metrics\"]"))
+
+- name: Install Newrelic Services
+  command: >
+    helm install nri-bundle {{ tools_dir }}/charts/nri-bundle
+      --namespace {{ newrelic['namespace'] }}
+      --version {{ newrelic['service_version'] }}
+      --set global.licenseKey="{{ newrelic['licensekey'] }}"
+      --set global.cluster="rancher"
+      --set newrelic-infrastructure.enabled=true
+      --set newrelic-infrastructure.rbac.pspEnabled=true
+      --set newrelic-infrastructure.networkPolicy.create=true
+      --set newrelic-infrastructure.resources.limits.memory=128Mi
+      --set newrelic-infrastructure.resources.requests.cpu=100m
+      --set newrelic-infrastructure.resources.requests.memory=30Mi
+      --set kubeEvents.enabled=true
+      --set newrelic-events.networkPolicy.create=true
+      --set newrelic-events.resources.limits.memory=128Mi
+      --set newrelic-events.resources.requests.cpu=100m
+      --set newrelic-events.resources.requests.memory=128Mi
+      --set logging.enabled=true
+      --set newrelic-logging.rbac.pspEnabled=true
+      --set newrelic-logging.networkPolicy.enabled=true
+      --set newrelic-logging.resources.limits.memory=256Mi
+      --set newrelic-logging.resources.requests.cpu=100m
+      --set newrelic-logging.resources.requests.memory=30Mi
+      --set prometheus.enabled=true
+      --set newrelic-open-metrics.resources.limits.cpu=1
+      --set newrelic-open-metrics.resources.limits.memory=1Gi
+      --set newrelic-open-metrics.resources.requests.cpu=100m
+      --set newrelic-open-metrics.resources.requests.memory=30Mi
+      --description='Deploy Newrelic services'
+      --set newrelic-infrastructure.customAttributes="'{\"clusterName\":\"$(CLUSTER_NAME)\"\,\"role\":\"rancher\"}'"
+      --wait
+      --timeout 600s
+  when: not (charts.json | json_query("[?name == \"nri-bundle\"]"))

@@ -21,3 +21,4 @@
     - docker
     - rke
     - rancher
+    - newrelic

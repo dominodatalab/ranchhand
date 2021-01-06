@@ -119,4 +119,5 @@
   copy:
     src: "{{ local_output_dir }}/kube_config_rancher-cluster.yml"
     dest: "/home/{{ ansible_user_id }}/.kube/config"
+    mode: 0600
   run_once: true

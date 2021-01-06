@@ -66,3 +66,19 @@ variable "admin_password" {
   description = "Password override for the initial admin user"
   default     = ""
 }
+
+variable "helm_v3_registry_host" {
+  default = "gcr.io"
+}
+
+variable "helm_v3_registry_user" {
+  default = ""
+}
+
+variable "helm_v3_registry_password" {
+  default = ""
+}
+
+variable "newrelic_licensekey" {
+  default = ""
+}
