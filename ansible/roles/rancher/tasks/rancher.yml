@@ -12,7 +12,7 @@
       --set antiAffinity=required
       --set tls=external
       --set privateCA=true
-      --set addLocal=false
+      --set restrictedAdmin=true
       --set auditLog.level=1
       --description='RanchHand Deploy'
       --wait
