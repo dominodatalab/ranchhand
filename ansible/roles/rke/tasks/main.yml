@@ -23,6 +23,7 @@
     url: "{{ item }}"
     dest: "{{ tools_dir }}"
     mode: a+x
+  retries: 3
   with_items:
     - "https://storage.googleapis.com/kubernetes-release/release/{{ kubectl_version }}/bin/linux/amd64/kubectl"
     - "https://github.com/rancher/rke/releases/download/{{ rke_cli_version }}/rke_linux-amd64"
@@ -33,6 +34,7 @@
     dest: "{{ tools_dir }}"
     remote_src: yes
     extra_opts: [--strip-components=1]
+  retries: 3
   with_items:
     - https://get.helm.sh/helm-{{ helm_version }}-linux-amd64.tar.gz
     - https://github.com/rancher/cli/releases/download/{{ rancher_cli_version }}/rancher-linux-amd64-{{ rancher_cli_version }}.tar.gz
