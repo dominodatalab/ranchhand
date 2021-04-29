@@ -23,9 +23,11 @@
   environment:
     HELM_EXPERIMENTAL_OCI: 1
 
-- name: Probe bitnami repo
+- name: Add bitnami repo
   command: helm repo add bitnami https://charts.bitnami.com/bitnami
-  when: not (repos.json | json_query("[?name == \"bitnami\"]"))
+
+- name: Update Helm Repo
+  command: helm repo update
 
 - name: Probe Newrelic Namespace
   command: kubectl get ns {{ newrelic['namespace'] }}
@@ -41,16 +43,17 @@
 
 - name: Install Kube State Metrics
   command: >
-    helm install kube-state-metrics bitnami/kube-state-metrics
+    helm upgrade kube-state-metrics bitnami/kube-state-metrics
+      --install
       --namespace {{ newrelic['namespace'] }}
       --set securityContext.enabled=true
       --set securityContext.runAsUser=65534
       --set securityContext.fsGroup=65534
-  when: not (charts.json | json_query("[?name == \"kube-state-metrics\"]"))
 
 - name: Install Newrelic Services
   command: >
-    helm install nri-bundle {{ tools_dir }}/charts/nri-bundle
+    helm upgrade nri-bundle {{ tools_dir }}/charts/nri-bundle
+      --install
       --namespace {{ newrelic['namespace'] }}
       --version {{ newrelic['service_version'] }}
       --set global.licenseKey="{{ newrelic['licensekey'] }}"
@@ -81,4 +84,3 @@
       --set newrelic-infrastructure.customAttributes="'{\"clusterName\":\"$(CLUSTER_NAME)\"\,\"role\":\"rancher\"}'"
       --wait
       --timeout 600s
-  when: not (charts.json | json_query("[?name == \"nri-bundle\"]"))

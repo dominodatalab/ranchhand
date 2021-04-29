@@ -57,6 +57,7 @@
       dest: kubectl
 
 - name: Copy rke Template
+  no_log: true
   template:
     src: rancher-cluster.yml
     dest: rancher-cluster.yml
