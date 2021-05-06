@@ -5,6 +5,7 @@
 
 - name: Add Docker GPG apt Key
   become: true
+  retries: 3
   apt_key:
     url: https://download.docker.com/linux/ubuntu/gpg
     state: present
