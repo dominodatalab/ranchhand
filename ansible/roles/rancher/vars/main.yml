@@ -1,4 +1,4 @@
 ---
 cert_manager_version: v1.2.0
 rancher_password: "{{ lookup('env','RANCHER_PASSWORD') }}"
-rancher_version: 2.5.6
+rancher_version: 2.5.8
