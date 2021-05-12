@@ -28,11 +28,12 @@ resource "null_resource" "ansible_playbook" {
         -e 'rancher_version=${var.rancher_version}' \
         -e 'rke_version=${var.rke_version}' \
         -e 'local_output_dir=${var.working_dir}/ansible.${self.id}' \
-        ansible/prod.yml --diff
+        ansible/prod.yml -v
     EOF
 
     working_dir = path.module
     environment = {
+      ANSIBLE_STDOUT_CALLBACK   = "yaml"
       ANSIBLE_SSH_RETRIES       = var.ansible_ssh_retries
       ANSIBLE_TIMEOUT           = var.ansible_ssh_timeout
       RANCHER_PASSWORD          = var.admin_password == "" ? join("", random_password.password.*.result) : var.admin_password
