@@ -8,6 +8,10 @@
   apt_key:
     url: https://download.docker.com/linux/ubuntu/gpg
     state: present
+  register: result
+  until: result is successful
+  retries: 10
+  delay: 3
 
 - name: Install Docker Dependencies
   become: true
