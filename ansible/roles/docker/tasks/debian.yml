@@ -5,10 +5,14 @@
 
 - name: Add Docker GPG apt Key
   become: true
-  retries: 3
-  apt_key:
+  get_url:
     url: https://download.docker.com/linux/ubuntu/gpg
-    state: present
+    dest: /etc/apt/trusted.gpg.d/docker.gpg
+    mode: 0644
+  register: result
+  until: result is successful
+  retries: 10
+  delay: 3
 
 - name: Install Docker Dependencies
   become: true
