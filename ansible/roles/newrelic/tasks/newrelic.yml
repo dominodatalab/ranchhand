@@ -26,6 +26,10 @@
 - name: Probe bitnami repo
   command: helm repo add bitnami https://charts.bitnami.com/bitnami
   when: not (repos.json | json_query("[?name == \"bitnami\"]"))
+  register: add_bitnami
+  until: add_bitnami is not failed
+  retries: 3
+  delay: 3
 
 - name: Probe Newrelic Namespace
   command: kubectl get ns {{ newrelic['namespace'] }}
