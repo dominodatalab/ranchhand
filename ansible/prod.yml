@@ -22,8 +22,15 @@
         state: directory
 
   roles:
-    - system-checks
-    - docker
-    - rke
-    - rancher
-    - newrelic
+    - name: proxy
+      proxy_settings_http_proxy: http_proxy 
+      proxy_settings_no_proxy:   no_proxy 
+      proxy_settings_https_proxy: https_proxy
+      when:
+        # is_proxy defaults to false
+        is_proxy | bool
+    - name: system-checks
+    - name: docker
+    - name: rke
+    - name: rancher
+    - name: newrelic

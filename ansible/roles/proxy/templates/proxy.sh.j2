@@ -1,0 +1,17 @@
+#
+# {{ ansible_managed }}
+#  # 10.42.0.0/16  - rancher default NO_PROXY
+#  # 172.17.0.0/16 - docker default NO_PROXY
+#
+{% if proxy_settings_http_proxy is defined %}
+export http_proxy="{{ proxy_settings_http_proxy }}"
+export HTTP_PROXY="{{ proxy_settings_http_proxy }}"
+{% endif %}
+{% if proxy_settings_https_proxy is defined %}
+export https_proxy="{{ proxy_settings_https_proxy }}"
+export HTTPS_PROXY="{{ proxy_settings_https_proxy }}"
+{% endif %}
+{% if proxy_settings_no_proxy is defined %}
+export no_proxy="{{ proxy_settings_no_proxy }}"
+export NO_PROXY="{{ proxy_settings_no_proxy }}"
+{% endif %}

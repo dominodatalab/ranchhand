@@ -1,0 +1,6 @@
+---
+# defaults file for proxy
+
+# proxy_settings_http_proxy: 'http://myuser:mypassword@px01.example.com:3128'
+# proxy_settings_https_proxy: 'http://px01.example.com:3128'
+# proxy_settings_no_proxy: 'example.com,192.168.122.1'

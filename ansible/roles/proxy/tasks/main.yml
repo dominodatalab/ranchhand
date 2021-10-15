@@ -1,0 +1,88 @@
+---
+# tasks file for proxy
+- name: Configure proxy settings for OS (/etc/environment)
+  become: yes
+  blockinfile:
+    dest: /etc/environment
+    create: yes
+    mode: u=rw,g=r,o=r
+    block: |
+      {% if proxy_settings_http_proxy is defined %}
+      http_proxy="{{ proxy_settings_http_proxy }}"
+      HTTP_PROXY="{{ proxy_settings_http_proxy }}"
+      {% endif %}
+      {% if proxy_settings_https_proxy is defined %}
+      https_proxy="{{ proxy_settings_https_proxy }}"
+      HTTPS_PROXY="{{ proxy_settings_https_proxy }}"
+      {% endif %}
+      {% if proxy_settings_no_proxy is defined %}
+      no_proxy="{{ proxy_settings_no_proxy }}"
+      NO_PROXY="{{ proxy_settings_no_proxy }}"
+      {% endif %}
+
+- name: Configure proxy settings for OS (/etc/profile.d/proxy.sh)
+  become: yes
+  template:
+    src: proxy.sh.j2
+    dest: /etc/profile.d/proxy.sh
+    mode: u=rw,g=r,o=r
+
+- name: Check if wgetrc exists
+  stat:
+    path: /etc/wgetrc
+  register: wgetrc
+
+- name: Add proxy settings to wgetrc (if exists)
+  become: yes
+  blockinfile:
+    dest: /etc/wgetrc
+    mode: u=rw,g=r,o=r
+    block: |
+      use_proxy = on
+      {% if proxy_settings_http_proxy is defined %}
+      http_proxy = {{ proxy_settings_http_proxy }}
+      {% endif %}
+      {% if proxy_settings_https_proxy is defined %}
+      https_proxy = {{ proxy_settings_https_proxy }}
+      {% endif %}
+      {% if proxy_settings_no_proxy is defined %}
+      no_proxy = {{ proxy_settings_no_proxy }}
+      {% endif %}
+  when: wgetrc.stat.exists
+
+- name: Configure proxy settings for yum
+  lineinfile:
+    dest: /etc/yum.conf
+    regexp: '^proxy='
+    line: "proxy={{ proxy_settings_https_proxy }}"
+    mode: u=rw,g=r,o=r
+  tags: proxy
+  when: ansible_pkg_mgr == 'yum'
+
+
+- name: Configure proxy settings for apt-get/aptitude
+  template:
+    src: 80proxy.j2
+    dest: /etc/apt/apt.conf.d/80proxy
+    mode: u=rw,g=r,o=r
+  tags: proxy
+  when: ansible_pkg_mgr == 'apt'
+
+- name: Check if systemd/system.conf exists
+  ansible.builtin.stat:
+    path: /etc/systemd/system.conf
+  register: systemd_system_conf
+
+- name: Configure proxy settings for systemd services
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/system.conf
+    regexp: "^DefaultEnvironment="
+    line: >-
+      DefaultEnvironment={% if proxy_settings_http_proxy is defined %}"HTTP_PROXY={{ proxy_settings_http_proxy }}"{% endif %}
+      {% if proxy_settings_https_proxy is defined %}"HTTPS_PROXY={{ proxy_settings_https_proxy }}"{% endif %}
+      {% if proxy_settings_no_proxy is defined %}"NO_PROXY={{ proxy_settings_no_proxy }}"{% endif %}
+      {% if proxy_settings_http_proxy is defined %}"http_proxy={{ proxy_settings_http_proxy }}"{% endif %}
+      {% if proxy_settings_https_proxy is defined %}"https_proxy={{ proxy_settings_https_proxy }}"{% endif %}
+      {% if proxy_settings_no_proxy is defined %}"no_proxy={{ proxy_settings_no_proxy }}"{% endif %}
+  when: systemd_system_conf.stat.exists
+  notify: systemd daemon-reload
