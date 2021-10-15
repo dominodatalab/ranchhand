@@ -9,6 +9,15 @@ variable "node_ips" {
 #------------------------------------------------------------------------------
 # OPTIONAL
 #------------------------------------------------------------------------------
+variable "is_proxy" {
+  description = "global proxy settings if any"
+  default ={
+    "is_proxy" = false
+    "http_proxy" = ""
+    "https_proxy" = ""
+    "no_proxy" = ""
+  }
+}
 variable "ansible_ssh_retries" {
   default = 5
 }

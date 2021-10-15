@@ -17,7 +17,6 @@ resource "random_password" "password" {
 resource "null_resource" "ansible_playbook" {
   provisioner "local-exec" {
     command = <<-EOF
-      ansible-galaxy install -r ansible/requirements.yml && \
       ansible-playbook \
         -i '${local.ip_addresses},' \
         --private-key=${var.ssh_key_path} \
@@ -28,6 +27,10 @@ resource "null_resource" "ansible_playbook" {
         -e 'rancher_version=${var.rancher_version}' \
         -e 'rke_version=${var.rke_version}' \
         -e 'local_output_dir=${var.working_dir}/ansible.${self.id}' \
+        -e 'is_proxy=${lookup(var.is_proxy["is_proxy"])}' \
+        -e 'http_proxy=${lookup(var.is_proxy["http_proxy"])}' \
+        -e 'https_proxy=${lookup(var.is_proxy["https_proxy"])}' \
+        -e 'no_proxy=${lookup(var.is_proxy["no_proxy"])}' \
         ansible/prod.yml --diff
     EOF
 
