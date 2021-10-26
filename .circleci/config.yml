@@ -3,7 +3,7 @@ version: 2.1
 executors:
   default:
     docker:
-      - image: cimg/python:3.8
+      - image: cimg/python:3.9
     environment:
       AWSCLI_VERSION: 1.18.103
       TERRAFORM_VERSION: 1.0.9
