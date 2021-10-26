@@ -19,7 +19,9 @@ commands:
           command: pip install ansible-base==$ANSIBLE_VERSION
       - run:
           name: Install Ansible Packages
-          command: ansible-galaxy install -r ansible/requirements.yml
+          command: |
+            cd ansible/collections
+            ansible-galaxy install -r requirements.yml
 
   install_terraform:
     description: Install Terraform
@@ -89,17 +91,17 @@ jobs:
           command: |
             terraform init
             terraform validate
-      - install_ansible
-      - run:
-          name: Check Ansible Syntax
-          command: ansible-playbook -i '127.0.0.1,' ansible/prod.yml --syntax-check
       - run:
           name: Check requirements against vendor
-          command:
+          command: |
             set -ex
             cd test/check-requirements-vendor
             pip install -r requirements.txt
             python check.py
+      - install_ansible
+      - run:
+          name: Check Ansible Syntax
+          command: ansible-playbook -i '127.0.0.1,' ansible/prod.yml --syntax-check
   e2e_centos:
     executor: default
     steps:
