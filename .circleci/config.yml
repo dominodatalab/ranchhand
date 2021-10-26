@@ -3,11 +3,11 @@ version: 2.1
 executors:
   default:
     docker:
-      - image: circleci/python:3.8-buster
+      - image: cimg/python:3.8
     environment:
       AWSCLI_VERSION: 1.18.103
-      TERRAFORM_VERSION: 0.12.29
-      ANSIBLE_VERSION: 2.10.4
+      TERRAFORM_VERSION: 1.0.9
+      ANSIBLE_VERSION: 2.10.15
       RANCHER_PASSWORD: thisisanewadminpassword
 
 commands:
@@ -93,6 +93,13 @@ jobs:
       - run:
           name: Check Ansible Syntax
           command: ansible-playbook -i '127.0.0.1,' ansible/prod.yml --syntax-check
+      - run:
+          name: Check requirements against vendor
+          command:
+            set -ex
+            cd test/check-requirements-vendor
+            pip install -r requirements.txt
+            python check.py
   e2e_centos:
     executor: default
     steps:

@@ -17,7 +17,7 @@ resource "random_password" "password" {
 resource "null_resource" "ansible_playbook" {
   provisioner "local-exec" {
     command = <<-EOF
-      ansible-galaxy install -r ansible/requirements.yml && \
+      (cd ansible/collections/ && ansible-galaxy install -r requirements.yml) && \
       ansible-playbook \
         -i '${local.ip_addresses},' \
         --private-key=${var.ssh_key_path} \
