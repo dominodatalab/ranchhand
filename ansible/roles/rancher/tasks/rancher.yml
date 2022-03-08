@@ -5,7 +5,7 @@
 
 - name: Install Rancher
   command: >
-    helm install rancher rancher-stable/rancher
+    helm upgrade rancher rancher-stable/rancher
       --namespace cattle-system
       --version {{ rancher_version }}
       --set replicas={{ node_count }}
@@ -14,8 +14,9 @@
       --set privateCA=true
       --set restrictedAdmin=true
       --set auditLog.level=1
+      --set bootstrapPassword={{ rancher_password }}
       --description='RanchHand Deploy'
-      --wait
+      --wait --install
   when: not (charts.json | json_query("[?name == \"rancher\"]"))
 
 - name: Wait for Rancher to be available

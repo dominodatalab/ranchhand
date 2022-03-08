@@ -58,9 +58,9 @@
 
 - name: Install cert-manager
   command: >
-    helm install cert-manager jetstack/cert-manager
+    helm upgrade cert-manager jetstack/cert-manager
       --namespace cert-manager
       --version {{ cert_manager_version }}
       --description='RanchHand Deploy'
-      --wait
+      --wait --install
   when: not (charts.json | json_query("[?name == \"cert-manager\"]"))
