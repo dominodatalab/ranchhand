@@ -7,7 +7,7 @@ executors:
     environment:
       AWSCLI_VERSION: 1.25.24
       TERRAFORM_VERSION: 1.2.4
-      ANSIBLE_VERSION: 2.10.17
+      ANSIBLE_VERSION: 2.13.1
       RANCHER_PASSWORD: thisisanewadminpassword
 
 commands:
@@ -16,7 +16,7 @@ commands:
     steps:
       - run:
           name: Install Ansible & Dependencies
-          command: pip install ansible-base==$ANSIBLE_VERSION
+          command: pip install ansible-core==$ANSIBLE_VERSION
       - run:
           name: Install Ansible Packages
           command: ansible-galaxy install -r ansible/requirements.yml
