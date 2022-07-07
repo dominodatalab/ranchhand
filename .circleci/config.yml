@@ -111,6 +111,12 @@ jobs:
     - launch_e2e:
         ssh_user: ubuntu
         blueprint_id: ubuntu_18_04
+  e2e_ubuntu20:
+    executor: default
+    steps:
+    - launch_e2e:
+        ssh_user: ubuntu
+        blueprint_id: ubuntu_20_04
 
 workflows:
   version: 2
@@ -124,5 +130,8 @@ workflows:
         requires:
         - lint
     - e2e_ubuntu18:
+        requires:
+        - lint
+    - e2e_ubuntu20:
         requires:
         - lint
