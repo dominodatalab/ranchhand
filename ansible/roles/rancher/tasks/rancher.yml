@@ -16,6 +16,7 @@
       --set auditLog.level=1
       --set bootstrapPassword={{ rancher_password }}
       --description='RanchHand Deploy'
+      --set rancherImageTag={{ rancher_image_tag }}
       --wait --install
   when: not (charts.json | json_query("[?name == \"rancher\"]"))
 

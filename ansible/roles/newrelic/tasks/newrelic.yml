@@ -1,27 +1,7 @@
-- name: Create charts directory
-  file:
-    path: "{{ tools_dir }}/charts"
-    state: directory
-  run_once: true
-
 - name: Login to GCR repo
   shell: echo {{ helm['password'] }} | base64 -d | helm registry login {{ helm['host'] }} --username {{ helm['user'] }} --password-stdin
   run_once: yes
-  environment:
-    HELM_EXPERIMENTAL_OCI: 1
   no_log: true
-
-- name: Pull nri-bundle charts
-  command: helm chart pull {{ helm['host'] }}/{{ helm['namespace'] }}/{{ newrelic['service_name'] }}:{{ newrelic['service_version'] }}
-  run_once: yes
-  environment:
-    HELM_EXPERIMENTAL_OCI: 1
-
-- name: Export nri-bundle charts to local
-  command: helm chart export {{ helm['host'] }}/{{ helm['namespace'] }}/{{ newrelic['service_name'] }}:{{ newrelic['service_version'] }} -d {{ tools_dir }}/charts
-  run_once: yes
-  environment:
-    HELM_EXPERIMENTAL_OCI: 1
 
 - name: Probe bitnami repo
   command: helm repo add bitnami https://charts.bitnami.com/bitnami
@@ -45,7 +25,8 @@
 
 - name: Install Kube State Metrics
   command: >
-    helm install kube-state-metrics bitnami/kube-state-metrics
+    helm upgrade kube-state-metrics bitnami/kube-state-metrics
+      --install
       --namespace {{ newrelic['namespace'] }}
       --set securityContext.enabled=true
       --set securityContext.runAsUser=65534
@@ -54,7 +35,8 @@
 
 - name: Install Newrelic Services
   command: >
-    helm install nri-bundle {{ tools_dir }}/charts/nri-bundle
+    helm upgrade nri-bundle oci://{{ helm['host'] }}/{{ helm['namespace'] }}/{{ newrelic['service_name'] }}
+      --install
       --namespace {{ newrelic['namespace'] }}
       --version {{ newrelic['service_version'] }}
       --set global.licenseKey="{{ newrelic['licensekey'] }}"

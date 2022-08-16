@@ -36,6 +36,7 @@ resource "null_resource" "ansible_playbook" {
       ANSIBLE_SSH_RETRIES       = var.ansible_ssh_retries
       ANSIBLE_TIMEOUT           = var.ansible_ssh_timeout
       RANCHER_PASSWORD          = nonsensitive(var.admin_password == "" ? join("", random_password.password.*.result) : var.admin_password)
+      RANCHER_IMAGE_TAG         = var.rancher_image_tag
       HELM_V3_REGISTRY_HOST     = var.helm_v3_registry_host
       HELM_V3_REGISTRY_USER     = var.helm_v3_registry_user
       HELM_V3_REGISTRY_PASSWORD = var.helm_v3_registry_password
