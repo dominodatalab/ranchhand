@@ -11,7 +11,7 @@ This tool aims to automate the steps listed in Rancher's official [HA Install][]
 
 ## Usage
 
-1. Ensure that the Rancher version is >= 2.5. 
+1. Ensure that the Rancher version is >= 2.6. 
 1. Download the [latest release][] from GitHub.
 1. [Install Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) (version >=2.8) locally
 1.  (optional) To update the Rancher default password, set the `RANCHER_PASSWORD` environment variable:

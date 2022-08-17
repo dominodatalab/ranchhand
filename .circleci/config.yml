@@ -3,11 +3,11 @@ version: 2.1
 executors:
   default:
     docker:
-      - image: circleci/python:3.8-buster
+      - image: cimg/python:3.9
     environment:
-      AWSCLI_VERSION: 1.18.103
-      TERRAFORM_VERSION: 0.12.29
-      ANSIBLE_VERSION: 2.10.4
+      AWSCLI_VERSION: 1.25.24
+      TERRAFORM_VERSION: 1.2.4
+      ANSIBLE_VERSION: 2.13.1
       RANCHER_PASSWORD: thisisanewadminpassword
 
 commands:
@@ -16,7 +16,7 @@ commands:
     steps:
       - run:
           name: Install Ansible & Dependencies
-          command: pip install ansible-base==$ANSIBLE_VERSION
+          command: pip install ansible-core==$ANSIBLE_VERSION
       - run:
           name: Install Ansible Packages
           command: ansible-galaxy install -r ansible/requirements.yml
@@ -111,6 +111,12 @@ jobs:
     - launch_e2e:
         ssh_user: ubuntu
         blueprint_id: ubuntu_18_04
+  e2e_ubuntu20:
+    executor: default
+    steps:
+    - launch_e2e:
+        ssh_user: ubuntu
+        blueprint_id: ubuntu_20_04
 
 workflows:
   version: 2
@@ -124,5 +130,8 @@ workflows:
         requires:
         - lint
     - e2e_ubuntu18:
+        requires:
+        - lint
+    - e2e_ubuntu20:
         requires:
         - lint
