@@ -37,6 +37,11 @@ variable "rancher_version" {
   default     = ""
 }
 
+variable "rancher_image_tag" {
+  description = "Rancher image tag to use in the cluster."
+  default     = ""
+}
+
 variable "rke_version" {
   description = "RKE version to use to create the underlying Kubernetes cluster."
   default     = ""
