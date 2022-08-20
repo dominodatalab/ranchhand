@@ -3,12 +3,15 @@ version: 2.1
 executors:
   default:
     docker:
-      - image: circleci/python:3.8-buster
+      - image: cimg/python:3.9
     environment:
-      AWSCLI_VERSION: 1.18.103
-      TERRAFORM_VERSION: 0.12.29
-      ANSIBLE_VERSION: 2.10.4
+      TERRAFORM_VERSION: 1.2.4
+      ANSIBLE_VERSION: 2.13.3
+      JMESPATH_VERSION: 1.0.1
       RANCHER_PASSWORD: thisisanewadminpassword
+
+orbs:
+  aws-cli: circleci/aws-cli@3.1.1
 
 commands:
   install_ansible:
@@ -16,7 +19,7 @@ commands:
     steps:
       - run:
           name: Install Ansible & Dependencies
-          command: pip install ansible-base==$ANSIBLE_VERSION
+          command: pip install ansible-core==$ANSIBLE_VERSION jmespath==$JMESPATH_VERSION
       - run:
           name: Install Ansible Packages
           command: ansible-galaxy install -r ansible/requirements.yml
@@ -44,10 +47,7 @@ commands:
     - add_ssh_keys:
         fingerprints:
           - "5a:19:ae:e7:ef:98:4f:2f:68:c3:be:72:62:f9:1d:35"
-    - run:
-        name: Install system requirements
-        command: |
-          pip install awscli==$AWSCLI_VERSION --upgrade
+    - aws-cli/install
     - run:
         name: Configure test env name
         command: echo 'export INSTANCE_NAME="ranchhand-$CIRCLE_WORKFLOW_JOB_ID-$CIRCLE_BUILD_NUM"' >> $BASH_ENV
@@ -111,6 +111,12 @@ jobs:
     - launch_e2e:
         ssh_user: ubuntu
         blueprint_id: ubuntu_18_04
+  e2e_ubuntu20:
+    executor: default
+    steps:
+    - launch_e2e:
+        ssh_user: ubuntu
+        blueprint_id: ubuntu_20_04
 
 workflows:
   version: 2
@@ -124,5 +130,8 @@ workflows:
         requires:
         - lint
     - e2e_ubuntu18:
+        requires:
+        - lint
+    - e2e_ubuntu20:
         requires:
         - lint
