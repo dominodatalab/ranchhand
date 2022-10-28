@@ -1,7 +1,18 @@
 ---
 - name: Add Rancher Repo
   command: helm repo add rancher-stable https://releases.rancher.com/server-charts/stable
-  when: not (repos.json | json_query("[?name == \"rancher-stable\"]"))
+  when: not (repos.stdout | from_json | json_query("[?name==`rancher-stable`]"))
+
+- name: Migrate chart to Helm 3
+  command: helm 2to3 convert --ignore-already-migrated rancher
+
+- name: Register ingress API version
+  command: kubectl get ingress -n cattle-system rancher -ojsonpath='{.apiVersion}'
+  register: rancher_ingress_api_version
+
+- name: Delete Rancher ingress (2to3 workaround)
+  command: kubectl delete ingress -n cattle-system rancher
+  when: rancher_ingress_api_version == "extensions/v1beta"
 
 - name: Install Rancher
   command: >
@@ -18,11 +29,9 @@
       --description='RanchHand Deploy'
       --set rancherImageTag={{ rancher_image_tag }}
       --wait --install
-  when: not (charts.json | json_query("[?name == \"rancher\"]"))
 
 - name: Wait for Rancher to be available
   command: kubectl rollout status --watch deployment rancher --namespace=cattle-system
-  run_once: true
 
 - name: Check if Rancher is Accessible
   uri:

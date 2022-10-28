@@ -1,11 +1,10 @@
 - name: Login to GCR repo
   shell: echo {{ helm['password'] }} | base64 -d | helm registry login {{ helm['host'] }} --username {{ helm['user'] }} --password-stdin
-  run_once: yes
   no_log: true
 
 - name: Probe bitnami repo
   command: helm repo add bitnami https://charts.bitnami.com/bitnami
-  when: not (repos.json | json_query("[?name == \"bitnami\"]"))
+  when: not (repos.stdout | from_json | json_query("[?name==`bitnami`]"))
   register: add_bitnami
   until: add_bitnami is not failed
   retries: 3
@@ -15,13 +14,14 @@
   command: kubectl get ns {{ newrelic['namespace'] }}
   changed_when: false
   ignore_errors: yes
-  run_once: yes
   register: rancher_monitoring
 
 - name: Create Newrelic namespace
   command: kubectl create namespace {{ newrelic['namespace'] }}
-  run_once: yes
   when: rancher_monitoring is failed
+
+- name: Migrate chart to Helm 3
+  command: helm 2to3 convert --ignore-already-migrated kube-state-metrics
 
 - name: Install Kube State Metrics
   command: >
@@ -31,7 +31,10 @@
       --set securityContext.enabled=true
       --set securityContext.runAsUser=65534
       --set securityContext.fsGroup=65534
-  when: not (charts.json | json_query("[?name == \"kube-state-metrics\"]"))
+  when: not (charts.stdout | from_json | json_query("[?name==`kube-state-metrics`]"))
+
+- name: Migrate chart to Helm 3
+  command: helm 2to3 convert --ignore-already-migrated nri-bundle
 
 - name: Install Newrelic Services
   command: >
@@ -67,4 +70,4 @@
       --set newrelic-infrastructure.customAttributes="'{\"clusterName\":\"$(CLUSTER_NAME)\"\,\"role\":\"rancher\"}'"
       --wait
       --timeout 600s
-  when: not (charts.json | json_query("[?name == \"nri-bundle\"]"))
+  when: not (charts.stdout | from_json | json_query("[?name==`nri-bundle`]"))

@@ -1,6 +1,4 @@
 ---
-# These Modules all Run Locally (local_action) to Generate TLS certs
-
 - name: Generate an OpenSSL Private Key
   local_action:
     module: openssl_privatekey

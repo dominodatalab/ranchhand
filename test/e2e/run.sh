@@ -2,64 +2,50 @@
 set -ex
 
 INSTANCE_NAME="${INSTANCE_NAME:-"ranchhand-local-$USER"}"
-INSTANCE_BLUEPRINT_ID="${INSTANCE_BLUEPRINT_ID:-ubuntu_16_04_2}"
-SSH_KEY_FILE="${SSH_KEY_FILE:-${HOME}/.ssh/id_rsa_a4d238e594137d6a2ec652c68f7f0e6b}"
+INSTANCE_AMI_ID="${INSTANCE_AMI_ID:-ubuntu_xenial}"
+INSTANCE_TAGS="${INSTANCE_TAGS:-"{\"Environment\": \"Test\"}"}"
+SSH_KEY_FILE="${SSH_KEY_FILE:-${HOME}/.ssh/id_rsa_5a19aee7ef984f2f68c3be7262f91d35}"
 SSH_USER="${SSH_USER:-ubuntu}"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
+ssh-keygen -y -f "$SSH_KEY_FILE" > "$SSH_KEY_FILE.pub"
 
 function setup_instance() {
-  if [[ -n $INSTANCE_TAGS ]]; then
-    local tags=($INSTANCE_TAGS)
-  else
-    local tags=("key=Environment,value=Test")
-  fi
-
-  aws lightsail create-instances \
-    --instance-names $INSTANCE_NAME \
-    --availability-zone us-east-1a \
-    --blueprint-id $INSTANCE_BLUEPRINT_ID \
-    --bundle-id medium_2_0 \
-    --tags ${tags[@]}
+  cd "$SCRIPT_DIR/terraform" || exit 1
+  terraform init
+  terraform apply -auto-approve -var name="$INSTANCE_NAME" \
+    -var public_key="$SSH_KEY_FILE.pub" \
+    -var tags="$INSTANCE_TAGS" \
+    -var ami_name="$INSTANCE_AMI_ID"
 
   local max_retries=20
 
+  ipaddr=$(terraform output -raw public_ip)
+  echo "$ipaddr" > "$SCRIPT_DIR"/../instance-ip
+
+  private_ipaddr=$(terraform output -raw private_ip)
+  echo "$private_ipaddr" > "$SCRIPT_DIR"/../private-instance-ip
+
   for retries in $(seq 0 ${max_retries}); do
     sleep 10
 
-    local state=$(aws lightsail get-instance-state --instance-name $INSTANCE_NAME --query 'state.name' --output text)
-    if [[ $state == "running" ]]; then
+    if ssh -o StrictHostKeyChecking=no -i "${SSH_KEY_FILE}" "${SSH_USER}@${ipaddr}" exit; then
       break
     fi
 
-    echo "$INSTANCE_NAME is not ready (state: $state), trying again in 10 secs"
-  done
-
-  if [ "$retries" -eq "${max_retries}" ]; then echo "$INSTANCE_NAME is not ready!"; exit 5; fi
-
-  local ipaddr=$(aws lightsail get-instance --instance-name $INSTANCE_NAME --query 'instance.publicIpAddress' --output text)
-  echo $ipaddr > instance-ip
-
-  local private_ipaddr=$(aws lightsail get-instance --instance-name $INSTANCE_NAME --query 'instance.privateIpAddress' --output text)
-  echo $private_ipaddr > private-instance-ip
-
-  for retries in $(seq 0 ${max_retries}); do
-    sleep 10
-
-    ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_FILE} ${SSH_USER}@${ipaddr} exit && break || true
     echo "${ipaddr} ssh connection timeout. Sleeping for 10 seconds..."
   done
 
   if [ "$retries" -eq "${max_retries}" ]; then echo "$INSTANCE_NAME not SSH ready!"; exit 5; fi
-
-  aws lightsail open-instance-public-ports \
-    --port-info fromPort=443,toPort=443,protocol=tcp \
-    --instance-name $INSTANCE_NAME
-  aws lightsail open-instance-public-ports \
-    --port-info fromPort=6443,toPort=6443,protocol=tcp \
-    --instance-name $INSTANCE_NAME
 }
 
 function teardown_instance() {
-  aws lightsail delete-instance --instance-name $INSTANCE_NAME
+  cd "$SCRIPT_DIR/terraform" || exit 1
+  terraform destroy -auto-approve \
+    -var name="$INSTANCE_NAME" \
+    -var public_key="$SSH_KEY_FILE.pub" \
+    -var tags="$INSTANCE_TAGS" \
+    -var ami_name="$INSTANCE_AMI_ID"
 }
 
 if [[ $0 == $BASH_SOURCE ]]; then

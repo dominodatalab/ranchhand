@@ -1,6 +1,5 @@
 ---
 - import_tasks: ssl-certificates.yml
-  run_once: true
 
 - name: install apt packages
   become: true
@@ -59,15 +58,14 @@
     - src: kubectl
       dest: kubectl
 
+- name: Install Helm plugin 2to3
+  command: helm plugin install https://github.com/helm/helm-2to3.git
+
 - name: Copy rke Template
   no_log: true
   template:
     src: rancher-cluster.yml
     dest: rancher-cluster.yml
-
-- name: Save K8s State (on upgrade only)
-  command: "rke etcd snapshot-save --name snapshot-{{ ansible_date_time.iso8601_basic }} --config ./rancher-cluster.yml"
-  when: false # TODO: create proper conditional
 
 - name: Ensure ssh directory exists
   file: path="/home/{{ ansible_user_id }}/.ssh" state=directory
@@ -75,7 +73,6 @@
 - name: Generate SSH Keypair
   openssh_keypair:
     path: /home/{{ ansible_user_id }}/.ssh/rke
-  run_once: true
 
 - name: Download SSH Keypair
   fetch:
@@ -85,7 +82,6 @@
   with_items:
     - {remote: "/home/{{ ansible_user_id }}/.ssh/rke", local: "{{ local_output_dir }}/rke"}
     - {remote: "/home/{{ ansible_user_id }}/.ssh/rke.pub", local: "{{ local_output_dir }}/rke.pub"}
-  run_once: yes
 
 - name: Distribute SSH Keypair
   copy:
@@ -102,13 +98,21 @@
     key: "{{ lookup('file', '{{ local_output_dir }}/rke.pub') }}"
     comment: rancher-k8s-cluster-key
 
+- name: Probe Namespace
+  command: kubectl get ns kube-system
+  changed_when: false
+  ignore_errors: yes
+  register: kubernetes_available
+
+- name: Save K8s State (on upgrade only)
+  command: "rke etcd snapshot-save --name snapshot-{{ ansible_date_time.iso8601_basic }} --config ./rancher-cluster.yml"
+  when: kubernetes_available is not failed
+
 - name: Run rke Install/Upgrade (one host only)
   command: rke up --config ./rancher-cluster.yml creates=rancher-cluster.rkestate
-  run_once: true
 
 - name: Create kubectl Directory
   file: path="/home/{{ ansible_user_id }}/.kube" state=directory
-  run_once: true
 
 - name: Download rke Generated Configs
   fetch:
@@ -119,11 +123,9 @@
     - kube_config_rancher-cluster.yml
     - rancher-cluster.yml
     - rancher-cluster.rkestate
-  run_once: yes
 
 - name: Copy kubectl Configuration
   copy:
     src: "{{ local_output_dir }}/kube_config_rancher-cluster.yml"
     dest: "/home/{{ ansible_user_id }}/.kube/config"
     mode: 0600
-  run_once: true

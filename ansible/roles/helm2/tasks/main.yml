@@ -1,0 +1,3 @@
+---
+- name: Clean up Helm 2
+  command: helm 2to3 cleanup --tiller-cleanup --release-cleanup

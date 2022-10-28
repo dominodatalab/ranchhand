@@ -2,35 +2,28 @@
 - name: Probe cert-manager Namespace
   command: kubectl get ns cert-manager
   changed_when: false
-  ignore_errors: yes
-  run_once: yes
+  ignore_errors: true
   register: certmanager_ns
 
 - name: Create cert-manager Namespace
   command: kubectl create namespace cert-manager
-  run_once: true
   when: certmanager_ns is failed
 
 - name: Probe cert-manager Namespace Label
   command: kubectl get namespace --selector certmanager.k8s.io/disable-validation=true
   changed_when: false
-  run_once: true
   register: certmanager_ns_label
 
 - name: Disable Resource Validation on cert-manager Namespace
   command: kubectl label namespace cert-manager certmanager.k8s.io/disable-validation=true
-  run_once: true
   when: "'No resources found' in certmanager_ns_label.stderr"
 
 - name: Add Jetstack Repo for cert-manager
   command: helm repo add jetstack https://charts.jetstack.io
-  when: not (repos.json | json_query("[?name == \"jetstack\"]"))
-  run_once: true
-  register: jetstack_repo
+  when: not (repos.stdout | from_json | json_query("[?name==`jetstack`]"))
 
-- name: Update Helm Repo
-  command: helm repo update
-  when: jetstack_repo is changed
+- name: Migrate chart to Helm 3
+  command: helm 2to3 convert --ignore-already-migrated cert-manager
 
 - name: Install cert-manager
   command: >
@@ -38,6 +31,5 @@
       --namespace cert-manager
       --version {{ cert_manager_version }}
       --set installCRDs=true
-      --description='RanchHand Deploy'
       --wait --install
-  when: not (charts.json | json_query("[?name == \"cert-manager\"]"))
+  when: not (charts.stdout | from_json | json_query("[?name==`cert-manager`]"))
