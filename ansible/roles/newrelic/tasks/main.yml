@@ -15,3 +15,4 @@
 
 - import_tasks: newrelic.yml
   run_once: true
+  when: newrelic.licensekey != ''

@@ -1,3 +1,7 @@
+- name: Check Credentials
+  fail: msg="Helm registry user and password are required when enabling New Relic"
+  when: helm['password'] == '' or helm['user'] == ''
+
 - name: Login to GCR repo
   shell: echo {{ helm['password'] }} | base64 -d | helm registry login {{ helm['host'] }} --username {{ helm['user'] }} --password-stdin
   run_once: yes
