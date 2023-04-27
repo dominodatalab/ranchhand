@@ -6,6 +6,7 @@
 - name: Install Rancher
   command: >
     helm upgrade rancher rancher-stable/rancher
+      --install --cleanup-on-fail --wait
       --namespace cattle-system
       --version {{ rancher_version }}
       --set replicas={{ node_count }}
@@ -17,8 +18,11 @@
       --set bootstrapPassword={{ rancher_password }}
       --description='RanchHand Deploy'
       --set rancherImageTag={{ rancher_image_tag }}
-      --wait --install
   when: not (charts.json | json_query("[?name == \"rancher\"]"))
+  register: rancher_install
+  until: rancher_install.rc == 0
+  retries: 3
+  delay: 30
 
 - name: Wait for Rancher to be available
   command: kubectl rollout status --watch deployment rancher --namespace=cattle-system
