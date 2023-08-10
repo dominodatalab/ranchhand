@@ -42,7 +42,7 @@
       --set global.licenseKey="{{ newrelic['licensekey'] }}"
       --set global.cluster="rancher"
       --set newrelic-infrastructure.enabled=true
-      --set newrelic-infrastructure.rbac.pspEnabled=true
+      --set newrelic-infrastructure.rbac.pspEnabled=false
       --set newrelic-infrastructure.networkPolicy.create=true
       --set newrelic-infrastructure.resources.limits.memory=128Mi
       --set newrelic-infrastructure.resources.requests.cpu=100m
@@ -53,7 +53,7 @@
       --set newrelic-events.resources.requests.cpu=100m
       --set newrelic-events.resources.requests.memory=128Mi
       --set logging.enabled=true
-      --set newrelic-logging.rbac.pspEnabled=true
+      --set newrelic-logging.rbac.pspEnabled=false
       --set newrelic-logging.networkPolicy.enabled=true
       --set newrelic-logging.resources.limits.memory=256Mi
       --set newrelic-logging.resources.requests.cpu=100m
