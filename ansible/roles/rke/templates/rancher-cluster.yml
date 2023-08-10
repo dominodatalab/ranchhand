@@ -21,7 +21,6 @@ services:
       enabled: true
     event_rate_limit:
       enabled: true
-    pod_security_policy: true
     secrets_encryption_config:
       enabled: true
     service_node_port_range: 30000-32767
