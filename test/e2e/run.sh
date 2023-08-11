@@ -5,6 +5,7 @@ INSTANCE_NAME="${INSTANCE_NAME:-"ranchhand-local-$USER"}"
 INSTANCE_BLUEPRINT_ID="${INSTANCE_BLUEPRINT_ID:-ubuntu_16_04_2}"
 SSH_KEY_FILE="${SSH_KEY_FILE:-${HOME}/.ssh/id_rsa_a4d238e594137d6a2ec652c68f7f0e6b}"
 SSH_USER="${SSH_USER:-ubuntu}"
+export AWS_REGION="us-east-1"
 
 function setup_instance() {
   if [[ -n $INSTANCE_TAGS ]]; then
