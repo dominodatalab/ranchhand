@@ -6,7 +6,7 @@
 - name: Install Rancher
   command: >
     helm upgrade rancher rancher-stable/rancher
-      --install --cleanup-on-fail --atomic --wait
+      --install --atomic
       --namespace cattle-system
       --version {{ rancher_version }}
       --set replicas={{ node_count }}
