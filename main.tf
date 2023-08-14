@@ -11,7 +11,7 @@ resource "random_password" "password" {
   length = 20
 
   # The default EXCEPT "-" and "'"because it can trigger CLI arguments / mangle quotes
-  override_special = "!@#$%&*()_=+[]{}<>:?"
+  override_special = "!@#$&*_+?"
 }
 
 resource "null_resource" "ansible_playbook" {
