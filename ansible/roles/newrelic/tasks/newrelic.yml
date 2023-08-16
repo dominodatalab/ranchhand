@@ -39,7 +39,7 @@
       --install
       --namespace {{ newrelic['namespace'] }}
       --version {{ newrelic['service_version'] }}
-      --set global.licenseKey="{{ newrelic['licensekey'] }}"
+      --set global.licenseKey="{{ newrelic['license_key'] }}"
       --set global.cluster="rancher"
       --set newrelic-infrastructure.enabled=true
       --set newrelic-infrastructure.rbac.pspEnabled=false

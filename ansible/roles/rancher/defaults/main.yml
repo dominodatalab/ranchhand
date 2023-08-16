@@ -1,0 +1,5 @@
+---
+cert_manager_version: ""
+rancher_image_tag: ""
+rancher_password: "{{ lookup('env','RANCHER_PASSWORD') }}"
+rancher_version: ""

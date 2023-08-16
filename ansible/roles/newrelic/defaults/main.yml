@@ -1,0 +1,12 @@
+---
+
+helm:
+  host: ""
+  user: ""
+  password: ""
+  namespace: "domino-eng-service-artifacts"
+newrelic:
+  license_key: ""
+  namespace: ""
+  service_name: ""
+  service_version: ""
