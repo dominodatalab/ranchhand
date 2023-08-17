@@ -1,4 +1,2 @@
 ---
-recommendedCpus: 4
-recommendedMemory: 15
-recommendedNodes: 3
+dom_debug: False

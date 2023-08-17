@@ -13,15 +13,15 @@
   run_once: true
   register: charts
 
-- import_tasks: secrets.yml
+- name: Include secrets.yml
+  include_tasks: secrets.yml
   run_once: true
 
-- import_tasks: cert-manager.yml
+- name: Include cert-manager.yml
+  include_tasks: cert-manager.yml
   run_once: true
 
-- import_tasks: rancher.yml
+- name: Include rancher.yml
+  include_tasks: rancher.yml
   run_once: true
 
-- import_tasks: password.yml
-  run_once: true
-  when: rancher_password != ''

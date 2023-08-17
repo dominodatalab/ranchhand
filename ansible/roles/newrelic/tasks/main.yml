@@ -13,5 +13,6 @@
   run_once: true
   register: charts
 
-- import_tasks: newrelic.yml
+- name: Include newrelic.yml
+  include_tasks: newrelic.yml
   run_once: true

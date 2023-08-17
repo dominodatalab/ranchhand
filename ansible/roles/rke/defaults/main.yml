@@ -1,0 +1,6 @@
+---
+kubectl_version: ""
+helm_version: ""
+local_output_dir: "/tmp"
+rke_cli_version: "{{ rke_version }}"
+tools_dir: "/home/{{ ansible_user_id }}/ranchhand/tools"

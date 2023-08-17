@@ -23,8 +23,14 @@ resource "null_resource" "ansible_playbook" {
         --private-key=${var.ssh_key_path} \
         --user=${var.ssh_username} \
         --ssh-common-args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${local.ansible_ssh_proxy}' \
+        -e 'cert_manager_version=${var.cert_manager_version}' \
         -e 'cert_names=${local.cert_names}' \
+        -e '{"helm": { "host": "${var.helm_v3_registry_host}","user": "${var.helm_v3_registry_user}", "namespace": "${var.helm_v3_namespace}","password": "${var.helm_v3_registry_password}" }}' \
+        -e 'helm_version=${var.helm_version}' \
+        -e 'kubectl_version=${var.kubectl_version}' \
+        -e '{ "newrelic": { "license_key": "${var.newrelic_license_key}","namespace": "${var.newrelic_namespace}", "service_name": "${var.newrelic_service_name}","service_version": "${var.newrelic_service_version}" }}' \
         -e 'node_count=${length(var.node_ips)}' \
+        -e 'rancher_image_tag=${var.rancher_image_tag}' \
         -e 'rancher_version=${var.rancher_version}' \
         -e 'rke_version=${var.rke_version}' \
         -e 'local_output_dir=${var.working_dir}/ansible.${self.id}' \
@@ -33,14 +39,9 @@ resource "null_resource" "ansible_playbook" {
 
     working_dir = path.module
     environment = {
-      ANSIBLE_SSH_RETRIES       = var.ansible_ssh_retries
-      ANSIBLE_TIMEOUT           = var.ansible_ssh_timeout
-      RANCHER_PASSWORD          = nonsensitive(var.admin_password == "" ? join("", random_password.password.*.result) : var.admin_password)
-      RANCHER_IMAGE_TAG         = var.rancher_image_tag
-      HELM_V3_REGISTRY_HOST     = var.helm_v3_registry_host
-      HELM_V3_REGISTRY_USER     = var.helm_v3_registry_user
-      HELM_V3_REGISTRY_PASSWORD = var.helm_v3_registry_password
-      NEWRELIC_LICENSEKEY       = var.newrelic_licensekey
+      ANSIBLE_SSH_RETRIES = var.ansible_ssh_retries
+      ANSIBLE_TIMEOUT     = var.ansible_ssh_timeout
+      RANCHER_PASSWORD    = nonsensitive(var.admin_password == "" ? join("", random_password.password.*.result) : var.admin_password)
     }
   }
 

@@ -1,8 +1,10 @@
 ---
-- import_tasks: debian.yml
+- name: Include debian.yml
+  include_tasks: debian.yml
   when: ansible_os_family == "Debian"
 
-- import_tasks: redhat.yml
+- name: Include redhat.yml
+  include_tasks: redhat.yml
   when: ansible_os_family == "RedHat"
 
 - name: Add user to docker group

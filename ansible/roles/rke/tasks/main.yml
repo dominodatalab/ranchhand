@@ -1,5 +1,6 @@
 ---
-- import_tasks: ssl-certificates.yml
+- name: Include ssl-certificates.yml
+  include_tasks: ssl-certificates.yml
   run_once: true
 
 - name: install apt packages
