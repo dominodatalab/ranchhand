@@ -87,7 +87,7 @@ variable "newrelic_service_name" {
 }
 
 variable "newrelic_service_version" {
-  description = "The New Relic ervice version. Without [v]"
+  description = "The New Relic service version. Without [v]"
   default     = "1.11.3-0.1.0"
 }
 
