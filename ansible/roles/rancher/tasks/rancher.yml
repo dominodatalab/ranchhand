@@ -1,28 +1,33 @@
 ---
 - name: Add Rancher Repo
-  command: helm repo add rancher-stable https://releases.rancher.com/server-charts/stable
+  kubernetes.core.helm_repository:
+    name: rancher-stable
+    repo_url: https://releases.rancher.com/server-charts/stable
   when: not (repos.json | json_query("[?name == \"rancher-stable\"]"))
 
 - name: Install Rancher
-  command: >
-    helm upgrade rancher rancher-stable/rancher
-      --install --cleanup-on-fail --wait
-      --namespace cattle-system
-      --version {{ rancher_version }}
-      --set replicas={{ node_count }}
-      --set antiAffinity=required
-      --set tls=external
-      --set privateCA=true
-      --set restrictedAdmin=true
-      --set auditLog.level=1
-      --set bootstrapPassword={{ rancher_password }}
-      --description='RanchHand Deploy'
-      --set rancherImageTag={{ rancher_image_tag }}
+  kubernetes.core.helm:
+    validate_certs: false
+    name: rancher
+    namespace: cattle-system
+    state: present
+    update_repo_cache: yes
+    chart_ref: rancher-stable/rancher
+    chart_version: "{{ rancher_version }}"
+    atomic: true
+    wait: true
+    values:
+      privateCA: true
+      replicas: "{{ node_count }}"
+      antiAffinity: required
+      tls: external
+      restrictAdmin: true
+      auditLog:
+        level: 1
+      bootstrapPassword: "{{ rancher_password }}"
+      rancherImageTag: "{{ rancher_image_tag }}"
   when: not (charts.json | json_query("[?name == \"rancher\"]"))
   register: rancher_install
-  until: rancher_install.rc == 0
-  retries: 3
-  delay: 30
 
 - name: Wait for Rancher to be available
   command: kubectl rollout status --watch deployment rancher --namespace=cattle-system
