@@ -67,7 +67,7 @@ commands:
             -e 'cert_names=DNS:test.dominodatalab.com' \
             -e 'node_count=1' \
             --private-key=~/.ssh/id_rsa_a4d238e594137d6a2ec652c68f7f0e6b \
-            --ssh-common-args="-o StrictHostKeyChecking=no -o StrictHostKeyChecking=no -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -W %h:%p -q << parameters.ssh_user >>@$(cat instance-ip)\"" \
+            --ssh-common-args="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -q << parameters.ssh_user >>@$(cat instance-ip)\"" \
             ansible/prod.yml --diff
     - run:
         name: Teardown test env

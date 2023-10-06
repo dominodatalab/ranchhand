@@ -22,7 +22,7 @@ resource "null_resource" "ansible_playbook" {
         -i '${local.ip_addresses},' \
         --private-key=${var.ssh_key_path} \
         --user=${var.ssh_username} \
-        --ssh-common-args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${local.ansible_ssh_proxy}' \
+        --ssh-common-args='${local.ansible_ssh_proxy}' \
         -e 'cert_manager_version=${var.cert_manager_version}' \
         -e 'cert_names=${local.cert_names}' \
         -e '{"helm": { "host": "${var.helm_v3_registry_host}","user": "${var.helm_v3_registry_user}", "namespace": "${var.helm_v3_namespace}","password": "${var.helm_v3_registry_password}" }}' \

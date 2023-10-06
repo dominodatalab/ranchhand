@@ -45,7 +45,7 @@ function setup_instance() {
   for retries in $(seq 0 ${max_retries}); do
     sleep 10
 
-    ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_FILE} ${SSH_USER}@${ipaddr} exit && break || true
+    ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ${SSH_KEY_FILE} ${SSH_USER}@${ipaddr} exit && break || true
     echo "${ipaddr} ssh connection timeout. Sleeping for 10 seconds..."
   done
 

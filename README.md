@@ -26,7 +26,7 @@ This tool aims to automate the steps listed in Rancher's official [HA Install][]
 This example shows a manual run of the production playbook (prod.yml) from a local machine imaging a cluster behind a bastion/proxy server.
 
 ```
-ansible-playbook -i '10.0.1.6,10.0.1.51,10.0.1.94,' --private-key=/Users/myhost/.ssh/id_rsa --user=ubuntu --ssh-common-args='-o StrictHostKeyChecking=no -o StrictHostKeyChecking=no -o ProxyCommand="ssh -o StrictHostKeyChecking=no -W %h:%p -q ubuntu@54.190.1.95"' ansible/prod.yml --diff
+ansible-playbook -i '10.0.1.6,10.0.1.51,10.0.1.94,' --private-key=/Users/myhost/.ssh/id_rsa --user=ubuntu --ssh-common-args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -q ubuntu@54.190.1.95"' ansible/prod.yml --diff
 ```
 
 In the example above, only the bastion server, 54.190.1.95, is publicly accessible. However, including the Terraform module should be sufficient for most users.
