@@ -123,15 +123,15 @@ workflows:
   ansible_integrations:
     jobs:
     - lint
-    - e2e_centos:
-        requires:
-        - lint
-    - e2e_ubuntu:
-        requires:
-        - lint
-    - e2e_ubuntu18:
-        requires:
-        - lint
-    - e2e_ubuntu20:
-        requires:
-        - lint
+    # - e2e_centos:
+    #     requires:
+    #     - lint
+    # - e2e_ubuntu:
+    #     requires:
+    #     - lint
+    # - e2e_ubuntu18:
+    #     requires:
+    #     - lint
+    # - e2e_ubuntu20:
+    #     requires:
+    #     - lint

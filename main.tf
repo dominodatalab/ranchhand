@@ -12,6 +12,10 @@ resource "random_password" "password" {
 
   # The default EXCEPT "-" and "'"because it can trigger CLI arguments / mangle quotes
   override_special = "!@#$&*_+?"
+
+  lifecycle {
+    ignore_changes = [override_special]
+  }
 }
 
 resource "null_resource" "ansible_playbook" {
