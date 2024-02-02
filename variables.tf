@@ -35,7 +35,7 @@ variable "cert_ipaddresses" {
 
 variable "cert_manager_version" {
   description = "cert-manager helm chart version. With the [v]"
-  default     = "v1.12.3"
+  default     = "v1.13.1"
 }
 
 variable "helm_v3_registry_host" {
@@ -59,7 +59,7 @@ variable "helm_v3_registry_user" {
 
 variable "helm_version" {
   description = "version of Helm to install. With the [v]"
-  default     = "v3.12.3"
+  default     = "v3.14.0"
 }
 
 # make sure to check that the Rancher chart
