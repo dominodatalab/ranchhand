@@ -1,6 +1,6 @@
 locals {
   ip_addresses      = join(",", var.node_ips)
-  ansible_ssh_proxy = var.ssh_proxy_host == "" ? "" : format("-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand=\"ssh -i %s -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %%h:%%p -q %s@%s\"", var.ssh_key_path, var.ssh_proxy_user, var.ssh_proxy_host)
+  ansible_ssh_proxy = var.ssh_proxy_host == "" ? "" : format("-o IdentityAgent=none -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand=\"ssh -i %s -o IdentityAgent=none -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %%h:%%p -q %s@%s\"", var.ssh_key_path, var.ssh_proxy_user, var.ssh_proxy_host)
   cert_dnsnames     = format("DNS:%s", join(",DNS:", var.cert_dnsnames))
   cert_ipaddresses  = length(var.cert_ipaddresses) == 0 ? "" : format(",IP:%s", join(",IP:", var.cert_ipaddresses))
   cert_names        = format("%s%s", local.cert_dnsnames, local.cert_ipaddresses)
@@ -26,7 +26,7 @@ resource "null_resource" "ansible_playbook" {
         -i '${local.ip_addresses},' \
         --private-key=${var.ssh_key_path} \
         --user=${var.ssh_username} \
-        --ssh-common-args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${local.ansible_ssh_proxy}' \
+        --ssh-common-args='-o IdentityAgent=none -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${local.ansible_ssh_proxy}' \
         -e 'cert_manager_version=${var.cert_manager_version}' \
         -e 'cert_names=${local.cert_names}' \
         -e '{"helm": { "host": "${var.helm_v3_registry_host}","user": "${var.helm_v3_registry_user}", "namespace": "${var.helm_v3_namespace}","password": "${var.helm_v3_registry_password}" }}' \
