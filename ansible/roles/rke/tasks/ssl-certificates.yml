@@ -11,7 +11,7 @@
     module: openssl_csr
     path: "{{ local_output_dir }}/dominodatalab.com.csr"
     privatekey_path: "{{ local_output_dir }}/dominodatalab.com.pem"
-    common_name: "{{ cert_names.split(',')[0] | regex_replace('DNS:') }}"
+    common_name: "rancher.internal"
     subject_alt_name: "{{ cert_names }}"
     organization_name: Domino Data Lab, Inc.
     organizational_unit_name: Platform Engineering
