@@ -36,7 +36,7 @@
   unarchive:
     src: "{{ item }}"
     dest: "{{ tools_dir }}"
-    remote_src: yes
+    remote_src: true
     extra_opts: [--strip-components=1]
   register: result
   until: result is succeeded
@@ -82,11 +82,11 @@
   fetch:
       src: "{{ item.remote }}"
       dest: "{{ item.local }}"
-      flat: yes
+      flat: true
   with_items:
     - {remote: "/home/{{ ansible_user_id }}/.ssh/rke", local: "{{ local_output_dir }}/rke"}
     - {remote: "/home/{{ ansible_user_id }}/.ssh/rke.pub", local: "{{ local_output_dir }}/rke.pub"}
-  run_once: yes
+  run_once: true
 
 - name: Distribute SSH Keypair
   copy:
@@ -115,16 +115,16 @@
   fetch:
       src: "/home/{{ ansible_user_id }}/{{ item }}"
       dest: "{{ local_output_dir }}/{{ item }}"
-      flat: yes
+      flat: true
   with_items:
     - kube_config_rancher-cluster.yml
     - rancher-cluster.yml
     - rancher-cluster.rkestate
-  run_once: yes
+  run_once: true
 
 - name: Copy kubectl Configuration
   copy:
     src: "{{ local_output_dir }}/kube_config_rancher-cluster.yml"
     dest: "/home/{{ ansible_user_id }}/.kube/config"
-    mode: 0600
+    mode: "0600"
   run_once: true

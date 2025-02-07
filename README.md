@@ -7,16 +7,16 @@ Deploy Rancher in HA mode onto existing hardware.
 
 ## Design
 
-This tool aims to automate the steps listed in Rancher's official [HA Install][] documentation in a reproducable manner. It also enforces many of the recommendations given inside Rancher's [hardening guide][].
+This tool aims to automate the steps listed in Rancher's official [HA Install](https://ranchermanager.docs.rancher.com/reference-guides/rancher-manager-architecture/architecture-recommendations#why-ha-is-better-for-rancher-in-production) documentation in a reproducable manner. It also enforces many of the recommendations given inside Rancher's [hardening guide](https://releases.rancher.com/documents/security/latest/Rancher_Hardening_Guide.pdf).
 
 ## Usage
 
 1. Ensure that the Rancher version is >= 2.6. 
-1. Download the [latest release][] from GitHub.
+1. Download the [latest release](https://github.com/dominodatalab/ranchhand/releases/latest) from GitHub.
 1. [Install Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) (version >=2.8) locally
-1.  (optional) To update the Rancher default password, set the `RANCHER_PASSWORD` environment variable:
+1. (_optional_) To update the Rancher default password, set the `RANCHER_PASSWORD` environment variable:
      `export RANCHER_PASSWORD=<new password>`
-    1.    (required) Configure ansible for proper output:
+    1. (**required**) Configure ansible for proper output:
             `export ANSIBLE_COW_SELECTION=random`
 1. Execute `ansible-galaxy install -r ansible/requirements.yml` to install dependencies
 1. Execute `ansible-playbook -i '1.2.4.5,...,10.20.30.40,' --private-key=~/.ssh/id_rsa --user=ubuntu ansible/prod.yml --diff --check` to perform a dry run of all the changes.
@@ -25,11 +25,11 @@ This tool aims to automate the steps listed in Rancher's official [HA Install][]
 
 This example shows a manual run of the production playbook (prod.yml) from a local machine imaging a cluster behind a bastion/proxy server.
 
-```
+```shell
 ansible-playbook -i '10.0.1.6,10.0.1.51,10.0.1.94,' --private-key=/Users/myhost/.ssh/id_rsa --user=ubuntu --ssh-common-args='-o StrictHostKeyChecking=no -o StrictHostKeyChecking=no -o ProxyCommand="ssh -o StrictHostKeyChecking=no -W %h:%p -q ubuntu@54.190.1.95"' ansible/prod.yml --diff
 ```
 
-In the example above, only the bastion server, 54.190.1.95, is publicly accessible. However, including the Terraform module should be sufficient for most users.
+In the example above, only the bastion server, `54.190.1.95`, is publicly accessible. However, including the Terraform module should be sufficient for most users.
 
 ## Terraform
 
@@ -55,20 +55,18 @@ module "ranchhand" {
 
 Please submit any feature enhancements, bug fixes, or ideas via pull requests or issues.  If you need to test local changes e2e, you can do so using Vagrant and Virtualbox. Here are the recommended steps:
 
-1. Make sure you have Vagrant and VirtualBox installed.
+1. Make sure you have Vagrant and VirtualBox installed by running `brew cask install vagrant virtualbox`
 
-    `brew cask install vagrant virtualbox`
+1. Create one or more VMs. For convenience, a pre-configured [Vagrantfile](./test/Vagrantfile) is available.
 
-1. Create one or more VMs. For convenience, a pre-configured [Vagrantfile][] is available.
-
-    ```
+    ```shell
     cd test/
-    NODE_COUNT=N NODE_DISTRO="ubuntu_xenial|ubuntu_bionic|centos|rhel" vagrant up
+    NODE_COUNT=N NODE_DISTRO="ubuntu_jammy|ubuntu_focal|rhel" vagrant up
     ```
 
 1. Use `ansible` to launch a Ranchhand run against your VM(s) and verify your changes.
 
-    ```
+    ```shell
     ansible-galaxy install -r ansible/requirements.yml
     ansible-playbook -i '192.168.50.10,' \
       --private-key=~/.ssh/id_rsa \
@@ -95,10 +93,3 @@ Here are some helpful Ansible references for getting started with Ansible.
 ## Contribute
 
 Contributions are always welcome! Please submit any questions, bugs or changes via an issue or PR. Thank you.
-
-[vagrantfile]: test/Vagrantfile
-
-[rke]: https://github.com/rancher/rke
-[ha install]: https://rancher.com/docs/rancher/v2.x/en/installation/ha/
-[hardening guide]: https://releases.rancher.com/documents/security/latest/Rancher_Hardening_Guide.pdf
-[latest release]: https://github.com/dominodatalab/ranchhand/releases/latest

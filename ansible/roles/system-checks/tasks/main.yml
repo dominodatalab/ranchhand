@@ -2,7 +2,7 @@
 - name: Check Node Count
   fail: msg="WARNING] {{ansible_play_hosts|length}} < {{ recommendedNodes }} (recommended)"
   when: ansible_play_hosts|length < recommendedNodes
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Check OS
   fail: msg="Operating System '{{ ansible_distribution }}' not supported"
@@ -11,9 +11,9 @@
 - name: Check cpu Count
   fail: msg="WARNING] cpu cores '{{ ansible_processor_vcpus }}' < {{ recommendedCpus }} (recommended)"
   when: ansible_processor_vcpus < recommendedCpus
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Check Memory Size
   fail: msg="WARNING] Memory '{{ ansible_memtotal_mb/1024 }}' < {{ recommendedMemory }} (recommended)"
   when: ansible_memtotal_mb/1024 < recommendedMemory
-  ignore_errors: yes
+  ignore_errors: true

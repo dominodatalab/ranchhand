@@ -8,13 +8,13 @@
   when: ansible_os_family == "RedHat"
 
 - name: Add user to docker group
-  become: yes
+  become: true
   user:
     name: "{{ ansible_user_id }}"
     group: docker
 
 - name: Configure Docker daemon options
-  become: yes
+  become: true
   template:
     src: "daemon.json.j2"
     dest: "/etc/docker/daemon.json"

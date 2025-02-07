@@ -1,6 +1,6 @@
 ---
 - name: Install Docker & Dependencies
-  become: yes
+  become: true
   yum:
     name: "{{ packages }}"
   vars:
@@ -11,8 +11,8 @@
       - "{{ docker_ce_repo_root }}/container-selinux-{{ container_selinux_yum_version }}.noarch.rpm"
 
 - name: Enable and Start Docker
-  become: yes
+  become: true
   systemd:
     state: started
     name: docker
-    enabled: yes
+    enabled: true

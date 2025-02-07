@@ -2,8 +2,8 @@
 - name: Probe cert-manager Namespace
   command: kubectl get ns cert-manager
   changed_when: false
-  ignore_errors: yes
-  run_once: yes
+  ignore_errors: true
+  run_once: true
   register: certmanager_ns
 
 - name: Create cert-manager Namespace

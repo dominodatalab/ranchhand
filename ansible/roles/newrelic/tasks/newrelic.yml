@@ -1,6 +1,6 @@
 - name: Login to GCR repo
   shell: echo {{ helm['password'] }} | base64 -d | helm registry login {{ helm['host'] }} --username {{ helm['user'] }} --password-stdin
-  run_once: yes
+  run_once: true
   no_log: true
 
 - name: Probe bitnami repo
@@ -14,13 +14,13 @@
 - name: Probe Newrelic Namespace
   command: kubectl get ns {{ newrelic['namespace'] }}
   changed_when: false
-  ignore_errors: yes
-  run_once: yes
+  ignore_errors: true
+  run_once: true
   register: rancher_monitoring
 
 - name: Create Newrelic namespace
   command: kubectl create namespace {{ newrelic['namespace'] }}
-  run_once: yes
+  run_once: true
   when: rancher_monitoring is failed
 
 - name: Install Kube State Metrics
