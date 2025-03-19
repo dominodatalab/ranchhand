@@ -1,0 +1,13 @@
+openapi: 3.0.1
+info:
+  title: ranchhand
+  description: Deploy Rancher in HA mode onto existing hardware
+  x-cortex-tag: ranchhand
+  x-cortex-type: service
+  x-cortex-git:
+    github:
+      repository: dominodatalab/ranchhand
+  x-cortex-owners:
+  - email: eng-infrastructure@dominodatalab.com
+    type: email
+    description: Infrastructure Engineering
