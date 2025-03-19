@@ -6,8 +6,13 @@ info:
   x-cortex-type: service
   x-cortex-git:
     github:
+      alias: cortex
       repository: dominodatalab/ranchhand
   x-cortex-owners:
-  - email: eng-infrastructure@dominodatalab.com
-    type: email
-    description: Infrastructure Engineering
+    - name: eng-distributions
+      type: group
+      provider: OKTA
+      description: Distributions
+  x-cortex-circle-ci:
+    projects:
+      - projectSlug: github/dominodatalab/ranchhand
