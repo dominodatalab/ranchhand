@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -ex
 
-INSTANCE_NAME="${INSTANCE_NAME:-"ranchhand-local-$USER"}"
-INSTANCE_BLUEPRINT_ID="${INSTANCE_BLUEPRINT_ID:-ubuntu_16_04_2}"
+INSTANCE_NAME="${INSTANCE_NAME:-"ranchhand-local-${USER}"}"
+INSTANCE_BLUEPRINT_ID="${INSTANCE_BLUEPRINT_ID:-ubuntu_24_04}"
 SSH_KEY_FILE="${SSH_KEY_FILE:-${HOME}/.ssh/id_rsa_a4d238e594137d6a2ec652c68f7f0e6b}"
 SSH_USER="${SSH_USER:-ubuntu}"
 export AWS_REGION="us-east-1"
@@ -15,11 +15,11 @@ function setup_instance() {
   fi
 
   aws lightsail create-instances \
-    --instance-names $INSTANCE_NAME \
+    --instance-names "${INSTANCE_NAME}" \
     --availability-zone us-east-1a \
-    --blueprint-id $INSTANCE_BLUEPRINT_ID \
-    --bundle-id medium_2_0 \
-    --tags ${tags[@]}
+    --blueprint-id "${INSTANCE_BLUEPRINT_ID}" \
+    --bundle-id medium_3_0 \
+    --tags "${tags[@]}"
 
   local max_retries=20
 

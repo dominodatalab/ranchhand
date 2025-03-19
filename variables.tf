@@ -25,7 +25,6 @@ variable "ansible_ssh_timeout" {
   type    = number
 }
 
-
 variable "cert_dnsnames" {
   description = "Hostnames for the rancher and rke ssl certs (comma-delimited)"
   default     = ["domino.rancher"]
@@ -99,6 +98,7 @@ variable "newrelic_namespace" {
 variable "newrelic_service_name" {
   description = "Name of the New Relic Service"
   default     = "nri-bundle"
+  type        = string
 }
 
 variable "newrelic_service_version" {
@@ -152,10 +152,8 @@ variable "ssh_username" {
   type        = string
 }
 
-
 variable "working_dir" {
   description = "Directory where ranchhand should be executed. Defaults to the current working directory."
   default     = ""
   type        = string
 }
-

@@ -1,22 +1,23 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+# Match platform-apps at
+# /resources/deployer/terraform/tfmodules/onprem/ami.tf
+# and /resources/deployer/config/ami.yaml
+#
+# Options at: https://portal.cloud.hashicorp.com/vagrant/discover
 VAGRANT_BOXES = {
-  ubuntu_bionic: {
-    box: "ubuntu/bionic64",
-    box_version: "20190708.0.0"
+  ubuntu_jammy: {
+    box: "ubuntu/jammy64",
+    box_version: "20241002.0.0"
   },
-  ubuntu_xenial: {
-    box: "ubuntu/xenial64",
-    box_version: "20190708.0.0"
-  },
-  centos: {
-    box: "centos/7",
-    box_version: "1905.01",
+  ubuntu_focal: {
+    box: "ubuntu/focal64",
+    box_version: "20240821.0.1"
   },
   rhel: {
-    box: "generic/rhel7",
-    box_version: "1.9.18",
+    box: "generic/rhel9",
+    box_version: "4.3.12",
   }
 }
 
@@ -42,6 +43,8 @@ Vagrant.configure("2") do |config|
 
       c.vm.network :private_network, ip: "192.168.50.1#{i}"
 
+      # Should reflect requirements of the bundle chosen in
+      # run.sh (chosen from `aws lightsail get-bundles`)
       c.vm.provider :virtualbox do |vb|
         vb.cpus = 2
         vb.memory = "4096"

@@ -1,3 +1,18 @@
+terraform {
+  required_version = ">= 1.3.0"
+
+  required_providers {
+    null = {
+      source  = "hashicorp/null"
+      version = ">= 3.0.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = ">= 3.0.0"
+    }
+  }
+}
+
 locals {
   ip_addresses      = join(",", var.node_ips)
   ansible_ssh_proxy = var.ssh_proxy_host == "" ? "" : format("-o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand=\"ssh -i %s -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %%h:%%p -q %s@%s\"", var.ssh_key_path, var.ssh_proxy_user, var.ssh_proxy_host)
@@ -45,7 +60,7 @@ resource "null_resource" "ansible_playbook" {
     environment = {
       ANSIBLE_SSH_RETRIES = var.ansible_ssh_retries
       ANSIBLE_TIMEOUT     = var.ansible_ssh_timeout
-      RANCHER_PASSWORD    = nonsensitive(var.admin_password == "" ? join("", random_password.password.*.result) : var.admin_password)
+      RANCHER_PASSWORD    = nonsensitive(var.admin_password == "" ? join("", random_password.password[*].result) : var.admin_password)
     }
   }
 
