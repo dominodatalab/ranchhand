@@ -1,7 +1,7 @@
 # RanchHand
 
 [![Release](https://img.shields.io/github/release/dominodatalab/ranchhand.svg)](https://github.com/dominodatalab/ranchhand/releases/latest)
-[![CircleCI](https://img.shields.io/circleci/project/github/dominodatalab/ranchhand/master.svg)](https://circleci.com/gh/dominodatalab/ranchhand)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/dominodatalab/ranchhand/tree/develop.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/dominodatalab/ranchhand/tree/develop)
 
 Deploy Rancher in HA mode onto existing hardware.
 
@@ -12,7 +12,7 @@ This tool aims to automate the steps listed in Rancher's official [HA Install](h
 ## Usage
 
 1. Ensure that the Rancher version is >= 2.6. 
-1. Download the [latest release](https://github.com/dominodatalab/ranchhand/releases/latest) from GitHub.
+1. Download the [latest release](https://github.com/dominodatalab/RanchHand/releases/latest) from GitHub.
 1. [Install Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) (version >=2.8) locally
 1. (_optional_) To update the Rancher default password, set the `RANCHER_PASSWORD` environment variable:
      `export RANCHER_PASSWORD=<new password>`
@@ -33,11 +33,11 @@ In the example above, only the bastion server, `54.190.1.95`, is publicly access
 
 ## Terraform
 
-Using the Terraform module, you can leverage Ranchhand to create a Rancher cluster on a specific set of nodes.
+Using the Terraform module, you can leverage RanchHand to create a Rancher cluster on a specific set of nodes.
 
 ```hcl
-module "ranchhand" {
-  source = "github.com/dominodatalab/ranchhand"
+module "RanchHand" {
+  source = "github.com/dominodatalab/RanchHand"
 
   node_ips         = ["..."]
   working_dir      = "..."
@@ -55,16 +55,17 @@ module "ranchhand" {
 
 Please submit any feature enhancements, bug fixes, or ideas via pull requests or issues.  If you need to test local changes e2e, you can do so using Vagrant and Virtualbox. Here are the recommended steps:
 
-1. Make sure you have Vagrant and VirtualBox installed by running `brew cask install vagrant virtualbox`
+1. Make sure you have Vagrant and VirtualBox installed by running `brew install --cask vagrant virtualbox`
 
 1. Create one or more VMs. For convenience, a pre-configured [Vagrantfile](./test/Vagrantfile) is available.
 
     ```shell
     cd test/
+    # only specify one distro below
     NODE_COUNT=N NODE_DISTRO="ubuntu_jammy|ubuntu_focal|rhel" vagrant up
     ```
 
-1. Use `ansible` to launch a Ranchhand run against your VM(s) and verify your changes.
+1. Use `ansible` to launch a local RanchHand run against your VM(s) and verify your changes.
 
     ```shell
     ansible-galaxy install -r ansible/requirements.yml
@@ -79,6 +80,8 @@ Please submit any feature enhancements, bug fixes, or ideas via pull requests or
     ```
 
     _Note the trailing comma (",") in the host/ip list._
+
+1. When testing is complete, vagrant boxes can be destroyed with `vagrant destroy`
 
 ### Ansible References
 

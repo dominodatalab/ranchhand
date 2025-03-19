@@ -1,6 +1,15 @@
+# CircleCI 2.1 configuration file
+# Check https://circleci.com/docs/2.0/sample-config/ for more details
+#
 version: 2.1
 
 executors:
+  trivy:
+    docker:
+      - image: aquasec/trivy:0.60.0
+    environment:
+      ENV_FILE: /tmp/workspace/.env
+      WORKSPACE: /tmp/workspace
   default:
     docker:
       - image: cimg/python:3.12
@@ -15,7 +24,7 @@ orbs:
 
 commands:
   install_ansible:
-    description: "Install Ansible"
+    description: Install Ansible
     steps:
       - run:
           name: Install Ansible & Dependencies
@@ -34,7 +43,7 @@ commands:
             sudo unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/local/bin
 
   launch_e2e:
-    description: "Launch an e2e test using an AWS Lightsail VPS"
+    description: Launch an e2e test using an AWS Lightsail VPS
     parameters:
       blueprint_id:
         type: string
@@ -93,6 +102,26 @@ jobs:
       - run:
           name: Check Ansible Syntax
           command: ansible-playbook -i '127.0.0.1,' ansible/prod.yml --syntax-check
+  scan:
+    executor: trivy
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Install trivy
+          command: |
+            apk add --update-cache --upgrade curl
+            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+      - run:
+          name: Scan filesystem
+          command: |
+            trivy fs --include-non-failures --misconfig-scanners terraform \
+            --exit-code 0 --no-progress \
+            --scanners vuln,secret,config --severity CRITICAL,HIGH,MEDIUM,LOW \
+            --output "trivy-results.json" --format json --ignore-unfixed .
+      - store_artifacts:
+          path: trivy-results.json
+          destination: trivy_output
   e2e_ubuntu20:
     executor: default
     steps:
@@ -107,9 +136,10 @@ jobs:
         blueprint_id: ubuntu_22_04
 
 workflows:
-  ansible_integrations:
+  Lint and Scan:
     jobs:
     - lint
+    - scan
     # - e2e_ubuntu20:
     #     requires:
     #     - lint
