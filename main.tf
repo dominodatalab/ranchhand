@@ -15,19 +15,18 @@ terraform {
 
 locals {
   ip_addresses      = join(",", var.node_ips)
+  server_ips        = join(",", slice(var.node_ips, 0, var.server_count))
+  agent_ips         = length(var.node_ips) > var.server_count ? join(",", slice(var.node_ips, var.server_count, length(var.node_ips))) : ""
   ansible_ssh_proxy = var.ssh_proxy_host == "" ? "" : format("-o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand=\"ssh -i %s -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %%h:%%p -q %s@%s\"", var.ssh_key_path, var.ssh_proxy_user, var.ssh_proxy_host)
   cert_dnsnames     = format("DNS:%s", join(",DNS:", var.cert_dnsnames))
   cert_ipaddresses  = length(var.cert_ipaddresses) == 0 ? "" : format(",IP:%s", join(",IP:", var.cert_ipaddresses))
   cert_names        = format("%s%s", local.cert_dnsnames, local.cert_ipaddresses)
 }
 
-resource "random_password" "password" {
+resource  "random_password" "cluster_token" {
   count  = var.admin_password == "" ? 1 : 0
-  length = 20
-
-  # The default EXCEPT "-" and "'"because it can trigger CLI arguments / mangle quotes
-  override_special = "!@#$&*_+?"
-
+  length = 64
+  special = false
   lifecycle {
     ignore_changes = [override_special]
   }
