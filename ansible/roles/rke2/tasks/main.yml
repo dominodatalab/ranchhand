@@ -1,0 +1,25 @@
+   ---
+   - name: Download and install RKE2
+     shell: |
+       curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION={{ rke2_version }} sh -
+     args:
+       creates: /usr/local/bin/rke2
+
+   - name: Enable and start rke2-server
+     systemd:
+       name: rke2-server
+       enabled: yes
+       state: started
+
+   - name: Wait for kubeconfig to be created
+     wait_for:
+       path: /etc/rancher/rke2/rke2.yaml
+       timeout: 300
+
+   - name: Copy kubeconfig to user home
+     copy:
+       src: /etc/rancher/rke2/rke2.yaml
+       dest: /home/{{ ansible_user_id }}/.kube/config
+       owner: "{{ ansible_user_id }}"
+       group: "{{ ansible_user_id }}"
+       mode: 0600

@@ -23,7 +23,6 @@
 
   roles:
     - system-checks
-    - docker
-    - rke
+    - rke2
     - rancher
     - newrelic
