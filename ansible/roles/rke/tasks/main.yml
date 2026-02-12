@@ -11,6 +11,14 @@
       - tar
   when: ansible_os_family == "Debian"
 
+- name: install yum packages
+  become: true
+  yum:
+    name:
+      - unzip
+      - tar
+  when: ansible_os_family == "RedHat"
+
 - name: Create RanchHand Directories
   file:
     path: "{{ item }}"
@@ -29,7 +37,7 @@
   retries: 10
   delay: 3
   with_items:
-    - "https://storage.googleapis.com/kubernetes-release/release/{{ kubectl_version }}/bin/linux/amd64/kubectl"
+    - "https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/amd64/kubectl"
     - "https://github.com/rancher/rke/releases/download/{{ rke_cli_version }}/rke_linux-amd64"
 
 - name: Download Packaged Binary Tools
